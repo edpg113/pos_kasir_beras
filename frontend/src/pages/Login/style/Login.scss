@@ -1,0 +1,98 @@
+@import '../../../styles//variables.scss';
+
+
+/* Login Page Styles */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0 50%;
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.login-card {
+  background: $white;
+  padding: 40px;
+  border-radius: $border-radius-lg;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  width: 350px;
+  max-width: 400px;
+  animation: slideUp 0.5s ease;
+
+  h1 {
+    text-align: center;
+    color: $secondary-color;
+    margin-bottom: 10px;
+    font-size: 28px;
+  }
+
+  .form-group {
+    select {
+        color: $secondary-color;
+    }
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-subtitle {
+  text-align: center;
+  color: $light-text;
+  margin-bottom: 30px;
+  font-size: 14px;
+}
+
+.login-card {
+  .form-group {
+    input {
+      color: $secondary-color;
+    }
+  }
+}
+
+.error-message {
+  background-color: $danger-bg;
+  color: $danger-color;
+  padding: 12px;
+  border-radius: $border-radius-sm;
+  margin-bottom: 15px;
+  border: 1px solid #f5c6cb;
+  font-size: 14px;
+}
+
+.login-card > a {
+  display: block;
+  text-align: center;
+  margin-top: 20px;
+  color: $primary-color;
+  text-decoration: none;
+  font-size: 14px;
+  transition: $transition;
+
+  &:hover {
+    color: $primary-dark;
+    text-decoration: underline;
+  }
+}
+
+/* Responsive */
+@media (max-width: $mobile) {
+  .login-card {
+    padding: 30px;
+
+    h1 {
+      font-size: 24px;
+    }
+  }
+}
