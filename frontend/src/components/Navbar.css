@@ -1,0 +1,20 @@
+.dashboard-navbar {
+  background-color: #ecf0f1;
+  padding: 15px 35px 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid #ecf0f1;
+  /* position: sticky; */
+  width: 87%;
+  position: fixed;
+  top: 0;
+  z-index: 50;
+}
+
+.dashboard-navbar h2 {
+  color: #2c3e50;
+  font-size: 20px;
+  margin: 0;
+}

@@ -1,0 +1,233 @@
+@import '../../../styles//variables.scss';
+
+
+/* Reports Page Styles */
+.reports-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.reports-content-wrapper {
+  margin-left: $sidebar-width;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: $white;
+}
+
+.reports-navbar {
+  background-color: $light-bg;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: $shadow-sm;
+  border-bottom: 1px solid $light-border;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  h2 {
+    color: $secondary-color;
+    font-size: 20px;
+    margin: 0;
+  }
+}
+
+.reports-page-content {
+  flex: 1;
+  padding: 30px;
+  animation: fadeIn 0.5s ease;
+  background-color: $white;
+}
+
+.reports-page-header {
+  margin-bottom: 30px;
+
+  h1 {
+    color: $secondary-color;
+    margin-bottom: 5px;
+    font-size: 28px;
+  }
+
+  p {
+    color: $light-text;
+    font-size: 14px;
+  }
+}
+
+.reports-filter-bar {
+  margin-bottom: 30px;
+  display: flex;
+  gap: 10px;
+
+  select {
+    padding: 10px;
+    border-radius: $border-radius-sm;
+    border: 1px solid $light-border;
+    cursor: pointer;
+    background-color: $white;
+    transition: $transition;
+    color: $secondary-color;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.1);
+    }
+  }
+
+  option {
+    color: $secondary-color;
+  }
+}
+
+.reports-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.reports-stat-card {
+  background-color: $light-bg;
+  border-radius: $border-radius;
+  padding: 20px;
+  border-left: 4px solid $primary-color;
+  box-shadow: $shadow-sm;
+  transition: $transition;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
+
+  h3 {
+    color: $light-text;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+
+  .value {
+    color: $secondary-color;
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+
+  .unit {
+    color: #95a5a6;
+    font-size: 12px;
+  }
+}
+
+.reports-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.reports-card {
+  background-color: $light-bg;
+  border-radius: $border-radius;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: $shadow-sm;
+  border: 1px solid $light-border;
+  transition: $transition;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
+
+  h2 {
+    color: $secondary-color;
+    margin-bottom: 20px;
+    font-size: 18px;
+  }
+}
+
+.reports-table-container {
+  background-color: $light-bg;
+  border-radius: $border-radius;
+  border: 1px solid $light-border;
+  overflow: hidden;
+  box-shadow: $shadow-sm;
+}
+
+.reports-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background-color: $light-border;
+    border-bottom: 2px solid #bdc3c7;
+  }
+
+  th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: $secondary-color;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    padding: 15px;
+    border-bottom: 1px solid $light-border;
+    color: $dark-text;
+    font-size: 13px;
+  }
+
+  tbody tr {
+    transition: $transition;
+
+    &:hover {
+      background-color: #f0f3f7;
+    }
+  }
+}
+
+/* Responsive */
+@media (max-width: $tablet) {
+  .reports-navbar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .reports-page-content {
+    padding: 15px;
+  }
+
+  .reports-filter-bar {
+    flex-direction: column;
+  }
+
+  .reports-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reports-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .reports-table {
+    font-size: 12px;
+
+    th,
+    td {
+      padding: 10px;
+    }
+  }
+
+  .reports-page-header h1 {
+    font-size: 22px;
+  }
+}

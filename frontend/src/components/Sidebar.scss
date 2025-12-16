@@ -1,0 +1,140 @@
+@import '../styles/variables.scss';
+
+/* Sidebar Component Styles */
+.sidebar {
+  width: $sidebar-width;
+  background-color: $secondary-color;
+  color: white;
+  padding: 20px 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+  transition: $transition;
+
+  &-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+    transition: $transition;
+
+    h2 {
+      font-size: 20px;
+      margin-bottom: 5px;
+      color: white;
+    }
+
+    p {
+      font-size: 12px;
+      color: #bdc3c7;
+      margin: 0;
+    }
+  }
+
+  &-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &-logout-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: $border-radius-sm;
+    cursor: pointer;
+    transition: $transition;
+    font-weight: 500;
+    font-size: 14px;
+
+    &:hover {
+      background: rgba(231, 76, 60, 0.8);
+      border-color: $danger-btn;
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  /* Scrollbar Styling */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(139, 115, 85, 0.5);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(139, 115, 85, 0.8);
+    }
+  }
+}
+
+.menu-item {
+  margin: 0;
+  transition: $transition;
+
+  a {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: $light-border;
+    text-decoration: none;
+    transition: $transition;
+    border-left: 3px solid transparent;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-left-color: $primary-color;
+      padding-left: 25px;
+    }
+
+    &.active {
+      background-color: rgba(139, 115, 85, 0.2);
+      border-left-color: $primary-color;
+      color: $primary-color;
+      font-weight: 600;
+    }
+  }
+}
+
+.menu-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+/* Responsive */
+@media (max-width: $tablet) {
+  .sidebar {
+    width: 200px;
+  }
+}
+
+@media (max-width: $mobile) {
+  .sidebar {
+    width: 0;
+    transform: translateX(-100%);
+
+    &.active {
+      transform: translateX(0);
+    }
+  }
+}

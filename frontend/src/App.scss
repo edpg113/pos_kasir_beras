@@ -1,0 +1,197 @@
+@import './styles/variables.scss';
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  transition: $transition;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: $white;
+  color: #333;
+}
+
+/* Global Button Styles */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: $border-radius-sm;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $transition;
+
+  &-primary {
+    background-color: $primary-color;
+    color: $white;
+
+    &:hover {
+      background-color: $primary-dark;
+      box-shadow: 0 4px 12px rgba(139, 115, 85, 0.3);
+      transform: translateY(-2px);
+    }
+
+    &:disabled {
+      background-color: $light-text;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+
+  &-secondary {
+    background-color: $light-border;
+    color: $secondary-color;
+
+    &:hover {
+      background-color: #d5dbdb;
+      transform: translateY(-2px);
+    }
+  }
+
+  &-logout {
+    background-color: $danger-btn;
+    color: $white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: $border-radius-sm;
+    cursor: pointer;
+    font-size: 13px;
+
+    &:hover {
+      background-color: $danger-btn-hover;
+      transform: translateY(-2px);
+    }
+  }
+}
+
+/* Global Form Styles */
+.form-group {
+  margin-bottom: 20px;
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    color: $secondary-color;
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  input,
+  select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid $light-border;
+    border-radius: $border-radius-sm;
+    font-size: 14px;
+    background-color: $light-bg;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.1);
+      background-color: $white;
+    }
+  }
+}
+
+/* Global Table Styles */
+.table-container {
+  background-color: $light-bg;
+  border-radius: $border-radius;
+  border: 1px solid $light-border;
+  overflow: hidden;
+  box-shadow: $shadow-sm;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background-color: $light-border;
+    border-bottom: 2px solid #bdc3c7;
+  }
+
+  th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: $secondary-color;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    padding: 15px;
+    border-bottom: 1px solid $light-border;
+    color: $dark-text;
+    font-size: 13px;
+  }
+
+  tbody tr {
+    transition: $transition;
+
+    &:hover {
+      background-color: #f0f3f7;
+    }
+  }
+}
+
+/* Badge Styles */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: $transition;
+
+  &-success {
+    background-color: $success-bg;
+    color: $success-color;
+  }
+
+  &-warning {
+    background-color: $warning-bg;
+    color: $warning-color;
+  }
+
+  &-danger {
+    background-color: $danger-bg;
+    color: $danger-color;
+  }
+
+  &-info {
+    background-color: $info-bg;
+    color: $info-color;
+  }
+}
+
+/* Global Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Navbar User Styles */
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  span {
+    color: $secondary-color;
+    font-weight: 500;
+  }
+}
