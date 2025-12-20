@@ -1,5 +1,4 @@
-@import '../../../styles//variables.scss';
-
+@use "../../../styles//variables.scss" as *;
 
 /* Products Page Styles */
 .products-container {
@@ -152,7 +151,8 @@
   display: flex;
   flex-direction: column;
   margin-bottom: 12px;
-  input, select {
+  input,
+  select {
     color: $dark-text;
   }
 }
@@ -179,7 +179,6 @@
     transform: scale(1);
   }
 }
-
 
 /* Responsive */
 @media (max-width: $tablet) {

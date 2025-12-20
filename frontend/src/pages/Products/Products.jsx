@@ -11,6 +11,7 @@ export default function Products({ onLogout, user }) {
     namaProduk: "",
     kategori: "",
     harga: "",
+    modal: "",
     stok: "",
     status: "",
   });
@@ -18,7 +19,8 @@ export default function Products({ onLogout, user }) {
   const getStokBadge = (stok) => {
     if (stok > 100)
       return <span className="badge badge-success">Stok Tinggi</span>;
-    if (stok >= 50) return <span className="badge badge-info">Stok Normal</span>;
+    if (stok >= 50)
+      return <span className="badge badge-info">Stok Normal</span>;
     return <span className="badge badge-warning">Stok Rendah</span>;
   };
 
@@ -96,7 +98,8 @@ export default function Products({ onLogout, user }) {
                   <tr>
                     <th>Nama Produk</th>
                     <th>Kategori</th>
-                    <th>Harga (Rp/kg)</th>
+                    <th>Harga Jual (Rp/kg)</th>
+                    <th>Harga Beli</th>
                     <th>Stok (kg)</th>
                     <th>Status</th>
                   </tr>
@@ -109,6 +112,7 @@ export default function Products({ onLogout, user }) {
                       </td>
                       <td>{product.kategori}</td>
                       <td>{product.harga.toLocaleString("id-ID")}</td>
+                      <td>{product.modal.toLocaleString("id-ID")}</td>
                       <td>{product.stok}</td>
                       <td>{getStokBadge(product.stok)}</td>
                     </tr>
@@ -160,10 +164,20 @@ export default function Products({ onLogout, user }) {
                   <option value="Khusus">Khusus</option>
                 </select>
               </div>
+              <div className="form-group">
+                <label>Harga Beli</label>
+                <input
+                  type="number"
+                  name="modal"
+                  value={newProduct.modal}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Harga (Rp/kg)</label>
+                  <label>Harga Jual (Rp/kg)</label>
                   <input
                     type="number"
                     name="harga"

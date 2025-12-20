@@ -200,49 +200,6 @@ export default function Settings({ onLogout, user }) {
           </div>
 
           <div className="settings-card">
-            <h2>Preferensi Aplikasi</h2>
-            <div className="settings-info-section">
-              <div className="settings-info-row">
-                <strong>Bahasa:</strong>
-                <select
-                  style={{
-                    marginLeft: "10px",
-                    padding: "5px",
-                    borderRadius: "4px",
-                    border: "1px solid #ecf0f1",
-                  }}
-                >
-                  <option>Indonesia</option>
-                  <option>English</option>
-                </select>
-              </div>
-              <div className="settings-info-row">
-                <strong>Tema:</strong>
-                <select
-                  style={{
-                    marginLeft: "10px",
-                    padding: "5px",
-                    borderRadius: "4px",
-                    border: "1px solid #ecf0f1",
-                  }}
-                >
-                  <option>Terang</option>
-                  <option>Gelap</option>
-                </select>
-              </div>
-              <div className="settings-info-row">
-                <strong>Notifikasi:</strong>
-                <input
-                  type="checkbox"
-                  className="settings-checkbox"
-                  defaultChecked
-                />{" "}
-                Aktifkan notifikasi
-              </div>
-            </div>
-          </div>
-
-          <div className="settings-card">
             <h2>Keamanan</h2>
             <div className="settings-info-section">
               <div className="settings-info-row">
