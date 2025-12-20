@@ -13,6 +13,8 @@
   display: flex;
   flex-direction: column;
   background-color: $white;
+  animation: fadeIn 0.5s ease;
+
 }
 
 .sales-navbar {
@@ -37,7 +39,7 @@
 .sales-page-content {
   flex: 1;
   padding: 30px;
-  animation: fadeIn 0.5s ease;
+  // animation: fadeIn 0.5s ease;
   background-color: $white;
 }
 
@@ -100,6 +102,9 @@
 
 .sales-action-bar {
   margin-bottom: 20px;
+  margin-top: 20px;
+  margin-left:30px;
+  
 }
 
 .sales-card {
@@ -123,6 +128,7 @@
   border: 1px solid $light-border;
   overflow: hidden;
   box-shadow: $shadow-sm;
+  margin-left: 30px;
 }
 
 .sales-table {
@@ -214,6 +220,7 @@
 .summary input {
   width: 160px;
   text-align: right;
+  height: 20px;
 }
 
 .summary .minus {

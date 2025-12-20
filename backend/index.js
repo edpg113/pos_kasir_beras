@@ -85,12 +85,12 @@ app.post("/api/login", (req, res) => {
 
 // API POST Product
 app.post("/api/products", (req, res) => {
-  const { namaProduk, kategori, harga, stok, status } = req.body;
+  const { namaProduk, kategori, harga, modal, stok, status } = req.body;
   const query =
-    "INSERT INTO produk (namaProduk, kategori, harga, stok, status) VALUES (?, ?, ?, ?, ?)";
+    "INSERT INTO produk (namaProduk, kategori, harga, modal, stok, status) VALUES (?, ?, ?, ?, ?, ?)";
   db.query(
     query,
-    [namaProduk, kategori, harga, stok, status],
+    [namaProduk, kategori, harga, modal, stok, status],
     (err, result) => {
       if (err) {
         console.error("❌ Database error:", err);
@@ -116,65 +116,131 @@ app.get("/api/getproducts", (req, res) => {
 
 // API POST Transaksi
 app.post("/api/transaksi", (req, res) => {
-  const { kasir_id, pembeli, total, bayar, kembalian, items } = req.body;
+  const { pembeli, total, bayar, kembalian, items } = req.body;
 
   if (!items || items.length === 0) {
-    return res
-      .status(400)
-      .json({ message: "Item transaksi tidak boleh kosong!" });
+    return res.status(400).json({ message: "Item transaksi kosong!" });
   }
-  const insertTransaksi = `INSERT INTO transaksi (tanggal, kasir_id, pembeli, total, bayar, kembalian) VALUES (NOW(), ?, ?, ?, ?, ?)`;
 
-  db.query(
-    insertTransaksi,
-    [kasir_id, pembeli, total, bayar, kembalian],
-    (err, result) => {
-      if (err) {
-        console.error("❌ Gagal insert transaksi", err);
-        return res.status(500).json({ error: "Gagal menyimpan transaksi" });
-      }
+  // Mulai transaksi database untuk memastikan konsistensi data
+  db.beginTransaction((err) => {
+    if (err) {
+      console.error("❌ Error starting transaction:", err);
+      return res
+        .status(500)
+        .json({ message: "Gagal memulai transaksi database." });
+    }
 
-      const transaksiId = result.insertId;
+    const queryTransaksi =
+      "INSERT INTO transaksi (tanggal, pembeli, total, bayar, kembalian) VALUES (NOW(), ?, ?, ?, ?)";
 
-      const insertItems = items.map((item) => [
-        transaksiId,
-        item.product_id,
-        item.qty,
-        item.harga,
-        item.subtotal,
-      ]);
-
-      const queryItem = `INSERT INTO transaksi_item (transaksi_id, produk_id, qty, harga, subtotal) VALUES ?`;
-
-      db.query(queryItem, [insertItems], (err) => {
+    db.query(
+      queryTransaksi,
+      [pembeli, total, bayar, kembalian],
+      (err, result) => {
         if (err) {
-          console.error("❌ Gagal insert item transaksi", err);
-          return res.status(500).json({ error: "Gagal menyimpan transaksi" });
+          console.error("❌ Error insert transaksi:", err);
+          return db.rollback(() => res.status(500).json(err));
         }
 
-        // Update stok produk
-        items.forEach((item) => {
-          db.query("UPDATE produk SET stok = stok - ? WHERE id = ?", [
-            item.qty,
-            item.product_id,
-          ]);
-        });
+        const transaksiId = result.insertId;
+        const itemQuery = `INSERT INTO transaksi_detail (transaksi_id, produk_id, qty, harga, subtotal) VALUES ?`;
+        const itemValues = items.map((i) => [
+          transaksiId,
+          i.produk_id,
+          i.qty,
+          i.harga,
+          i.subtotal,
+        ]);
 
-        return res.status(201).json({
-          message: "Transaksi berhasil disimpan!",
-          transaksi_id: transaksiId,
+        db.query(itemQuery, [itemValues], (err2) => {
+          if (err2) {
+            console.error("❌ Error insert transaksi_detail:", err2);
+            return db.rollback(() => res.status(500).json(err2));
+          }
+
+          // ===== UPDATE STOK =====
+          const stokPromises = items.map((item) => {
+            return new Promise((resolve, reject) => {
+              // Update stok secara atomik untuk mencegah race condition
+              const updateStokQuery = `UPDATE produk SET stok = stok - ? WHERE id = ? AND stok >= ?`;
+              db.query(
+                updateStokQuery,
+                [item.qty, item.produk_id, item.qty],
+                (err, updateResult) => {
+                  if (err) return reject(err);
+                  // Jika tidak ada baris yang terpengaruh, berarti stok tidak cukup
+                  if (updateResult.affectedRows === 0) {
+                    return reject(
+                      new Error(
+                        `Stok tidak cukup untuk produk ID ${item.produk_id}`
+                      )
+                    );
+                  }
+                  resolve();
+                }
+              );
+            });
+          });
+
+          Promise.all(stokPromises)
+            .then(() => {
+              // Jika semua berhasil, commit transaksi
+              db.commit((commitErr) => {
+                if (commitErr) {
+                  return db.rollback(() => res.status(500).json(commitErr));
+                }
+                // Kirim satu respons sukses di akhir
+                res.json({
+                  message: "✅ Transaksi berhasil & stok diperbarui",
+                  transaksi_id: transaksiId,
+                });
+              });
+            })
+            .catch((error) => {
+              // Jika ada error (misal: stok tidak cukup), rollback transaksi
+              db.rollback(() => {
+                res.status(400).json({ message: error.message });
+              });
+            });
         });
+      }
+    );
+  });
+  for (const item of items) {
+    if (!item.produk_id || item.qty <= 0) {
+      return res.status(400).json({
+        message: "Data item transaksi tidak valid",
       });
     }
-  );
+  }
 });
 
-// API Get Transaksi
+// API GET TRANSAKSI
 app.get("/api/gettransaksi", (req, res) => {
-  const query = "SELECT * FROM transaksi";
+  const query = `
+    SELECT
+      t.id,
+      t.tanggal,
+      t.pembeli,
+      t.total,
+      t.bayar,
+      t.kembalian,
+      p.namaProduk,
+      td.qty,
+      td.harga,
+      td.subtotal
+    FROM transaksi t
+    JOIN transaksi_detail td ON td.transaksi_id = t.id
+    JOIN produk p ON p.id = td.produk_id
+    ORDER BY t.tanggal DESC
+  `;
+
   db.query(query, (err, result) => {
-    if (err)
-      return res.status(500).json({ error: "Database error", details: err });
+    if (err) {
+      console.error(err);
+      return res.status(500).json(err);
+    }
     res.json(result);
   });
 });
