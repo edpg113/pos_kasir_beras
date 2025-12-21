@@ -2,6 +2,8 @@ import { useState } from "react";
 import "./style/Login.scss";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import axios from "axios";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -13,6 +15,7 @@ export default function Register() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [toko, setToko] = useState([]);
 
   const handleChange = (e) => {
     setFormData({
@@ -26,7 +29,12 @@ export default function Register() {
     setError("");
 
     // Validasi input
-    if (!formData.nama || !formData.email || !formData.password || !formData.role) {
+    if (
+      !formData.nama ||
+      !formData.email ||
+      !formData.password ||
+      !formData.role
+    ) {
       setError("Semua field harus diisi!");
       return;
     }
@@ -35,7 +43,7 @@ export default function Register() {
 
     try {
       console.log("📤 Sending data:", formData);
-      
+
       const response = await fetch("http://localhost:3000/api/newusers", {
         method: "POST",
         headers: {
@@ -45,7 +53,7 @@ export default function Register() {
       });
 
       console.log("📥 Response status:", response.status);
-      
+
       const data = await response.json();
       console.log("📥 Response data:", data);
 
@@ -58,20 +66,39 @@ export default function Register() {
       }
     } catch (error) {
       console.error("❌ Error during registration:", error);
-      setError("❌ Server tidak merespon. Pastikan backend berjalan di http://localhost:3000");
+      setError(
+        "❌ Server tidak merespon. Pastikan backend berjalan di http://localhost:3000"
+      );
     } finally {
       setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchToko();
+  }, []);
+
+  const fetchToko = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/getsetting");
+      setToko(response.data);
+    } catch (err) {
+      console.log(err);
     }
   };
 
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1>🌾 Toko Beras</h1>
+        {toko.map((item) => (
+          <div key={item.id}>
+          <h1>🌾 {item.namaToko}</h1>
+          </div>
+        ))}
         <p className="login-subtitle">Sistem Manajemen Toko Beras</p>
         <form onSubmit={handleSubmit}>
           {error && <div className="error-message">{error}</div>}
-          
+
           <div className="form-group">
             <label>Nama Lengkap</label>
             <input

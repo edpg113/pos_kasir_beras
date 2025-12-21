@@ -1,5 +1,4 @@
-@use '../../../styles//variables.scss' as *;
-
+@use "../../../styles//variables.scss" as *;
 
 /* Sales Page Styles */
 .sales-container {
@@ -14,7 +13,6 @@
   flex-direction: column;
   background-color: $white;
   animation: fadeIn 0.5s ease;
-
 }
 
 .sales-navbar {
@@ -103,8 +101,7 @@
 .sales-action-bar {
   margin-bottom: 20px;
   margin-top: 20px;
-  margin-left:30px;
-  
+  margin-left: 30px;
 }
 
 .sales-card {
@@ -155,7 +152,11 @@
     border-bottom: 1px solid $light-border;
     color: $dark-text;
     font-size: 13px;
+    
   }
+  td:nth-child(2) {
+      font-weight: 700;
+    }
 
   tbody tr {
     transition: $transition;
@@ -216,6 +217,14 @@
   justify-content: space-between;
   margin-bottom: 8px;
 }
+.row input:nth-child(2) {
+  width: 180px;
+  height: 35px;
+  background-color: #f8f9fa;
+  border: 1px solid #ecf0f1;
+  color: $dark-text;
+  padding: 5px;
+}
 
 .summary input {
   width: 160px;
@@ -236,7 +245,6 @@
   color: #dc2626;
   font-size: 14px;
 }
-
 
 /* Responsive */
 @media (max-width: $tablet) {

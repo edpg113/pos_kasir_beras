@@ -83,34 +83,70 @@ app.post("/api/login", (req, res) => {
   });
 });
 
-// API POST Product
-app.post("/api/products", (req, res) => {
-  const { namaProduk, kategori, harga, modal, stok, status } = req.body;
-  const query =
-    "INSERT INTO produk (namaProduk, kategori, harga, modal, stok, status) VALUES (?, ?, ?, ?, ?, ?)";
-  db.query(
-    query,
-    [namaProduk, kategori, harga, modal, stok, status],
-    (err, result) => {
-      if (err) {
-        console.error("❌ Database error:", err);
-        return res.status(500).json({ error: "Database error", details: err });
-      }
-      console.log("✅ Product added with ID:", result.insertId);
-      return res
-        .status(200)
-        .json({ message: "Produk berhasil ditambahkan", result });
+// API GET DATA DASHBOARD STATISTIK
+app.get("/api/dashboard-stats", (req, res) => {
+  const query = `
+  SELECT
+  (SELECT IFNULL(SUM(total),0) FROM transaksi) AS total_penjualan,
+  (SELECT IFNULL(SUM(qty),0) FROM transaksi_detail) AS produk_terjual,
+  (SELECT IFNULL(SUM(stok), 0) FROM produk) AS stok_beras
+  `;
+
+  db.query(query, (err, result) => {
+    if (err) {
+      console.error("❌ Dashboard stats error:", err);
+      return res.status(500).json(err);
     }
-  );
+    res.json(result[0]);
+  });
 });
 
-// API Get Products
+// API POST Product
+app.post("/api/products", (req, res) => {
+  const { namaProduk, kategori, harga, modal, stok } = req.body;
+  const query =
+    "INSERT INTO produk (namaProduk, kategori, harga, modal, stok) VALUES (?, ?, ?, ?, ?)";
+  db.query(query, [namaProduk, kategori, harga, modal, stok], (err, result) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ error: "Database error", details: err });
+    }
+    console.log("✅ Product added with ID:", result.insertId);
+    return res
+      .status(200)
+      .json({ message: "Produk berhasil ditambahkan", result });
+  });
+});
+
+// API GET Products
 app.get("/api/getproducts", (req, res) => {
   const query = "SELECT * FROM produk";
   db.query(query, (err, result) => {
     if (err)
       return res.status(500).json({ error: "Database error", details: err });
     res.json(result);
+  });
+});
+
+// API EDIT Products
+app.put("/api/editproduct/:id", (req, res) => {
+  const { id } = req.params;
+  const { namaProduk, kategori, harga, modal, stok } = req.body;
+  const query =
+    "UPDATE produk SET namaProduk = ?, kategori = ?, harga = ?, modal = ?, stok = ? WHERE id = ?";
+  db.query(query, [namaProduk, kategori, harga, modal, stok, id], (err) => {
+    if (err) return res.status(500).json("Gagal mengubah produk", err);
+    res.json("Produk berhasil di ubah");
+  });
+});
+
+// API DELETE Products
+app.delete("/api/deleteproduct/:id", (req, res) => {
+  const { id } = req.params;
+  const query = "DELETE FROM produk WHERE id = ?";
+  db.query(query, [id], (err) => {
+    if (err) return res.status(500).json("Gagal menghapus produk", err);
+    res.json("Berhasil menghapus produk");
   });
 });
 
@@ -219,22 +255,46 @@ app.post("/api/transaksi", (req, res) => {
 // API GET TRANSAKSI
 app.get("/api/gettransaksi", (req, res) => {
   const query = `
-    SELECT
-      t.id,
-      t.tanggal,
-      t.pembeli,
-      t.total,
-      t.bayar,
-      t.kembalian,
-      p.namaProduk,
-      td.qty,
-      td.harga,
-      td.subtotal
-    FROM transaksi t
-    JOIN transaksi_detail td ON td.transaksi_id = t.id
-    JOIN produk p ON p.id = td.produk_id
-    ORDER BY t.tanggal DESC
+  SELECT
+  td.id AS transaksi_detail_id,
+  t.id AS transaksi_id,
+  t.tanggal,
+  t.pembeli,
+  t.total,
+  t.bayar,
+  t.kembalian,
+  p.namaProduk,
+  td.qty,
+  td.harga,
+  td.subtotal
+FROM transaksi_detail td
+JOIN transaksi t ON td.transaksi_id = t.id
+JOIN produk p ON p.id = td.produk_id
+ORDER BY t.tanggal DESC
   `;
+
+  db.query(query, (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json(err);
+    }
+    res.json(result);
+  });
+});
+
+// API GET Inventory
+app.get("/api/inventory", (req, res) => {
+  const query = `
+      SELECT
+      id,
+      namaProduk AS produk,
+      stok,
+      min_stok AS minStok,
+      reorder_qty AS reorder,
+      updated_at AS lastUpdate
+      FROM produk
+      ORDER BY namaProduk ASC
+      `;
 
   db.query(query, (err, result) => {
     if (err) {
@@ -280,6 +340,49 @@ app.get("/api/getsetting", (req, res) => {
         .status(500)
         .json({ error: "Database error", details: err.message });
     res.json(result);
+  });
+});
+
+// API Change Password
+app.put("/api/user/password/:id", (req, res) => {
+  const { id } = req.params;
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    return res
+      .status(400)
+      .json({ error: "Password lama dan baru harus diisi!" });
+  }
+
+  // Ambil password saat ini dari database
+  const getUserQuery = "SELECT password FROM user WHERE id = ?";
+  db.query(getUserQuery, [id], (err, result) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "User tidak ditemukan" });
+    }
+
+    const currentPassword = result[0].password;
+
+    // Verifikasi password lama
+    if (oldPassword !== currentPassword) {
+      return res.status(401).json({ error: "Password lama salah!" });
+    }
+
+    // Update ke password baru
+    const updatePasswordQuery = "UPDATE user SET password = ? WHERE id = ?";
+    db.query(updatePasswordQuery, [newPassword, id], (updateErr) => {
+      if (updateErr) {
+        console.error("❌ Database error on update:", updateErr);
+        return res.status(500).json({ error: "Gagal mengubah password" });
+      }
+
+      res.json({ message: "Password berhasil diubah" });
+    });
   });
 });
 

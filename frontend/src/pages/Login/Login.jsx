@@ -1,10 +1,11 @@
 import "./style/Login.scss";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function Login() {
-  // const [isLogin, setIsLogin] = useState(true);
+  const [toko, setToko] = useState([]);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
@@ -25,12 +26,12 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    
+
     if (!formData.email || !formData.password) {
       setError("Email dan password harus diisi!");
       return;
     }
-    
+
     setLoading(true);
     try {
       console.log("📤 Sending login data:", formData);
@@ -41,10 +42,10 @@ export default function Login() {
         },
         body: JSON.stringify(formData),
       });
-      
+
       const data = await response.json();
       console.log("📥 Received response:", data);
-      
+
       if (response.ok) {
         console.log("✅ Login successful");
         alert("✅ Login berhasil!");
@@ -62,10 +63,26 @@ export default function Login() {
     }
   };
 
+  // GET nama toko from API Setting
+  useEffect(() => {
+    fetchToko();
+  }, []);
+
+  const fetchToko = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/getsetting");
+      setToko(response.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1>🌾 Toko Beras</h1>
+        {toko.map((item) => (
+          <h1>🌾 {item.namaToko}</h1>
+        ))}
         <p className="login-subtitle">Sistem Manajemen Toko Beras</p>
 
         <form onSubmit={handleSubmit} id="login-form">
@@ -94,9 +111,20 @@ export default function Login() {
           </div>
         </form>
 
-        {error && <div style={{ color: "#e74c3c", marginBottom: "15px", fontSize: "14px" }}>{error}</div>}
-        
-        <button type="submit" form="login-form" disabled={loading} className="btn btn-primary">
+        {error && (
+          <div
+            style={{ color: "#e74c3c", marginBottom: "15px", fontSize: "14px" }}
+          >
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          form="login-form"
+          disabled={loading}
+          className="btn btn-primary"
+        >
           {loading ? "Memproses..." : "Masuk"}
         </button>
         <Link to="/register">Belum punya akun ? Register</Link>
