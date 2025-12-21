@@ -1,65 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar";
 import "./style/Inventory.scss";
 import Navbar from "../../components/Navbar";
+import axios from "axios";
 
 export default function Inventory({ onLogout, user }) {
-  const [inventory] = useState([
-    {
-      id: 1,
-      produk: "Beras Putih Premium",
-      stok: 150,
-      minStok: 50,
-      reorder: 100,
-      lokasi: "Rak A1",
-      lastUpdate: "2025-12-09",
-    },
-    {
-      id: 2,
-      produk: "Beras Merah Organik",
-      stok: 85,
-      minStok: 40,
-      reorder: 80,
-      lokasi: "Rak B2",
-      lastUpdate: "2025-12-08",
-    },
-    {
-      id: 3,
-      produk: "Beras Jasmine",
-      stok: 120,
-      minStok: 50,
-      reorder: 100,
-      lokasi: "Rak A3",
-      lastUpdate: "2025-12-09",
-    },
-    {
-      id: 4,
-      produk: "Beras Ketan",
-      stok: 60,
-      minStok: 30,
-      reorder: 70,
-      lokasi: "Rak C1",
-      lastUpdate: "2025-12-07",
-    },
-    {
-      id: 5,
-      produk: "Beras Basmati",
-      stok: 45,
-      minStok: 30,
-      reorder: 60,
-      lokasi: "Rak B3",
-      lastUpdate: "2025-12-09",
-    },
-    {
-      id: 6,
-      produk: "Beras Putih Standar",
-      stok: 200,
-      minStok: 80,
-      reorder: 150,
-      lokasi: "Rak A2",
-      lastUpdate: "2025-12-09",
-    },
-  ]);
+  const [inventory, setInventory] = useState([]);
+
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
+  const fetchInventory = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/inventory");
+      setInventory(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const getStokStatus = (stok, minStok) => {
     if (stok <= minStok)
@@ -146,7 +105,6 @@ export default function Inventory({ onLogout, user }) {
                       <td>{item.stok}</td>
                       <td>{item.minStok}</td>
                       <td>{item.reorder}</td>
-                      <td>{item.lokasi}</td>
                       <td>{getStokStatus(item.stok, item.minStok)}</td>
                       <td>{item.lastUpdate}</td>
                     </tr>

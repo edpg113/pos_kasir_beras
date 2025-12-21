@@ -120,7 +120,7 @@ export default function Sales({ onLogout, user }) {
               </thead>
               <tbody>
                 {transaksi.map((item) => (
-                  <tr key={item.id}>
+                  <tr key={item.transaksi_detail_id}>
                     <td>
                       {new Date(item.tanggal).toLocaleDateString("id-ID", {
                         day: "2-digit",

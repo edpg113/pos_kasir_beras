@@ -1,59 +1,40 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import "./style/Dashboard.scss";
 import Navbar from "../../components/Navbar";
+import axios from "axios";
 
 export default function Dashboard({ onLogout, user }) {
-  const dashboardStats = [
-    { title: "Total Penjualan", value: "2.450.000", unit: "Rp" },
-    { title: "Produk Terjual", value: "145", unit: "kg" },
-    { title: "Stok Beras", value: "1.200", unit: "kg" },
-    { title: "Pelanggan", value: "87", unit: "orang" },
-  ];
+  const [transaksi, setTrasaksi] = useState([]);
+  const [stats, setStats] = useState({
+    total_penjualan: 0,
+    produk_terjual: 0,
+    stok_beras: 0,
+  });
 
-  const recentSales = [
-    {
-      id: 1,
-      tanggal: "2025-12-09",
-      produk: "Beras Putih Premium",
-      qty: 10,
-      total: 85000,
-    },
-    {
-      id: 2,
-      tanggal: "2025-12-09",
-      produk: "Beras Merah Organik",
-      qty: 5,
-      total: 55000,
-    },
-    {
-      id: 3,
-      tanggal: "2025-12-08",
-      produk: "Beras Jasmine",
-      qty: 15,
-      total: 135000,
-    },
-    {
-      id: 4,
-      tanggal: "2025-12-08",
-      produk: "Beras Ketan",
-      qty: 8,
-      total: 64000,
-    },
-    {
-      id: 5,
-      tanggal: "2025-12-07",
-      produk: "Beras Putih Premium",
-      qty: 20,
-      total: 170000,
-    },
-  ];
+  useEffect(() => {
+    fetchStats();
+    fetchTransaksi();
+  }, []);
+
+  const fetchTransaksi = async () => {
+    axios
+      .get("http://localhost:3000/api/gettransaksi")
+      .then((res) => setTrasaksi(res.data))
+      .catch((err) => console.error(err));
+  };
+
+  const fetchStats = async () => {
+    axios
+      .get("http://localhost:3000/api/dashboard-stats")
+      .then((res) => setStats(res.data))
+      .catch((err) => console.error(err));
+  };
 
   return (
     <div className="dashboard-container">
       <Sidebar onLogout={onLogout} user={user} />
       <div className="dashboard-content-wrapper">
-        
         <Navbar title="Dashboard" onLogout={onLogout} user={user} />
 
         <div className="dashboard-page-content">
@@ -63,13 +44,24 @@ export default function Dashboard({ onLogout, user }) {
           </div>
 
           <div className="dashboard-stats-grid">
-            {dashboardStats.map((stat, index) => (
-              <div key={index} className="dashboard-stat-card">
-                <h3>{stat.title}</h3>
-                <div className="value">{stat.value}</div>
-                <div className="unit">{stat.unit}</div>
+            <div className="dashboard-stats-grid">
+              <div className="dashboard-stat-card">
+                <h3>Total Penjualan</h3>
+                <div className="value">
+                  Rp {Number(stats.total_penjualan).toLocaleString("id-ID")}
+                </div>
               </div>
-            ))}
+
+              <div className="dashboard-stat-card">
+                <h3>Produk Terjual</h3>
+                <div className="value">{stats.produk_terjual} kg</div>
+              </div>
+
+              <div className="dashboard-stat-card">
+                <h3>Stok Beras</h3>
+                <div className="value">{stats.stok_beras} kg</div>
+              </div>
+            </div>
           </div>
 
           <div className="dashboard-card">
@@ -85,10 +77,18 @@ export default function Dashboard({ onLogout, user }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentSales.map((sale) => (
+                  {transaksi.map((sale) => (
                     <tr key={sale.id}>
-                      <td>{sale.tanggal}</td>
-                      <td>{sale.produk}</td>
+                      <td>
+                        {new Date(sale.tanggal).toLocaleString("id-ID", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </td>
+                      <td>{sale.namaProduk}</td>
                       <td>{sale.qty}</td>
                       <td>{sale.total.toLocaleString("id-ID")}</td>
                     </tr>
