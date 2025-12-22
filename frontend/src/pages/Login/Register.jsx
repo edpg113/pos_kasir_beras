@@ -142,7 +142,7 @@ export default function Register() {
           </div>
 
           <div className="login-toggle-form">
-            <button type="submit" disabled={loading}>
+            <button type="submit" disabled={loading} className="btn btn-primary">
               {loading ? "Membuat Akun..." : "Buat Akun"}
             </button>
           </div>

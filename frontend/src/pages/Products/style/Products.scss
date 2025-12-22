@@ -46,7 +46,7 @@
   h1 {
     color: $secondary-color;
     margin-bottom: 5px;
-    font-size: 28px;
+    font-size: 26px; // Adjusted
   }
 
   p {
@@ -55,8 +55,77 @@
   }
 }
 
+.products-layout {
+  display: flex;
+  gap: 30px;
+}
+
+.products-main-column {
+  flex: 3; // Takes up more space
+}
+
+.products-side-column {
+  flex: 1; // Takes up less space
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .products-action-bar {
   margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    color: $secondary-color;
+  }
+  .btn {
+    width: auto;
+  }
+}
+
+.category-card {
+  background-color: $light-bg;
+  border-radius: $border-radius;
+  padding: 20px;
+  box-shadow: $shadow-sm;
+  border: 1px solid $light-border;
+  h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: $secondary-color;
+  }
+}
+
+.category-form .form-group {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-bottom: 0;
+  input {
+    flex: 1;
+  }
+  .btn {
+    padding: 0 15px;
+  }
+}
+
+.category-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  li {
+    padding: 10px;
+    border-bottom: 1px solid $light-border;
+    font-size: 14px;
+    color: $dark-text;
+    &:last-child {
+      border-bottom: none;
+    }
+  }
 }
 
 .products-card {
@@ -86,6 +155,7 @@
   }
 
   th {
+    width: 200px;
     padding: 15px;
     text-align: left;
     font-weight: 600;
@@ -107,6 +177,12 @@
 
     &:hover {
       background-color: #f0f3f7;
+    }
+    td {
+      button {
+        background-color: transparent;
+        border: 1px solid #bdc3c7;
+      }
     }
   }
 }
@@ -145,7 +221,8 @@
 
 .modal-body {
   margin-top: 15px;
-  select, input {
+  select,
+  input {
     background-color: #f8f9fa;
     border: 1px solid #ecf0f1;
     color: $dark-text;
@@ -180,14 +257,17 @@
     opacity: 0;
     transform: scale(0.95);
   }
-  to {
-    opacity: 1;
+  to {    opacity: 1;
     transform: scale(1);
   }
 }
 
 /* Responsive */
 @media (max-width: $tablet) {
+  .products-layout {
+    flex-direction: column;
+  }
+
   .products-navbar {
     flex-direction: column;
     gap: 10px;

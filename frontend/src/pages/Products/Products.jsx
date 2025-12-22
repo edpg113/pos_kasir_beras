@@ -6,8 +6,12 @@ import axios from "axios";
 
 export default function Products({ onLogout, user }) {
   const [products, setProducts] = useState([]);
+  const [newCategories, setNewCategories] = useState({
+    category: "",
+  });
+  const [getcategory, setGetCategory] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null); // State untuk produk yang diedit & visibilitas modal
+  const [editingProduct, setEditingProduct] = useState(null);
   const [newProduct, setNewProduct] = useState({
     namaProduk: "",
     kategori: "",
@@ -32,7 +36,47 @@ export default function Products({ onLogout, user }) {
   };
 
   // =============================
-  // ADD PRODUCT
+  // CATEGORY HANDLERS
+  // =============================
+  const dataCategories = {
+    category: newCategories,
+  };
+
+  const handleAddCategories = async (e) => {
+    e.preventDefault();
+
+    try {
+      await axios.post(
+        "http://localhost:3000/api/addcategories",
+        dataCategories,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      alert("Berhasil menambahkan kategori");
+      setNewCategories("");
+      fetchCategories();
+    } catch (err) {
+      console.log(err);
+      alert("Gagal menambahkan kategori");
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      // Assuming an endpoint to get categories exists
+      const response = await axios.get("http://localhost:3000/api/categories");
+      console.log("📥 Fetched products:", response.data);
+      setGetCategory(response.data);
+    } catch (error) {
+      console.error("❌ Error fetching categories:", error);
+    }
+  };
+
+  // =============================
+  // PRODUCT HANDLERS
   // =============================
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,9 +107,6 @@ export default function Products({ onLogout, user }) {
     }
   };
 
-  // =============================
-  // FETCH PRODUCT
-  // =============================
   const fetchProducts = async () => {
     try {
       const response = await axios.get("http://localhost:3000/api/getproducts");
@@ -78,11 +119,9 @@ export default function Products({ onLogout, user }) {
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
-  // =============================
-  // EDIT PRODUCT HANDLERS
-  // =============================
   const handleEditClick = (product) => {
     setEditingProduct(product);
   };
@@ -110,16 +149,13 @@ export default function Products({ onLogout, user }) {
       console.log("🔄 Product updated response:", response);
       alert("✅ Produk berhasil diperbarui!");
       fetchProducts();
-      setEditingProduct(null); // Tutup modal setelah berhasil
+      setEditingProduct(null);
     } catch (error) {
       console.log("❌ Error updating product:", error);
       alert("❌ Gagal memperbarui produk!");
     }
   };
 
-  // =============================
-  // DELETE PRODUCT HANDLERS
-  // =============================
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:3000/api/deleteproduct/${id}`);
@@ -140,58 +176,92 @@ export default function Products({ onLogout, user }) {
 
         <div className="products-page-content">
           <div className="products-page-header">
-            <h1>Daftar Produk Beras</h1>
-            <p>Kelola semua produk beras yang tersedia di toko Anda</p>
+            <h1>Manajemen Produk & Kategori</h1>
+            <p>Kelola semua produk beras dan kategori yang tersedia</p>
           </div>
 
-          <div className="products-action-bar">
-            <button
-              className="btn btn-primary"
-              style={{ width: "auto" }}
-              onClick={() => setShowModal(true)}
-            >
-              + Tambah Produk Baru
-            </button>
-          </div>
+          <div className="products-layout">
+            {/* Left Column: Product List */}
+            <div className="products-main-column">
+              <div className="products-action-bar">
+                <h3>Daftar Produk</h3>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setShowModal(true)}
+                >
+                  + Tambah Produk
+                </button>
+              </div>
+              <div className="products-card">
+                <div className="products-table-container">
+                  <table className="products-table">
+                    <thead>
+                      <tr>
+                        <th>Nama Produk</th>
+                        <th>Kategori</th>
+                        <th>Harga Jual (Rp/kg)</th>
+                        <th>Harga Beli</th>
+                        <th>Stok (kg)</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {products.map((product) => (
+                        <tr key={product.id}>
+                          <td>
+                            <strong>{product.namaProduk}</strong>
+                          </td>
+                          <td>{product.kategori}</td>
+                          <td>{product.harga.toLocaleString("id-ID")}</td>
+                          <td>{product.modal.toLocaleString("id-ID")}</td>
+                          <td>{product.stok}</td>
+                          <td>{getStokBadge(product.stok)}</td>
+                          <td>
+                            <button onClick={() => handleEditClick(product)}>
+                              ✏️
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
 
-          <div className="products-card">
-            <div className="products-table-container">
-              <table className="products-table">
-                <thead>
-                  <tr>
-                    <th>Nama Produk</th>
-                    <th>Kategori</th>
-                    <th>Harga Jual (Rp/kg)</th>
-                    <th>Harga Beli</th>
-                    <th>Stok (kg)</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.map((product) => (
-                    <tr key={product.id}>
-                      <td>
-                        <strong>{product.namaProduk}</strong>
-                      </td>
-                      <td>{product.kategori}</td>
-                      <td>{product.harga.toLocaleString("id-ID")}</td>
-                      <td>{product.modal.toLocaleString("id-ID")}</td>
-                      <td>{product.stok}</td>
-                      <td>{getStokBadge(product.stok)}</td>
-                      <td>
-                        <button onClick={() => handleEditClick(product)}>
-                          ✏️
-                        </button>
-                      </td>
-                    </tr>
+            {/* Right Column: Category Management */}
+            <div className="products-side-column">
+              <div className="category-card">
+                <h3>Buat Kategori Baru</h3>
+                <form onSubmit={handleAddCategories} className="category-form">
+                  <div className="form-group">
+                    <input
+                      type="text"
+                      placeholder="Nama Kategori"
+                      value={newCategories.kategori}
+                      onChange={(e) => setNewCategories(e.target.value)}
+                      required
+                    />
+                    <button type="submit" className="btn btn-primary">
+                      +
+                    </button>
+                  </div>
+                </form>
+              </div>
+              <div className="category-card">
+                <h3>Daftar Kategori</h3>
+                <ul className="category-list">
+                  {getcategory.map((item) => (
+                    <li key={item.id}>{item.kategori}</li>
                   ))}
-                </tbody>
-              </table>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-card">
@@ -204,7 +274,6 @@ export default function Products({ onLogout, user }) {
                 ✖
               </button>
             </div>
-
             <form onSubmit={handleSubmit} className="modal-body">
               <div className="form-group">
                 <label>Nama Produk</label>
@@ -216,7 +285,6 @@ export default function Products({ onLogout, user }) {
                   required
                 />
               </div>
-
               <div className="form-group">
                 <label>Kategori</label>
                 <select
@@ -225,12 +293,12 @@ export default function Products({ onLogout, user }) {
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Pilih Kategori</option>
-                  <option value="Premium">Premium</option>
-                  <option value="Standar">Standar</option>
-                  <option value="Organik">Organik</option>
-                  <option value="Import">Import</option>
-                  <option value="Khusus">Khusus</option>
+                  <option value="">-- Pilih Kategori --</option>
+                  {getcategory.map((item) => (
+                    <option key={item.id} value={item.kategori}>
+                      {item.kategori}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="form-group">
@@ -243,7 +311,6 @@ export default function Products({ onLogout, user }) {
                   required
                 />
               </div>
-
               <div className="form-row">
                 <div className="form-group">
                   <label>Harga Jual (Rp/kg)</label>
@@ -255,7 +322,6 @@ export default function Products({ onLogout, user }) {
                     required
                   />
                 </div>
-
                 <div className="form-group">
                   <label>Stok (kg)</label>
                   <input
@@ -267,7 +333,6 @@ export default function Products({ onLogout, user }) {
                   />
                 </div>
               </div>
-
               <div className="modal-footer">
                 <button
                   type="button"
@@ -294,7 +359,6 @@ export default function Products({ onLogout, user }) {
                 ✖
               </button>
             </div>
-
             <form onSubmit={handleUpdateProduct} className="modal-body">
               <div className="form-group">
                 <label>Nama Produk</label>
@@ -306,7 +370,6 @@ export default function Products({ onLogout, user }) {
                   required
                 />
               </div>
-
               <div className="form-group">
                 <label>Kategori</label>
                 <select
@@ -315,12 +378,12 @@ export default function Products({ onLogout, user }) {
                   onChange={handleEditChange}
                   required
                 >
-                  <option value="">Pilih Kategori</option>
-                  <option value="Premium">Premium</option>
-                  <option value="Standar">Standar</option>
-                  <option value="Organik">Organik</option>
-                  <option value="Import">Import</option>
-                  <option value="Khusus">Khusus</option>
+                  <option value="">-- Pilih Kategori --</option>
+                  {getcategory.map((item) => (
+                    <option key={item.id} value={item.kategori}>
+                      {item.kategori}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="form-group">
@@ -333,7 +396,6 @@ export default function Products({ onLogout, user }) {
                   required
                 />
               </div>
-
               <div className="form-row">
                 <div className="form-group">
                   <label>Harga Jual (Rp/kg)</label>
@@ -345,7 +407,6 @@ export default function Products({ onLogout, user }) {
                     required
                   />
                 </div>
-
                 <div className="form-group">
                   <label>Stok (kg)</label>
                   <input
@@ -357,7 +418,6 @@ export default function Products({ onLogout, user }) {
                   />
                 </div>
               </div>
-
               <div className="modal-footer">
                 <button
                   type="button"
@@ -366,7 +426,11 @@ export default function Products({ onLogout, user }) {
                 >
                   Batal
                 </button>
-                <button type="submit" className="btn btn-logout" onClick={() => handleDelete(editingProduct.id)}>
+                <button
+                  type="button"
+                  className="btn btn-logout"
+                  onClick={() => handleDelete(editingProduct.id)}
+                >
                   Hapus Produk
                 </button>
                 <button type="submit" className="btn btn-primary">
