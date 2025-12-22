@@ -305,6 +305,78 @@ app.get("/api/inventory", (req, res) => {
   });
 });
 
+// API ADD STOCK to Inventory
+app.patch("/api/inventory/:id/add-stock", (req, res) => {
+  const { id } = req.params;
+  const { quantity, supplier } = req.body;
+
+  const qty = parseInt(quantity, 10);
+
+  if (!qty || qty <= 0) {
+    return res
+      .status(400)
+      .json({ message: "Jumlah stok tambahan harus angka positif." });
+  }
+  if (!supplier) {
+    return res.status(400).json({ message: "Nama supplier harus diisi." });
+  }
+
+  db.beginTransaction((err) => {
+    if (err) {
+      console.error("❌ Error starting transaction:", err);
+      return res
+        .status(500)
+        .json({ message: "Gagal memulai transaksi database." });
+    }
+
+    // 1. Update stok di tabel produk
+    const updateStokQuery = `
+      UPDATE produk
+      SET stok = stok + ?, updated_at = NOW()
+      WHERE id = ?
+    `;
+    db.query(updateStokQuery, [qty, id], (updateErr, result) => {
+      if (updateErr) {
+        console.error("❌ DB error on stock update:", updateErr);
+        return db.rollback(() => {
+          res.status(500).json({ message: "Gagal memperbarui stok produk." });
+        });
+      }
+
+      if (result.affectedRows === 0) {
+        return db.rollback(() => {
+          res.status(404).json({ message: "Produk tidak ditemukan." });
+        });
+      }
+
+      // 2. Catat riwayat di tabel stok_masuk
+      const logStockQuery = `
+        INSERT INTO stok_masuk (produk_id, supplier, qty, tanggal)
+        VALUES (?, ?, ?, NOW())
+      `;
+      db.query(logStockQuery, [id, supplier, qty], (logErr) => {
+        if (logErr) {
+          console.error("❌ DB error on logging stock:", logErr);
+          return db.rollback(() => {
+            res.status(500).json({ message: "Gagal mencatat riwayat stok." });
+          });
+        }
+
+        // Jika semua berhasil, commit transaksi
+        db.commit((commitErr) => {
+          if (commitErr) {
+            console.error("❌ DB error on commit:", commitErr);
+            return db.rollback(() => {
+              res.status(500).json({ message: "Gagal menyelesaikan transaksi." });
+            });
+          }
+          res.json({ message: "Stok berhasil ditambahkan dan dicatat." });
+        });
+      });
+    });
+  });
+});
+
 // API Post Setting
 app.post("/api/setting/:id", (req, res) => {
   const { id } = req.params;
