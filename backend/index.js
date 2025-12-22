@@ -150,6 +150,32 @@ app.delete("/api/deleteproduct/:id", (req, res) => {
   });
 });
 
+// API POST Kategori
+app.post("/api/addcategories", (req, res) => {
+  const { category } = req.body;
+  const query = "INSERT INTO kategori (kategori) VALUES (?)";
+  db.query(query, [category], (err, result) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ error: "Database error", details: err });
+    }
+    console.log("✅ Category added :", result.insertId);
+    return res
+      .status(200)
+      .json({ message: "Category berhasil ditambahkan", result });
+  });
+});
+
+// API GET Kategori
+app.get("/api/categories", (req, res) => {
+  const query = "SELECT * FROM kategori";
+  db.query(query, (err, result) => {
+    if (err)
+      return res.status(500).json({ message: "Gagal menambahkan kategori" });
+    res.json(result);
+  });
+});
+
 // API POST Transaksi
 app.post("/api/transaksi", (req, res) => {
   const { pembeli, total, bayar, kembalian, items } = req.body;
@@ -286,14 +312,15 @@ ORDER BY t.tanggal DESC
 app.get("/api/inventory", (req, res) => {
   const query = `
       SELECT
-      id,
-      namaProduk AS produk,
-      stok,
-      min_stok AS minStok,
-      reorder_qty AS reorder,
-      updated_at AS lastUpdate
-      FROM produk
-      ORDER BY namaProduk ASC
+      p.id,
+      p.namaProduk AS produk,
+      p.stok,
+      p.min_stok AS minStok,
+      p.reorder_qty AS reorder,
+      p.updated_at AS lastUpdate,
+      (SELECT supplier FROM stok_masuk WHERE produk_id = p.id ORDER BY tanggal DESC LIMIT 1) AS supplier
+      FROM produk p
+      ORDER BY p.namaProduk ASC
       `;
 
   db.query(query, (err, result) => {
@@ -367,7 +394,9 @@ app.patch("/api/inventory/:id/add-stock", (req, res) => {
           if (commitErr) {
             console.error("❌ DB error on commit:", commitErr);
             return db.rollback(() => {
-              res.status(500).json({ message: "Gagal menyelesaikan transaksi." });
+              res
+                .status(500)
+                .json({ message: "Gagal menyelesaikan transaksi." });
             });
           }
           res.json({ message: "Stok berhasil ditambahkan dan dicatat." });

@@ -165,6 +165,7 @@ export default function Inventory({ onLogout, user }) {
                     <th>Qty Reorder (kg)</th>
                     <th>Status</th>
                     <th>Update Terakhir</th>
+                    <th>Supplier</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -186,6 +187,7 @@ export default function Inventory({ onLogout, user }) {
                           minute: "2-digit",
                         })}
                       </td>
+                      <td>{item.supplier}</td>
                     </tr>
                   ))}
                 </tbody>
