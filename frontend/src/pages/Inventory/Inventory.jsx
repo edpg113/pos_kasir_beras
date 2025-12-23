@@ -17,10 +17,9 @@ export default function Inventory({ onLogout, user }) {
   });
   const [selectedItemCurrentStock, setSelectedItemCurrentStock] = useState(0);
 
-  useEffect(() => {
-    fetchInventory();
-  }, []);
-
+  // =============================
+  // HANDLE FETCH STOCK
+  // =============================
   const fetchInventory = async () => {
     try {
       const response = await axios.get("http://localhost:3000/api/inventory");
@@ -29,6 +28,10 @@ export default function Inventory({ onLogout, user }) {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    fetchInventory();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -55,6 +58,9 @@ export default function Inventory({ onLogout, user }) {
     }
   };
 
+  // =============================
+  // HANDLE ADD STOK HANDLERS
+  // =============================
   const handleAddStock = async (e) => {
     e.preventDefault();
     try {
@@ -88,6 +94,9 @@ export default function Inventory({ onLogout, user }) {
     setSelectedItemCurrentStock(0);
   };
 
+  // =============================
+  // HANDLE STATUS STOK HANDLERS
+  // =============================
   const getStokStatus = (stok, minStok) => {
     if (stok <= minStok)
       return <span className="badge badge-danger">Perlu Reorder</span>;

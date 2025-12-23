@@ -12,6 +12,8 @@
   display: flex;
   flex-direction: column;
   background-color: $white;
+  margin-top: 5%;
+
 }
 
 .products-navbar {
@@ -125,6 +127,15 @@
     &:last-child {
       border-bottom: none;
     }
+    span {
+      padding: 0 5px;
+    }
+    button {
+      background-color: transparent;
+      width: 10px;
+      border: none;
+      outline: none;
+    }
   }
 }
 
@@ -166,7 +177,7 @@
   }
 
   td {
-    padding: 15px;
+    padding: 10px;
     border-bottom: 1px solid $light-border;
     color: $dark-text;
     font-size: 13px;
@@ -185,6 +196,7 @@
       }
     }
   }
+ 
 }
 
 .modal-overlay {
@@ -217,6 +229,7 @@
   border: none;
   font-size: 18px;
   cursor: pointer;
+  color: black;
 }
 
 .modal-body {

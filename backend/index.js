@@ -176,6 +176,27 @@ app.get("/api/categories", (req, res) => {
   });
 });
 
+// API EDIT Kategori
+app.put("/api/editcategories/:id", (req, res) => {
+  const {id} = req.params;
+  const {kategori} = req.body;
+  const query = "UPDATE kategori SET kategori = ? WHERE id = ?";
+  db.query(query, [kategori, id], (err) => {
+    if (err) return res.status(500).json("Gagal mengubah kategori", err);
+    res.json("Kategori berhasil di ubah");
+  })
+})
+
+// API DELETE Kategori
+app.delete("/api/deletecategories/:id", (req, res) => {
+  const { id } = req.params;
+  const query = "DELETE FROM kategori WHERE id = ?";
+  db.query(query, [id], (err) => {
+    if (err) return res.status(500).json("Gagal menghapus kategori", err);
+    res.json("Berhasil menghapus kategori");
+  });
+});
+
 // API POST Transaksi
 app.post("/api/transaksi", (req, res) => {
   const { pembeli, total, bayar, kembalian, items } = req.body;

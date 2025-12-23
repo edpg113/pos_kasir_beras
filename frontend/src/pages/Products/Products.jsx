@@ -10,6 +10,8 @@ export default function Products({ onLogout, user }) {
     category: "",
   });
   const [getcategory, setGetCategory] = useState([]);
+  const [modalCategory, setModalCategory] = useState(false);
+  const [editCategory, setEditCategory] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [newProduct, setNewProduct] = useState({
@@ -72,6 +74,43 @@ export default function Products({ onLogout, user }) {
       setGetCategory(response.data);
     } catch (error) {
       console.error("❌ Error fetching categories:", error);
+    }
+  };
+
+  // =============================
+  // EDIT CATEGORY HANDLERS
+  // =============================
+
+  const handleEditCategory = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/api/editcategories/${editCategory.id}`,
+        editCategory
+      );
+      setEditCategory(response.data);
+      alert("✅ Kategori berhasil diperbarui!");
+      fetchCategories();
+      setModalCategory(false);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  // =============================
+  // DELETE CATEGORY HANDLERS
+  // =============================
+  const handleDeleteCategory = async (id) => {
+    try {
+      await axios.delete(`http://localhost:3000/api/deletecategories/${id}`);
+      alert("✅ Kategori berhasil dihapus!");
+      fetchCategories();
+      setEditCategory(null);
+      setModalCategory(false);
+    } catch (error) {
+      console.log("❌ Error updating kategori:", error);
+      alert("❌ Gagal menghapus kategori!");
     }
   };
 
@@ -213,8 +252,8 @@ export default function Products({ onLogout, user }) {
                             <strong>{product.namaProduk}</strong>
                           </td>
                           <td>{product.kategori}</td>
-                          <td>{product.harga.toLocaleString("id-ID")}</td>
-                          <td>{product.modal.toLocaleString("id-ID")}</td>
+                          <td>Rp. {product.harga.toLocaleString("id-ID")}</td>
+                          <td>Rp. {product.modal.toLocaleString("id-ID")}</td>
                           <td>{product.stok}</td>
                           <td>{getStokBadge(product.stok)}</td>
                           <td>
@@ -239,7 +278,7 @@ export default function Products({ onLogout, user }) {
                     <input
                       type="text"
                       placeholder="Nama Kategori"
-                      value={newCategories.kategori}
+                      value={newCategories.category}
                       onChange={(e) => setNewCategories(e.target.value)}
                       required
                     />
@@ -253,10 +292,62 @@ export default function Products({ onLogout, user }) {
                 <h3>Daftar Kategori</h3>
                 <ul className="category-list">
                   {getcategory.map((item) => (
-                    <li key={item.id}>{item.kategori}</li>
+                    <li key={item.id}>
+                      {item.kategori} <span>|</span>
+                      <button
+                        onClick={() => {
+                          setEditCategory(item);
+                          setModalCategory(true);
+                        }}
+                      >
+                        ✏️
+                      </button>
+                    </li>
                   ))}
                 </ul>
               </div>
+              {modalCategory && (
+                <div className="modal-overlay">
+                  <div className="modal-card">
+                    <div className="modal-header">
+                      <h2>Edit Kategori</h2>
+                      <button
+                        className="modal-close"
+                        onClick={() => setModalCategory(false)}
+                      >
+                        ✖
+                      </button>
+                    </div>
+                    <form className="modal-body" onSubmit={handleEditCategory}>
+                      <div className="form-group">
+                        <input
+                          type="text"
+                          value={editCategory ? editCategory.kategori : ""}
+                          onChange={(e) =>
+                            setEditCategory({
+                              ...editCategory,
+                              kategori: e.target.value,
+                            })
+                          }
+                          required
+                        />
+                      </div>
+                      <div className="modal-footer">
+                        <button
+                          type="button"
+                          className="btn btn-logout"
+                          onClick={() => handleDeleteCategory(editCategory.id)}
+                        >
+                          Hapus
+                        </button>
+                        <button type="submit" className="btn btn-primary">
+                          Simpan
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

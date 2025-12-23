@@ -13,6 +13,8 @@
   flex-direction: column;
   background-color: $white;
   animation: fadeIn 0.5s ease;
+  margin-top: 8%;
+
 }
 
 .sales-navbar {
@@ -200,6 +202,7 @@
 
 .add-item {
   margin-top: 8px;
+  margin-bottom: 8px;
   background: none;
   border: none;
   color: #2563eb;
@@ -224,6 +227,7 @@
   border: 1px solid #ecf0f1;
   color: $dark-text;
   padding: 5px;
+  border-radius: 10px;
 }
 
 .summary input {
