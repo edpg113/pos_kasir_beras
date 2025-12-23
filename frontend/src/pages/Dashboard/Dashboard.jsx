@@ -3,6 +3,7 @@ import Sidebar from "../../components/Sidebar";
 import "./style/Dashboard.scss";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
+// import Inventory from "../Inventory/Inventory";
 
 export default function Dashboard({ onLogout, user }) {
   const [transaksi, setTrasaksi] = useState([]);
@@ -11,25 +12,50 @@ export default function Dashboard({ onLogout, user }) {
     produk_terjual: 0,
     stok_beras: 0,
   });
+  const [inventory, setInventory] = useState([]);
 
-  useEffect(() => {
-    fetchStats();
-    fetchTransaksi();
-  }, []);
-
+  // =============================
+  // HANDLE FETCH TRANSAKSI
+  // =============================
   const fetchTransaksi = async () => {
     axios
       .get("http://localhost:3000/api/gettransaksi")
       .then((res) => setTrasaksi(res.data))
       .catch((err) => console.error(err));
   };
-
+  // =============================
+  // HANDLE FETCH STATS
+  // =============================
   const fetchStats = async () => {
     axios
       .get("http://localhost:3000/api/dashboard-stats")
       .then((res) => setStats(res.data))
       .catch((err) => console.error(err));
   };
+
+  // =============================
+  // HANDLE FETCH STOCK
+  // =============================
+  const fetchInventory = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/inventory");
+      setInventory(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+    fetchTransaksi();
+    fetchInventory();
+  }, []);
+
+  const needReorder = inventory.filter(
+    (item) => item.stok <= item.minStok
+  ).length;
+  // const averageStock =
+  //   inventory.length > 0 ? Math.round(totalStok / inventory.length) : 0;
 
   return (
     <div className="dashboard-container">
@@ -43,26 +69,44 @@ export default function Dashboard({ onLogout, user }) {
             <p>Kelola toko beras Anda dengan mudah dan efisien</p>
           </div>
 
-          <div className="dashboard-stats-grid">
             <div className="dashboard-stats-grid">
               <div className="dashboard-stat-card">
                 <h3>Total Penjualan</h3>
                 <div className="value">
-                  Rp {Number(stats.total_penjualan).toLocaleString("id-ID")}
+                  Rp. {Number(stats.total_penjualan).toLocaleString("id-ID")}
                 </div>
               </div>
 
               <div className="dashboard-stat-card">
                 <h3>Produk Terjual</h3>
-                <div className="value">{stats.produk_terjual} kg</div>
+                <div className="value">{stats.produk_terjual}</div>
+                <div className="unit">kg</div>
+
               </div>
 
               <div className="dashboard-stat-card">
-                <h3>Stok Beras</h3>
-                <div className="value">{stats.stok_beras} kg</div>
+                <h3>Total Stok Beras</h3>
+                <div className="value">{stats.stok_beras}</div>
+                <div className="unit">kg</div>
+
+              </div>
+              <div className="dashboard-stat-card">
+                <h3>Total Produk</h3>
+                <div className="value">{inventory.length}</div>
+                <div className="unit">produk</div>
+
+              </div>
+              <div className="dashboard-stat-card">
+                <h3>Perlu Reorder</h3>
+                <div
+                  className="value"
+                  style={{ color: needReorder > 0 ? "#e74c3c" : "#27ae60" }}
+                >
+                  {needReorder}
+                </div>
+                <div className="unit">produk</div>
               </div>
             </div>
-          </div>
 
           <div className="dashboard-card">
             <h2>Penjualan Terbaru</h2>
@@ -90,7 +134,7 @@ export default function Dashboard({ onLogout, user }) {
                       </td>
                       <td>{sale.namaProduk}</td>
                       <td>{sale.qty}</td>
-                      <td>{sale.total.toLocaleString("id-ID")}</td>
+                      <td>Rp. {sale.total.toLocaleString("id-ID")}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -1,15 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./Sidebar.scss";
 import axios from "axios";
 
 export default function Sidebar({ onLogout, user }) {
   const isActive = (path) => (location.pathname === path ? "active" : "");
   const [toko, setToko] = useState([]);
-
-  useEffect(() => {
-    fetchToko();
-  }, []);
 
   const fetchToko = async () => {
     try {
@@ -19,6 +15,10 @@ export default function Sidebar({ onLogout, user }) {
       console.log(err);
     }
   };
+
+  useEffect(() => {
+    fetchToko();
+  }, []);
 
   return (
     <div className="sidebar">
@@ -36,7 +36,7 @@ export default function Sidebar({ onLogout, user }) {
 
       <ul className="sidebar-menu">
         <li className="menu-item">
-          <Link to="/dashboard" className={isActive("/")}>
+          <Link to="/dashboard" className={isActive("/dashboard")}>
             <span className="menu-icon">📊</span>
             Dashboard
           </Link>
