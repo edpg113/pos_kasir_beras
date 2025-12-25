@@ -5,7 +5,7 @@ import Navbar from "../../components/Navbar";
 import axios from "axios";
 import ChangePasswordModal from "./ChangePasswordModal"; // Impor modal
 
-export default function Settings({ onLogout, user }) {
+export default function Settings({ onLogout, user, storeName, refreshStore }) {
   const [formData, setFormData] = useState({
     id: "",
     namaToko: "",
@@ -43,15 +43,19 @@ export default function Settings({ onLogout, user }) {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`http://localhost:3000/api/user/password/${formData.id}`, {
-        namaToko: formData.namaToko,
-        pemilik: formData.pemilik,
-        email: formData.email,
-        telepon: formData.telepon,
-        alamat: formData.alamat,
-      });
+      const response = await axios.post(
+        `http://localhost:3000/api/user/password/${formData.id}`,
+        {
+          namaToko: formData.namaToko,
+          pemilik: formData.pemilik,
+          email: formData.email,
+          telepon: formData.telepon,
+          alamat: formData.alamat,
+        }
+      );
       console.log("📥 Settings saved response:", response);
       alert("✅ Pengaturan berhasil disimpan!");
+      refreshStore(); // Refresh store settings in App.jsx
     } catch (error) {
       console.error("❌ Error saving settings:", error);
       alert("❌ Gagal menyimpan pengaturan!");
@@ -67,7 +71,7 @@ export default function Settings({ onLogout, user }) {
   return (
     <>
       <div className="settings-container">
-        <Sidebar onLogout={onLogout} user={user} />
+        <Sidebar onLogout={onLogout} user={user} storeName={storeName} />
         <div className="settings-content-wrapper">
           <Navbar title="Setting" onLogout={onLogout} user={user} />
 
@@ -210,7 +214,10 @@ export default function Settings({ onLogout, user }) {
                   </button>
                 </div>
                 <div className="settings-info-row">
-                  <button className="btn btn-secondary" style={{ width: "auto" }}>
+                  <button
+                    className="btn btn-secondary"
+                    style={{ width: "auto" }}
+                  >
                     📋 Lihat Log Aktivitas
                   </button>
                 </div>

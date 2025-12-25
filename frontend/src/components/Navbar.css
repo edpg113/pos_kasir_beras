@@ -8,9 +8,10 @@
   border-bottom: 1px solid #ecf0f1;
   position: fixed; /* Changed from fixed */
   top: 0;
+  left: 260px; /* $sidebar-width */
+  right: 0;
+  width: auto;
   z-index: 50;
-  width: 86.3%; 
-  /* overflow: hidden; */
 }
 
 .dashboard-navbar h2 {

@@ -1,38 +1,92 @@
-import React, { useState } from 'react'
-import Sidebar from '../../components/Sidebar'
-import './style/Reports.scss'
-import Navbar from '../../components/Navbar'
+import React, { useState, useEffect } from "react";
+import Sidebar from "../../components/Sidebar";
+import "./style/Reports.scss";
+import Navbar from "../../components/Navbar";
+import axios from "axios";
 
-export default function Reports({ onLogout, user }) {
-  const [reportPeriod, setReportPeriod] = useState('Desember 2025')
+export default function Reports({ onLogout, user, storeName }) {
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [summaryStats, setSummaryStats] = useState({
+    total_penjualan: 0,
+    total_terjual: 0,
+  });
+  const [monthlySales, setMonthlySales] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [customerStats, setCustomerStats] = useState([]);
 
-  const monthlySales = [
-    { bulan: 'Oktober', total: 1800000, qty: 180 },
-    { bulan: 'November', total: 2100000, qty: 210 },
-    { bulan: 'Desember', total: 2450000, qty: 245 }
-  ]
+  // =============================
+  // HANDLE FETCH DATA
+  // =============================
+  const fetchSummary = async (date) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/api/reports/summary?date=${date}`
+      );
+      setSummaryStats(response.data);
+    } catch (error) {
+      console.error("Gagal mengambil summary laporan:", error);
+    }
+  };
 
-  const topProducts = [
-    { produk: 'Beras Putih Premium', penjualan: 500000, qty: 55 },
-    { produk: 'Beras Jasmine', penjualan: 450000, qty: 50 },
-    { produk: 'Beras Merah Organik', penjualan: 400000, qty: 38 },
-    { produk: 'Beras Putih Standar', penjualan: 350000, qty: 47 }
-  ]
+  const fetchTopProducts = async (date) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/api/reports/top-products?date=${date}`
+      );
+      setTopProducts(response.data);
+    } catch (error) {
+      console.error("Gagal mengambil produk terlaris:", error);
+    }
+  };
 
-  const customerStats = [
-    { kategori: 'Pelanggan Setia', jumlah: 45, persentase: '52%' },
-    { kategori: 'Pelanggan Baru', jumlah: 28, persentase: '32%' },
-    { kategori: 'Pelanggan Pasif', jumlah: 14, persentase: '16%' }
-  ]
+  const fetchMonthly = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:3000/api/reports/monthly"
+      );
+      setMonthlySales(response.data);
+    } catch (error) {
+      console.error("Gagal mengambil penjualan bulanan:", error);
+    }
+  };
 
-  const totalSales = monthlySales.reduce((sum, item) => sum + item.total, 0)
-  const totalQty = monthlySales.reduce((sum, item) => sum + item.qty, 0)
+  const fetchCustomers = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:3000/api/reports/customers"
+      );
+      setCustomerStats(response.data);
+    } catch (error) {
+      console.error("Gagal mengambil statistik pelanggan:", error);
+    }
+  };
+
+  const handleDateChange = (e) => {
+    setSelectedDate(e.target.value);
+  };
+
+  const handleExport = () => {
+    // Trigger download directly
+    window.location.href = `http://localhost:3000/api/reports/export?date=${selectedDate}`;
+  };
+
+  useEffect(() => {
+    fetchSummary(selectedDate);
+    fetchTopProducts(selectedDate);
+  }, [selectedDate]);
+
+  useEffect(() => {
+    fetchMonthly();
+    fetchCustomers();
+  }, []);
 
   return (
     <div className="reports-container">
-      <Sidebar onLogout={onLogout} user={user} />
+      <Sidebar onLogout={onLogout} user={user} storeName={storeName} />
       <div className="reports-content-wrapper">
-       <Navbar title="Laporan" onLogout={onLogout} user={user} />
+        <Navbar title="Laporan" onLogout={onLogout} user={user} />
 
         <div className="reports-page-content">
           <div className="reports-page-header">
@@ -41,67 +95,91 @@ export default function Reports({ onLogout, user }) {
           </div>
 
           <div className="reports-filter-bar">
-            <select 
-              value={reportPeriod}
-              onChange={(e) => setReportPeriod(e.target.value)}
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={handleDateChange}
+            />
+            <button
+              className="btn btn-primary"
+              style={{ width: "auto" }}
+              onClick={handleExport}
             >
-              <option>Desember 2025</option>
-              <option>November 2025</option>
-              <option>Oktober 2025</option>
-            </select>
-            <button className="btn btn-primary" style={{ width: 'auto' }}>📥 Export</button>
+              📥 Export
+            </button>
           </div>
 
           <div className="reports-stats-grid">
             <div className="reports-stat-card">
               <h3>Total Penjualan</h3>
-              <div className="value">{totalSales.toLocaleString('id-ID')}</div>
+              <div className="value">
+                {Number(summaryStats.total_penjualan).toLocaleString("id-ID")}
+              </div>
               <div className="unit">Rp</div>
             </div>
             <div className="reports-stat-card">
               <h3>Total Terjual</h3>
-              <div className="value">{totalQty}</div>
-              <div className="unit">kg</div>
+              <div className="value">{summaryStats.total_terjual}</div>
+              <div className="unit">item</div>
             </div>
             <div className="reports-stat-card">
-              <h3>Rata-rata Hari</h3>
-              <div className="value">{Math.round(totalSales / 30).toLocaleString('id-ID')}</div>
-              <div className="unit">Rp/hari</div>
+              <h3>Rata-rata Pendapatan</h3>
+              <div className="value">
+                {Number(summaryStats.rata_rata || 0).toLocaleString("id-ID")}
+              </div>
+              <div className="unit">Rp/transaksi</div>
             </div>
             <div className="reports-stat-card">
               <h3>Total Pelanggan</h3>
-              <div className="value">87</div>
+              <div className="value">
+                {customerStats.reduce((acc, curr) => acc + curr.jumlah, 0)}
+              </div>
               <div className="unit">orang</div>
+            </div>
+          </div>
+
+          <div className="reports-card">
+            <h2>Penjualan Bulanan (Tahun Ini)</h2>
+            <div className="reports-table-container">
+              <table className="reports-table">
+                <thead>
+                  <tr>
+                    <th>Bulan</th>
+                    <th>Total Penjualan</th>
+                    <th>Jumlah (item)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {monthlySales.length > 0 ? (
+                    monthlySales.map((item, index) => (
+                      <tr key={index}>
+                        <td>{item.bulan}</td>
+                        <td>
+                          <strong>
+                            {Number(item.total).toLocaleString("id-ID")}
+                          </strong>
+                        </td>
+                        <td>{item.qty}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3" style={{ textAlign: "center" }}>
+                        Belum ada data penjualan tahun ini.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
           <div className="reports-grid-2">
             <div className="reports-card">
-              <h2>Penjualan Bulanan</h2>
-              <div className="reports-table-container">
-                <table className="reports-table">
-                  <thead>
-                    <tr>
-                      <th>Bulan</th>
-                      <th>Total Penjualan</th>
-                      <th>Jumlah (kg)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {monthlySales.map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.bulan}</td>
-                        <td><strong>{item.total.toLocaleString('id-ID')}</strong></td>
-                        <td>{item.qty} kg</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="reports-card">
-              <h2>Produk Terlaris</h2>
+              <h2>
+                Produk Terlaris (
+                {new Date(selectedDate).toLocaleDateString("id-ID")})
+              </h2>
               <div className="reports-table-container">
                 <table className="reports-table">
                   <thead>
@@ -112,11 +190,49 @@ export default function Reports({ onLogout, user }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {topProducts.map((item, index) => (
+                    {topProducts.length > 0 ? (
+                      topProducts.map((item, index) => (
+                        <tr key={index}>
+                          <td>{item.produk}</td>
+                          <td>
+                            <strong>
+                              {Number(item.penjualan).toLocaleString("id-ID")}
+                            </strong>
+                          </td>
+                          <td>{item.qty}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="3" style={{ textAlign: "center" }}>
+                          Tidak ada penjualan untuk tanggal ini.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="reports-card">
+              <h2>Statistik Pelanggan</h2>
+              <div className="reports-table-container">
+                <table className="reports-table">
+                  <thead>
+                    <tr>
+                      <th>Kategori</th>
+                      <th>Jumlah</th>
+                      <th>Persentase</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customerStats.map((item, index) => (
                       <tr key={index}>
-                        <td>{item.produk}</td>
-                        <td><strong>{item.penjualan.toLocaleString('id-ID')}</strong></td>
-                        <td>{item.qty} kg</td>
+                        <td>
+                          <strong>{item.kategori}</strong>
+                        </td>
+                        <td>{item.jumlah} orang</td>
+                        <td>{item.persentase}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -124,32 +240,8 @@ export default function Reports({ onLogout, user }) {
               </div>
             </div>
           </div>
-
-          <div className="reports-card">
-            <h2>Statistik Pelanggan</h2>
-            <div className="reports-table-container">
-              <table className="reports-table">
-                <thead>
-                  <tr>
-                    <th>Kategori</th>
-                    <th>Jumlah</th>
-                    <th>Persentase</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {customerStats.map((item, index) => (
-                    <tr key={index}>
-                      <td><strong>{item.kategori}</strong></td>
-                      <td>{item.jumlah} orang</td>
-                      <td>{item.persentase}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

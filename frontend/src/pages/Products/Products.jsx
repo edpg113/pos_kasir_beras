@@ -4,7 +4,7 @@ import "./style/Products.scss";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
 
-export default function Products({ onLogout, user }) {
+export default function Products({ onLogout, user, storeName }) {
   const [products, setProducts] = useState([]);
   const [newCategories, setNewCategories] = useState({
     category: "",
@@ -209,9 +209,14 @@ export default function Products({ onLogout, user }) {
 
   return (
     <div className="products-container">
-      <Sidebar onLogout={onLogout} user={user} />
+      <Sidebar onLogout={onLogout} user={user} storeName={storeName} />
       <div className="products-content-wrapper">
-        <Navbar title="Produk" onLogout={onLogout} user={user} />
+        <Navbar
+          title="Produk"
+          onLogout={onLogout}
+          user={user}
+          storeName={storeName}
+        />
 
         <div className="products-page-content">
           <div className="products-page-header">
@@ -258,7 +263,7 @@ export default function Products({ onLogout, user }) {
                           <td>{getStokBadge(product.stok)}</td>
                           <td>
                             <button onClick={() => handleEditClick(product)}>
-                              ✏️
+                              Edit
                             </button>
                           </td>
                         </tr>
@@ -300,7 +305,7 @@ export default function Products({ onLogout, user }) {
                           setModalCategory(true);
                         }}
                       >
-                        ✏️
+                        Edit
                       </button>
                     </li>
                   ))}
