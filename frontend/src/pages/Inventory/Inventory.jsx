@@ -2,24 +2,25 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar";
 import "./style/Inventory.scss";
 import Navbar from "../../components/Navbar";
-import Modal from "../../components/Modal";
 import axios from "axios";
 
-export default function Inventory({ onLogout, user }) {
+export default function Inventory({ onLogout, user, storeName }) {
   const [inventory, setInventory] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [supplier, setSupplier] = useState("");
+  const [editStok, setEditStok] = useState("");
 
-  // State for the new "Add Stock" modal
-  const [stockUpdateData, setStockUpdateData] = useState({
+  // State for multi-item stock update
+  const initialItem = {
     inventoryId: "",
-    quantity: 0,
-    supplier: "",
-  });
-  const [selectedItemCurrentStock, setSelectedItemCurrentStock] = useState(0);
+    produk: "",
+    stok: 0,
+    quantity: 1,
+  };
+  const [itemsToAdd, setItemsToAdd] = useState([initialItem]);
 
-  // =============================
-  // HANDLE FETCH STOCK
-  // =============================
   const fetchInventory = async () => {
     try {
       const response = await axios.get("http://localhost:3000/api/inventory");
@@ -33,47 +34,112 @@ export default function Inventory({ onLogout, user }) {
     fetchInventory();
   }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setStockUpdateData((prev) => ({ ...prev, [name]: value }));
+  // ====== MODAL HANDLERS START ======
+  const handleItemChange = (index, field, value) => {
+    const newItems = [...itemsToAdd];
+    const item = newItems[index];
+    item[field] = value;
+
+    // If product is changed, update its details
+    if (field === "inventoryId") {
+      const selectedProduct = inventory.find((p) => p.id.toString() === value);
+      if (selectedProduct) {
+        item.produk = selectedProduct.produk;
+        item.stok = selectedProduct.stok;
+      }
+    }
+
+    setItemsToAdd(newItems);
   };
 
-  const handleProductSelection = (e) => {
-    const selectedId = e.target.value;
-    const selectedItem = inventory.find(
-      (item) => item.id.toString() === selectedId
-    );
+  const addItem = () => {
+    setItemsToAdd([...itemsToAdd, { ...initialItem }]);
+  };
 
-    setStockUpdateData((prev) => ({
-      ...prev,
-      inventoryId: selectedId,
-      quantity: 0,
-      supplier: "",
-    }));
-
-    if (selectedItem) {
-      setSelectedItemCurrentStock(selectedItem.stok);
-    } else {
-      setSelectedItemCurrentStock(0);
+  const removeItem = (index) => {
+    if (itemsToAdd.length > 1) {
+      const newItems = itemsToAdd.filter((_, i) => i !== index);
+      setItemsToAdd(newItems);
     }
   };
 
-  // =============================
-  // HANDLE ADD STOK HANDLERS
-  // =============================
+  const openModal = (item = null) => {
+    if (item) {
+      setIsEditMode(true);
+      setEditData(item);
+      setSupplier(item.supplier || "");
+      setEditStok(item.stok); // Pre-fill with current stock
+    } else {
+      setIsEditMode(false);
+      setEditData(null);
+      setItemsToAdd([{ ...initialItem }]);
+      setSupplier("");
+    }
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setIsEditMode(false);
+    setEditData(null);
+    setItemsToAdd([{ ...initialItem }]); // Reset to a single empty item
+    setSupplier(""); // Reset supplier
+    setEditStok("");
+  };
+
   const handleAddStock = async (e) => {
     e.preventDefault();
+
+    if (!supplier) {
+      alert("❌ Harap isi nama supplier.");
+      return;
+    }
+
+    // Logic for Edit Mode
+    if (isEditMode) {
+      try {
+        await axios.put(`http://localhost:3000/api/inventory/${editData.id}`, {
+          stok: editStok,
+          supplier: supplier,
+        });
+        alert("✅ Inventori berhasil diupdate");
+        fetchInventory();
+        closeModal();
+      } catch (error) {
+        console.error("Failed to update inventory", error);
+        alert(
+          `❌ Gagal update inventori: ${
+            error.response?.data?.message || error.message
+          }`
+        );
+      }
+      return;
+    }
+
+    // Logic for Add Mode (Multiple Items)
+    const validItems = itemsToAdd.filter(
+      (item) => item.inventoryId && parseInt(item.quantity, 10) > 0
+    );
+
+    if (validItems.length === 0) {
+      alert("❌ Harap isi data produk dan jumlah dengan benar.");
+      return;
+    }
+
+    const itemsWithSupplier = validItems.map((item) => ({
+      ...item,
+      supplier,
+    }));
+
     try {
-      const { inventoryId, quantity, supplier } = stockUpdateData;
-      await axios.patch(
-        `http://localhost:3000/api/inventory/${inventoryId}/add-stock`,
-        { quantity, supplier } // Send both quantity and supplier
-      );
-      alert("✅ Berhasil menambah stok");
+      await axios.post(`http://localhost:3000/api/inventory/add-stocks`, {
+        items: itemsWithSupplier,
+      });
+      alert("✅ Berhasil menambah semua stok");
       fetchInventory(); // Refresh data
       closeModal();
     } catch (error) {
-      console.error("Failed to add stock", error);
+      console.error("Failed to add stocks", error);
       alert(
         `❌ Gagal menambah stok: ${
           error.response?.data?.message || error.message
@@ -81,22 +147,8 @@ export default function Inventory({ onLogout, user }) {
       );
     }
   };
+  // ====== MODAL HANDLERS END ======
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => {
-    setIsModalOpen(false);
-    // Reset form
-    setStockUpdateData({
-      inventoryId: "",
-      quantity: 0,
-      supplier: "",
-    });
-    setSelectedItemCurrentStock(0);
-  };
-
-  // =============================
-  // HANDLE STATUS STOK HANDLERS
-  // =============================
   const getStokStatus = (stok, minStok) => {
     if (stok <= minStok)
       return <span className="badge badge-danger">Perlu Reorder</span>;
@@ -114,7 +166,7 @@ export default function Inventory({ onLogout, user }) {
 
   return (
     <div className="inventory-container">
-      <Sidebar onLogout={onLogout} user={user} />
+      <Sidebar onLogout={onLogout} user={user} storeName={storeName} />
       <div className="inventory-content-wrapper">
         <Navbar title="Inventory" onLogout={onLogout} user={user} />
 
@@ -156,7 +208,7 @@ export default function Inventory({ onLogout, user }) {
             <button
               className="btn btn-primary"
               style={{ width: "auto" }}
-              onClick={openModal}
+              onClick={() => openModal(null)}
             >
               + Tambah Stok
             </button>
@@ -173,8 +225,9 @@ export default function Inventory({ onLogout, user }) {
                     <th>Min Stok (kg)</th>
                     <th>Qty Reorder (kg)</th>
                     <th>Status</th>
-                    <th>Update Terakhir</th>
                     <th>Supplier</th>
+                    <th>Update Terakhir</th>
+                    <th>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -187,6 +240,7 @@ export default function Inventory({ onLogout, user }) {
                       <td>{item.minStok}</td>
                       <td>{item.reorder}</td>
                       <td>{getStokStatus(item.stok, item.minStok)}</td>
+                      <td>{item.supplier}</td>
                       <td>
                         {new Date(item.lastUpdate).toLocaleDateString("id-ID", {
                           day: "2-digit",
@@ -196,7 +250,14 @@ export default function Inventory({ onLogout, user }) {
                           minute: "2-digit",
                         })}
                       </td>
-                      <td>{item.supplier}</td>
+                      <td>
+                        <button
+                          className="btn-edit"
+                          onClick={() => openModal(item)}
+                        >
+                          Edit
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -206,83 +267,134 @@ export default function Inventory({ onLogout, user }) {
         </div>
       </div>
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        title="Tambah Stok Produk"
-      >
-        <form onSubmit={handleAddStock} className="inventory-form">
-          <div className="form-group">
-            <label htmlFor="inventoryId">Nama Produk</label>
-            <select
-              id="inventoryId"
-              name="inventoryId"
-              value={stockUpdateData.inventoryId}
-              onChange={handleProductSelection}
-              required
-            >
-              <option value="" disabled>
-                -- Pilih Produk --
-              </option>
-              {inventory.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.produk}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {stockUpdateData.inventoryId && (
-            <div className="form-group">
-              <label>Stok Saat Ini</label>
-              <input
-                type="text"
-                value={`${selectedItemCurrentStock} kg`}
-                readOnly
-                className="readonly-input"
-              />
+      {isModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-card large">
+            <div className="modal-header">
+              <h2>{isEditMode ? "Edit Stok Produk" : "Tambah Stok Produk"}</h2>
             </div>
-          )}
+            <div className="modal-body">
+              {isEditMode ? (
+                /* Edit Mode UI */
+                <div className="edit-mode-form">
+                  <div className="form-group">
+                    <label>Nama Produk (Read-Only)</label>
+                    <input
+                      type="text"
+                      value={editData?.produk || ""}
+                      disabled
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Stok Awal (Read-Only)</label>
+                    <input
+                      type="text"
+                      value={editData?.stok || 0}
+                      disabled
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Stok Baru (Ubah disini)</label>
+                    <input
+                      type="number"
+                      value={editStok}
+                      onChange={(e) => setEditStok(e.target.value)}
+                      min="0"
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Nama Supplier</label>
+                    <input
+                      type="text"
+                      value={supplier}
+                      onChange={(e) => setSupplier(e.target.value)}
+                      className="form-control"
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* Add Mode UI */
+                <>
+                  {itemsToAdd.map((item, index) => (
+                    <div key={index} className="modal-body item-row">
+                      <select
+                        name="inventoryId"
+                        value={item.inventoryId}
+                        onChange={(e) =>
+                          handleItemChange(index, "inventoryId", e.target.value)
+                        }
+                        required
+                      >
+                        <option value="" disabled>
+                          -- Pilih Produk --
+                        </option>
+                        {inventory.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.produk} (Stok: {p.stok})
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        name="quantity"
+                        placeholder="Qty"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          handleItemChange(index, "quantity", e.target.value)
+                        }
+                        required
+                        min="1"
+                        style={{ width: "80px" }}
+                      />
+                      {itemsToAdd.length > 1 && (
+                        <button
+                          className="remove"
+                          onClick={() => removeItem(index)}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button className="add-item" onClick={addItem}>
+                    + Tambah Produk
+                  </button>
 
-          <div className="form-group">
-            <label htmlFor="quantity">Jumlah Stok Tambahan (kg)</label>
-            <input
-              type="number"
-              id="quantity"
-              name="quantity"
-              value={stockUpdateData.quantity}
-              onChange={handleInputChange}
-              required
-              min="1"
-            />
+                  <div className="supplier-row" style={{ marginTop: "15px" }}>
+                    <input
+                      type="text"
+                      name="supplier"
+                      placeholder="Nama Supplier"
+                      value={supplier}
+                      onChange={(e) => setSupplier(e.target.value)}
+                      required
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={closeModal}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleAddStock}
+              >
+                {isEditMode ? "Simpan Perubahan" : "Simpan Semua"}
+              </button>
+            </div>
           </div>
-
-          <div className="form-group">
-            <label htmlFor="supplier">Supplier (PT Pengirim)</label>
-            <input
-              type="text"
-              id="supplier"
-              name="supplier"
-              value={stockUpdateData.supplier}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="form-actions">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={closeModal}
-            >
-              Batal
-            </button>
-            <button type="submit" className="btn btn-primary">
-              Simpan
-            </button>
-          </div>
-        </form>
-      </Modal>
+        </div>
+      )}
     </div>
   );
 }

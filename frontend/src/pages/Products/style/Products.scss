@@ -128,11 +128,11 @@
       border-bottom: none;
     }
     span {
-      padding: 0 5px;
+      padding: 0 10px;
     }
     button {
-      background-color: transparent;
-      width: 10px;
+      background-color: #ffc107;
+      width: auto;
       border: none;
       outline: none;
     }
@@ -191,7 +191,7 @@
     }
     td {
       button {
-        background-color: transparent;
+        background-color: #ffc107;
         border: 1px solid #bdc3c7;
       }
     }

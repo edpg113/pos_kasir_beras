@@ -1,0 +1,203 @@
+.pelanggan-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.pelanggan-content-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background-color: #f4f7f6;
+  margin-left: 260px; /* Compensate for fixed sidebar width */
+}
+
+.pelanggan-page-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// Action Bar
+.pelanggan-action-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+// Card for Table
+.table-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  padding: 30px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+
+  h2 {
+    font-size: 22px;
+    color: #333;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+  }
+}
+
+// Table Styles
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    tbody tr {
+      &:hover {
+        background-color: #f1f3f5;
+      }
+    }
+
+    td {
+      color: #555;
+      
+      // Action buttons in table
+      .btn-edit, .btn-delete {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 13px;
+        margin-right: 5px;
+      }
+      .btn-edit {
+        background-color: #ffc107;
+        color: #333;
+        &:hover { background-color: #e0a800; }
+      }
+      .btn-delete {
+        background-color: #dc3545;
+        color: white;
+        &:hover { background-color: #c82333; }
+      }
+    }
+  }
+}
+
+// General Button Styles (reusable)
+// .btn {
+//   padding: 10px 20px;
+//   border: none;
+//   border-radius: 6px;
+//   cursor: pointer;
+//   font-size: 15px;
+//   font-weight: 500;
+//   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+
+//   &-primary {
+//     background-color: #007bff;
+//     color: white;
+//     &:hover { background-color: #0056b3; }
+//   }
+//   &-secondary {
+//     background-color: #6c757d;
+//     color: white;
+//     margin-right: 10px;
+//     &:hover { background-color: #5a6268; }
+//   }
+// }
+
+// Modal Styles (reused from Sales/Inventory)
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+
+  .modal-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+  }
+
+  .modal-body {
+    flex-grow: 1;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    margin-top: 20px;
+  }
+}
+
+// Form group styles inside modal
+.form-group {
+  margin-bottom: 20px;
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555;
+  }
+  input[type="text"],
+  input[type="tel"],
+  textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+    box-sizing: border-box;
+    &:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+  }
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+    background-color: transparent;
+    color: #333;
+  }
+}

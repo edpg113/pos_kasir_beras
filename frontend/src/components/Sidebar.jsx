@@ -3,31 +3,15 @@ import { Link } from "react-router-dom";
 import "./Sidebar.scss";
 import axios from "axios";
 
-export default function Sidebar({ onLogout, user }) {
+export default function Sidebar({ onLogout, user, storeName }) {
   const isActive = (path) => (location.pathname === path ? "active" : "");
-  const [toko, setToko] = useState([]);
-
-  const fetchToko = async () => {
-    try {
-      const response = await axios.get("http://localhost:3000/api/getsetting");
-      setToko(response.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchToko();
-  }, []);
 
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        {toko.map((item) => (
-          <div key={item.id}>
-            <h2>🌾 {item.namaToko}</h2>
-          </div>
-        ))}
+        <div>
+          <h2>🌾 {storeName || "Toko Beras"}</h2>
+        </div>
         <p>
           {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1) ||
             "karyawan"}
@@ -51,6 +35,12 @@ export default function Sidebar({ onLogout, user }) {
           <Link to="/sales" className={isActive("/sales")}>
             <span className="menu-icon">💰</span>
             Penjualan
+          </Link>
+        </li>
+        <li className="menu-item">
+          <Link to="/pelanggan" className={isActive("/pelanggan")}>
+            <span className="menu-icon">🙎‍♂️</span>
+            Pelanggan
           </Link>
         </li>
         <li className="menu-item">

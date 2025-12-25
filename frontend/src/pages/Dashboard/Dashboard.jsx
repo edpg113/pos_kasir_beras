@@ -5,7 +5,7 @@ import Navbar from "../../components/Navbar";
 import axios from "axios";
 // import Inventory from "../Inventory/Inventory";
 
-export default function Dashboard({ onLogout, user }) {
+export default function Dashboard({ onLogout, user, storeName }) {
   const [transaksi, setTrasaksi] = useState([]);
   const [stats, setStats] = useState({
     total_penjualan: 0,
@@ -13,6 +13,7 @@ export default function Dashboard({ onLogout, user }) {
     stok_beras: 0,
   });
   const [inventory, setInventory] = useState([]);
+  const [pelanggan, setPelanggan] = useState([]);
 
   // =============================
   // HANDLE FETCH TRANSAKSI
@@ -45,10 +46,23 @@ export default function Dashboard({ onLogout, user }) {
     }
   };
 
+  // =============================
+  // HANDLE FETCH PELANGGAN
+  // =============================
+  const fetchPelanggan = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/pelanggan");
+      setPelanggan(response.data);
+    } catch (error) {
+      console.error("Gagal mengambil data pelanggan:", error);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
     fetchTransaksi();
     fetchInventory();
+    fetchPelanggan();
   }, []);
 
   const needReorder = inventory.filter(
@@ -59,9 +73,14 @@ export default function Dashboard({ onLogout, user }) {
 
   return (
     <div className="dashboard-container">
-      <Sidebar onLogout={onLogout} user={user} />
+      <Sidebar onLogout={onLogout} user={user} storeName={storeName} />
       <div className="dashboard-content-wrapper">
-        <Navbar title="Dashboard" onLogout={onLogout} user={user} />
+        <Navbar
+          title="Dashboard"
+          onLogout={onLogout}
+          user={user}
+          storeName={storeName}
+        />
 
         <div className="dashboard-page-content">
           <div className="dashboard-page-header">
@@ -69,44 +88,47 @@ export default function Dashboard({ onLogout, user }) {
             <p>Kelola toko beras Anda dengan mudah dan efisien</p>
           </div>
 
-            <div className="dashboard-stats-grid">
-              <div className="dashboard-stat-card">
-                <h3>Total Penjualan</h3>
-                <div className="value">
-                  Rp. {Number(stats.total_penjualan).toLocaleString("id-ID")}
-                </div>
+          <div className="dashboard-stats-grid">
+            <div className="dashboard-stat-card">
+              <h3>Total Penjualan</h3>
+              <div className="value">
+                {Number(stats.total_penjualan).toLocaleString("id-ID")}
               </div>
-
-              <div className="dashboard-stat-card">
-                <h3>Produk Terjual</h3>
-                <div className="value">{stats.produk_terjual}</div>
-                <div className="unit">kg</div>
-
-              </div>
-
-              <div className="dashboard-stat-card">
-                <h3>Total Stok Beras</h3>
-                <div className="value">{stats.stok_beras}</div>
-                <div className="unit">kg</div>
-
-              </div>
-              <div className="dashboard-stat-card">
-                <h3>Total Produk</h3>
-                <div className="value">{inventory.length}</div>
-                <div className="unit">produk</div>
-
-              </div>
-              <div className="dashboard-stat-card">
-                <h3>Perlu Reorder</h3>
-                <div
-                  className="value"
-                  style={{ color: needReorder > 0 ? "#e74c3c" : "#27ae60" }}
-                >
-                  {needReorder}
-                </div>
-                <div className="unit">produk</div>
-              </div>
+              <div className="unit">Rp</div>
             </div>
+
+            <div className="dashboard-stat-card">
+              <h3>Produk Terjual</h3>
+              <div className="value">{stats.produk_terjual}</div>
+              <div className="unit">kg</div>
+            </div>
+
+            <div className="dashboard-stat-card">
+              <h3>Total Stok Beras</h3>
+              <div className="value">{stats.stok_beras}</div>
+              <div className="unit">kg</div>
+            </div>
+            <div className="dashboard-stat-card">
+              <h3>Total Produk</h3>
+              <div className="value">{inventory.length}</div>
+              <div className="unit">produk</div>
+            </div>
+            <div className="dashboard-stat-card">
+              <h3>Perlu Reorder</h3>
+              <div
+                className="value"
+                style={{ color: needReorder > 0 ? "#e74c3c" : "#27ae60" }}
+              >
+                {needReorder}
+              </div>
+              <div className="unit">produk</div>
+            </div>
+            <div className="dashboard-stat-card">
+              <h3>Total Pelanggan</h3>
+              <div className="value">{pelanggan.length}</div>
+              <div className="unit">pelanggan</div>
+            </div>
+          </div>
 
           <div className="dashboard-card">
             <h2>Penjualan Terbaru</h2>
