@@ -19,6 +19,7 @@ const transaksiRoutes = require("./routes/transaksi");
 const inventoryRoutes = require("./routes/inventory");
 const settingsRoutes = require("./routes/settings");
 const reportsRoutes = require("./routes/reports");
+const returRoutes = require("./routes/retur");
 
 // Use Routes
 app.use("/api", authRoutes);
@@ -30,6 +31,7 @@ app.use("/api", transaksiRoutes);
 app.use("/api", inventoryRoutes);
 app.use("/api", settingsRoutes);
 app.use("/api", reportsRoutes);
+app.use("/api", returRoutes);
 
 // Test route
 app.get("/", (req, res) => {

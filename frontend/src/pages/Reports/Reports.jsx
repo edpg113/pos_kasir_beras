@@ -11,6 +11,8 @@ export default function Reports({ onLogout, user, storeName }) {
   const [summaryStats, setSummaryStats] = useState({
     total_penjualan: 0,
     total_terjual: 0,
+    total_keuntungan: 0,
+    rata_rata: 0,
   });
   const [monthlySales, setMonthlySales] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
@@ -122,6 +124,16 @@ export default function Reports({ onLogout, user, storeName }) {
               <div className="value">{summaryStats.total_terjual}</div>
               <div className="unit">item</div>
             </div>
+            <div
+              className="reports-stat-card"
+              style={{ borderLeftColor: "#27ae60" }}
+            >
+              <h3>Total Keuntungan</h3>
+              <div className="value" style={{ color: "#27ae60" }}>
+                {Number(summaryStats.total_keuntungan).toLocaleString("id-ID")}
+              </div>
+              <div className="unit">Rp</div>
+            </div>
             <div className="reports-stat-card">
               <h3>Rata-rata Pendapatan</h3>
               <div className="value">
@@ -187,6 +199,7 @@ export default function Reports({ onLogout, user, storeName }) {
                       <th>Produk</th>
                       <th>Penjualan</th>
                       <th>Qty</th>
+                      <th>Keuntungan</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -200,11 +213,21 @@ export default function Reports({ onLogout, user, storeName }) {
                             </strong>
                           </td>
                           <td>{item.qty}</td>
+                          <td
+                            style={{
+                              color:
+                                item.keuntungan >= 0 ? "#27ae60" : "#e74c3c",
+                            }}
+                          >
+                            <strong>
+                              {Number(item.keuntungan).toLocaleString("id-ID")}
+                            </strong>
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="3" style={{ textAlign: "center" }}>
+                        <td colSpan="4" style={{ textAlign: "center" }}>
                           Tidak ada penjualan untuk tanggal ini.
                         </td>
                       </tr>

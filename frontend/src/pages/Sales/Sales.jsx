@@ -4,6 +4,7 @@ import Navbar from "../../components/Navbar";
 import "./style/Sales.scss";
 import axios from "axios";
 import { printReceipt } from "../../utils/printReceipt";
+import ProductAutocomplete from "../../components/ProductAutocomplete";
 
 export default function Sales({ onLogout, user, storeName }) {
   const [showModal, setShowModal] = useState(false);
@@ -79,7 +80,7 @@ export default function Sales({ onLogout, user, storeName }) {
     }
 
     try {
-      await axios.post("http://localhost:3000/api/transaksi", {
+      const response = await axios.post("http://localhost:3000/api/transaksi", {
         pembeli,
         total,
         bayar,
@@ -94,6 +95,8 @@ export default function Sales({ onLogout, user, storeName }) {
         kembalian: selisih,
         items: validItems,
         tanggal: new Date(),
+        kode_transaksi: response.data.kode_transaksi, // Get from backend
+        kasir: user.nama, // From props
       });
 
       setShowModal(false);
@@ -107,6 +110,13 @@ export default function Sales({ onLogout, user, storeName }) {
       alert("❌ Gagal menyimpan transaksi");
       console.error(err);
     }
+  };
+
+  const handleCancel = async () => {
+    setShowModal(false);
+    setItems([{ produk_id: "", nama: "", harga: 0, qty: 1, subtotal: 0 }]);
+    setPembeli("");
+    setBayar(0);
   };
 
   // =============================
@@ -200,6 +210,7 @@ export default function Sales({ onLogout, user, storeName }) {
                 <thead>
                   <tr>
                     <th>Tanggal & jam</th>
+                    <th>Kode Transaksi</th>
                     <th>Produk</th>
                     <th>Qty</th>
                     <th>Pembeli</th>
@@ -220,6 +231,7 @@ export default function Sales({ onLogout, user, storeName }) {
                           minute: "2-digit",
                         })}
                       </td>
+                      <td>{item.kode_transaksi}</td>
                       <td>{item.namaProduk}</td>
                       <td>{item.qty}</td>
                       <td>{item.pembeli}</td>
@@ -241,144 +253,131 @@ export default function Sales({ onLogout, user, storeName }) {
                   <h2>Tambah Transaksi</h2>
                 </div>
 
-                {/* ===== ITEMS ===== */}
-                {items.map((item, index) => (
-                  <div key={index} className="modal-body item-row">
-                    <select
-                      value={item.produk_id}
-                      onChange={(e) => {
-                        const value = Number(e.target.value);
+                <div className="modal-body">
+                  {/* ===== ITEMS ===== */}
+                  {items.map((item, index) => (
+                    <div key={index} className="item-row">
+                      <ProductAutocomplete
+                        products={produk}
+                        value={item.produk_id}
+                        onChange={(selectedProduct) => {
+                          // jika belum pilih produk / clear
+                          if (!selectedProduct) {
+                            const newItems = [...items];
+                            newItems[index] = {
+                              ...item,
+                              produk_id: "",
+                              nama: "",
+                              harga: 0,
+                              subtotal: 0,
+                            };
+                            setItems(newItems);
+                            return;
+                          }
 
-                        // jika belum pilih produk
-                        if (!value) {
                           const newItems = [...items];
                           newItems[index] = {
                             ...item,
-                            produk_id: "",
-                            nama: "",
-                            harga: 0,
-                            subtotal: 0,
+                            produk_id: selectedProduct.id,
+                            nama: selectedProduct.namaProduk,
+                            harga: selectedProduct.harga,
+                            subtotal: selectedProduct.harga * item.qty,
                           };
                           setItems(newItems);
-                          return;
-                        }
+                        }}
+                      />
 
-                        const p = produk.find((x) => x.id === value);
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.qty}
+                        onChange={(e) => {
+                          const newItems = [...items];
+                          newItems[index].qty = Number(e.target.value);
+                          newItems[index].subtotal =
+                            newItems[index].qty * newItems[index].harga;
+                          setItems(newItems);
+                        }}
+                      />
 
-                        if (!p) return; // safety guard
+                      <div className="price">
+                        Rp {item.subtotal.toLocaleString("id-ID")}
+                      </div>
 
-                        const newItems = [...items];
-                        newItems[index] = {
-                          ...item,
-                          produk_id: p.id,
-                          nama: p.namaProduk,
-                          harga: p.harga,
-                          subtotal: p.harga * item.qty,
-                        };
-                        setItems(newItems);
-                      }}
-                    >
-                      <option value="">-- Pilih Produk --</option>
-                      {produk.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.namaProduk}
-                        </option>
-                      ))}
-                    </select>
+                      {items.length > 1 && (
+                        <button
+                          className="remove"
+                          onClick={() =>
+                            setItems(items.filter((_, i) => i !== index))
+                          }
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
 
+                  <button
+                    className="add-item"
+                    onClick={() =>
+                      setItems([
+                        ...items,
+                        {
+                          produk_id: "",
+                          nama: "",
+                          harga: 0,
+                          qty: 1,
+                          subtotal: 0,
+                        },
+                      ])
+                    }
+                  >
+                    + Tambah Produk
+                  </button>
+
+                  <div className="form-group">
+                    <label>Pembeli</label>
                     <input
-                      type="number"
-                      min="1"
-                      value={item.qty}
-                      onChange={(e) => {
-                        const newItems = [...items];
-                        newItems[index].qty = Number(e.target.value);
-                        newItems[index].subtotal =
-                          newItems[index].qty * newItems[index].harga;
-                        setItems(newItems);
-                      }}
+                      type="text"
+                      className="form-control"
+                      value={pembeli}
+                      onChange={(e) => setPembeli(e.target.value)}
+                      placeholder="Nama pembeli"
                     />
+                  </div>
 
-                    <div className="price">
-                      Rp {item.subtotal.toLocaleString("id-ID")}
+                  {/* ===== RINGKASAN ===== */}
+                  <div className="summary">
+                    <div className="row">
+                      <span>Total</span>
+                      <strong>Rp {total.toLocaleString("id-ID")}</strong>
                     </div>
 
-                    {items.length > 1 && (
-                      <button
-                        className="remove"
-                        onClick={() =>
-                          setItems(items.filter((_, i) => i !== index))
-                        }
-                      >
-                        ×
-                      </button>
+                    <div className="row">
+                      <span>Bayar</span>
+                      <input
+                        type="number"
+                        value={bayar}
+                        onChange={(e) => setBayar(Number(e.target.value))}
+                      />
+                    </div>
+
+                    <div className={`row ${selisih < 0 ? "minus" : "plus"}`}>
+                      <span>{selisih < 0 ? "Kurang" : "Kembalian"}</span>
+                      <strong>
+                        Rp {Math.abs(selisih).toLocaleString("id-ID")}
+                      </strong>
+                    </div>
+
+                    {selisih < 0 && (
+                      <div className="warning">⚠ Uang pembayaran kurang</div>
                     )}
                   </div>
-                ))}
-
-                <button
-                  className="add-item"
-                  onClick={() =>
-                    setItems([
-                      ...items,
-                      {
-                        produk_id: "",
-                        nama: "",
-                        harga: 0,
-                        qty: 1,
-                        subtotal: 0,
-                      },
-                    ])
-                  }
-                >
-                  + Tambah Produk
-                </button>
-
-                {/* ===== PEMBELI ===== */}
-                <div className="row">
-                  <span>Pembeli : </span>
-                  <input
-                    type="text"
-                    value={pembeli}
-                    onChange={(e) => setPembeli(e.target.value)}
-                    placeholder="Nama pembeli"
-                  />
-                </div>
-
-                {/* ===== RINGKASAN ===== */}
-                <div className="summary">
-                  <div className="row">
-                    <span>Total</span>
-                    <strong>Rp {total.toLocaleString("id-ID")}</strong>
-                  </div>
-
-                  <div className="row">
-                    <span>Bayar</span>
-                    <input
-                      type="number"
-                      value={bayar}
-                      onChange={(e) => setBayar(Number(e.target.value))}
-                    />
-                  </div>
-
-                  <div className={`row ${selisih < 0 ? "minus" : "plus"}`}>
-                    <span>{selisih < 0 ? "Kurang" : "Kembalian"}</span>
-                    <strong>
-                      Rp {Math.abs(selisih).toLocaleString("id-ID")}
-                    </strong>
-                  </div>
-
-                  {selisih < 0 && (
-                    <div className="warning">⚠ Uang pembayaran kurang</div>
-                  )}
                 </div>
 
                 {/* ===== FOOTER ===== */}
                 <div className="modal-footer">
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setShowModal(false)}
-                  >
+                  <button className="btn btn-secondary" onClick={handleCancel}>
                     Batal
                   </button>
                   <button
@@ -406,6 +405,11 @@ export default function Sales({ onLogout, user, storeName }) {
                       <img src="/done2.gif" alt="" />
                     </div>
                     <p>Transaksi telah disimpan.</p>
+                    {lastTransaction.kode_transaksi && (
+                      <h3 style={{ color: "#3498db", marginTop: "5px" }}>
+                        {lastTransaction.kode_transaksi}
+                      </h3>
+                    )}
                   </div>
 
                   <div

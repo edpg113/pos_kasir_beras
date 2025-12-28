@@ -37,32 +37,52 @@ export default function Pelanggan({ onLogout, user, storeName }) {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  // Handle form submission to add or update customer
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Handle Add Customer
+  const handleAddPelanggan = async () => {
     try {
-      if (isEditMode) {
-        await axios.put(
-          `http://localhost:3000/api/pelanggan/${editId}`,
-          formData
-        );
-        alert(`Pelanggan berhasil diperbarui!`);
-      } else {
-        await axios.post("http://localhost:3000/api/addpelanggan", formData);
-        alert(`Pelanggan berhasil ditambahkan!`);
-      }
-      fetchPelanggan(); // Refresh the list
+      await axios.post("http://localhost:3000/api/addpelanggan", formData);
+      alert(`Pelanggan berhasil ditambahkan!`);
+      fetchPelanggan();
       closeModal();
     } catch (error) {
-      console.error("Gagal menyimpan data pelanggan:", error);
+      console.error("Gagal menambahkan pelanggan:", error);
       alert(
-        "Gagal menyimpan data pelanggan: " +
+        "Gagal menambahkan pelanggan: " +
           (error.response?.data?.message || error.message)
       );
     }
   };
 
-  const handleDelete = async () => {
+  // Handle Update Customer
+  const handleUpdatePelanggan = async () => {
+    try {
+      await axios.put(
+        `http://localhost:3000/api/pelanggan/${editId}`,
+        formData
+      );
+      alert(`Pelanggan berhasil diperbarui!`);
+      fetchPelanggan();
+      closeModal();
+    } catch (error) {
+      console.error("Gagal memperbarui pelanggan:", error);
+      alert(
+        "Gagal memperbarui pelanggan: " +
+          (error.response?.data?.message || error.message)
+      );
+    }
+  };
+
+  // Switcher for form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (isEditMode) {
+      handleUpdatePelanggan();
+    } else {
+      handleAddPelanggan();
+    }
+  };
+
+  const handleDeletePelanggan = async () => {
     if (!window.confirm("Apakah Anda yakin ingin menghapus pelanggan ini?"))
       return;
 
@@ -216,7 +236,7 @@ export default function Pelanggan({ onLogout, user, storeName }) {
                   <button
                     type="button"
                     className="btn btn-danger"
-                    onClick={handleDelete}
+                    onClick={handleDeletePelanggan}
                     style={{
                       marginRight: "auto",
                       backgroundColor: "#dc3545",

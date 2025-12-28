@@ -50,6 +50,18 @@ export default function Sidebar({ onLogout, user, storeName }) {
           </Link>
         </li>
         <li className="menu-item">
+          <Link to="/pengiriman" className={isActive("/pengiriman")}>
+            <span className="menu-icon">🚚</span>
+            Pengiriman
+          </Link>
+        </li>
+        <li className="menu-item">
+          <Link to="/retur" className={isActive("/retur")}>
+            <span className="menu-icon">↺</span>
+            Retur
+          </Link>
+        </li>
+        <li className="menu-item">
           <Link to="/reports" className={isActive("/reports")}>
             <span className="menu-icon">📈</span>
             Laporan

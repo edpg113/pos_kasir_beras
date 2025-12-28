@@ -6,7 +6,7 @@ import axios from "axios";
 // import Inventory from "../Inventory/Inventory";
 
 export default function Dashboard({ onLogout, user, storeName }) {
-  const [transaksi, setTrasaksi] = useState([]);
+  const [transaksi, setTransaksi] = useState([]);
   const [stats, setStats] = useState({
     total_penjualan: 0,
     produk_terjual: 0,
@@ -19,9 +19,10 @@ export default function Dashboard({ onLogout, user, storeName }) {
   // HANDLE FETCH TRANSAKSI
   // =============================
   const fetchTransaksi = async () => {
+    const today = new Date().toISOString().split("T")[0];
     axios
-      .get("http://localhost:3000/api/gettransaksi")
-      .then((res) => setTrasaksi(res.data))
+      .get(`http://localhost:3000/api/gettransaksi?date=${today}`)
+      .then((res) => setTransaksi(res.data))
       .catch((err) => console.error(err));
   };
   // =============================

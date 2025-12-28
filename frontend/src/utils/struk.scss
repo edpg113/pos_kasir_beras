@@ -1,0 +1,135 @@
+.struk {
+  font-family: monospace;
+  width: 280px; /* kurangi lebar struk */
+  margin: 0 auto;
+  padding: 5px;
+  font-size: 12px; /* ukuran font default */
+}
+
+.struk .head {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 5px auto;
+  text-align: center;
+}
+
+.struk .head img {
+  max-width: 40px;
+  margin: 5px 0;
+}
+
+.struk h2 {
+  text-align: center;
+  font-size: 14px;
+  margin: 5px 0;
+}
+
+.struk > p:first-of-type {
+  text-align: center;
+  margin: 5px 0;
+  font-size: 11px;
+}
+
+.struk hr {
+  border: none;
+  border-top: 1px dashed #000;
+  margin: 5px 0;
+}
+
+.struk .info {
+  padding: 0 5px;
+}
+
+.struk .info p {
+  margin: 3px 0;
+  font-size: 11px;
+  padding: 0;
+}
+
+.struk ul {
+  list-style: none;
+  padding: 0 5px;
+  margin: 5px 0;
+}
+
+.struk li {
+  margin: 3px 0;
+  font-size: 11px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.struk li span:first-child {
+  flex: 1;
+  padding-right: 10px;
+  text-align: left;
+}
+
+.struk li span:last-child {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.struk .footer {
+  text-align: center;
+  margin-top: 5px;
+}
+
+.struk .footer p {
+  font-size: 11px;
+  margin: 2px 0;
+}
+
+/* Print styles */
+/* Hapus atau komentar @media print yang lama */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .struk,
+  .struk * {
+    visibility: visible;
+  }
+
+  .struk {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 70mm !important;
+    margin: 0 auto;
+    padding: 5mm;
+  }
+
+  /* Mencegah page break di tengah struk */
+  .struk {
+    page-break-inside: avoid;
+    page-break-after: avoid;
+    page-break-before: avoid;
+  }
+}
+
+/* Tambahkan di bagian bawah file */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .struk-container {
+    display: block !important;
+  }
+}

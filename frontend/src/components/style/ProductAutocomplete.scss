@@ -1,0 +1,69 @@
+@use "../../styles/variables.scss" as *;
+
+.product-autocomplete-wrapper {
+  position: relative;
+  width: 100%;
+
+  input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    outline: none;
+
+    &:focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
+    }
+  }
+
+  .autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 4px;
+
+    .autocomplete-item {
+      padding: 5px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #f0f0f0;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover,
+      &.active {
+        background-color: #f8f9fa;
+      }
+
+      .item-name {
+        font-weight: 400;
+        font-size: 14px;
+        color: $dark-text;
+      }
+
+      .item-price {
+        color: $secondary-color;
+        font-size: 0.9em;
+      }
+    }
+
+    .no-results {
+      padding: 10px;
+      color: #999;
+      text-align: center;
+      font-style: italic;
+    }
+  }
+}

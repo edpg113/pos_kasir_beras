@@ -8,12 +8,16 @@ router.get("/inventory", (req, res) => {
         SELECT
             p.id,
             p.namaProduk AS produk,
+            p.namaProduk,
+            p.harga,
+            p.modal,
             p.stok,
             p.min_stok AS minStok,
             (SELECT qty FROM stok_masuk WHERE produk_id = p.id ORDER BY tanggal DESC LIMIT 1) AS reorder,
             p.updated_at AS lastUpdate,
             (SELECT supplier FROM stok_masuk WHERE produk_id = p.id ORDER BY tanggal DESC LIMIT 1) AS supplier
         FROM produk p
+        WHERE p.is_active = 1
         ORDER BY p.namaProduk ASC
         `;
   db.query(query, (err, result) => {
@@ -189,13 +193,10 @@ router.post("/inventory/add-stocks", (req, res) => {
       .catch((queryErr) => {
         console.error("❌ DB error during transaction:", queryErr);
         db.rollback(() => {
-          res
-            .status(500)
-            .json({
-              message:
-                "Gagal memperbarui salah satu item. Transaksi dibatalkan.",
-              error: queryErr.message,
-            });
+          res.status(500).json({
+            message: "Gagal memperbarui salah satu item. Transaksi dibatalkan.",
+            error: queryErr.message,
+          });
         });
       });
   });
@@ -290,6 +291,200 @@ router.put("/inventory/:id", (req, res) => {
         }
       });
     });
+  });
+});
+
+// =======================
+// POST RETUR BARANG
+// =======================
+
+router.post("/retur", (req, res) => {
+  const { items, keterangan } = req.body;
+
+  if (!items || items.length === 0) {
+    return res.status(400).json({ message: "Item retur kosong" });
+  }
+
+  db.beginTransaction((err) => {
+    if (err) return res.status(500).json({ message: "Gagal mulai transaksi" });
+
+    // 1. Insert ke tabel retur
+    const insertRetur = `INSERT INTO retur (keterangan) VALUES (?)`;
+    db.query(insertRetur, [keterangan || "-"], (err, result) => {
+      if (err) return rollback(res, err);
+
+      const returId = result.insertId;
+
+      // 2. Loop item
+      const promises = items.map((item) => {
+        return new Promise((resolve, reject) => {
+          // Tambah stok produk
+          const updateStok = "UPDATE produk SET stok = stok + ? WHERE id = ?";
+          db.query(updateStok, [item.qty, item.produk_id], (err) => {
+            if (err) return reject(err);
+
+            // Simpan detail retur
+            const insertDetail = `
+              INSERT INTO retur_detail (retur_id, produk_id, qty)
+              VALUES (?, ?, ?)
+            `;
+            db.query(
+              insertDetail,
+              [returId, item.produk_id, item.qty],
+              (err) => {
+                if (err) reject(err);
+                else resolve();
+              }
+            );
+          });
+        });
+      });
+
+      Promise.all(promises)
+        .then(() => {
+          db.commit(() => {
+            res.json({ message: "Retur berhasil disimpan" });
+          });
+        })
+        .catch((err) => rollback(res, err));
+    });
+  });
+
+  function rollback(res, err) {
+    console.error(err);
+    db.rollback(() => {
+      res.status(500).json({ message: "Gagal memproses retur" });
+    });
+  }
+});
+
+// =======================
+// STOCK TRANSFER (Kirim Barang ke Cabang)
+// =======================
+
+// API Send Stock to Branch (Bulk Support)
+router.post("/inventory/transfer", (req, res) => {
+  const { items } = req.body;
+
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ message: "Data pengiriman tidak lengkap." });
+  }
+
+  db.beginTransaction((err) => {
+    if (err) {
+      console.error("❌ Error starting transfer transaction:", err);
+      return res
+        .status(500)
+        .json({ message: "Gagal memulai transaksi database." });
+    }
+
+    const processItems = items.map((item) => {
+      const { produk_id, qty, tujuan, keterangan } = item;
+      const quantity = parseInt(qty, 10);
+
+      return new Promise((resolve, reject) => {
+        // 1. Check stock availability
+        const checkStockQuery =
+          "SELECT stok, namaProduk FROM produk WHERE id = ?";
+        db.query(checkStockQuery, [produk_id], (checkErr, checkResult) => {
+          if (checkErr) return reject(new Error("Gagal mengecek stok produk."));
+          if (checkResult.length === 0)
+            return reject(new Error(`Produk ID ${produk_id} tidak ditemukan.`));
+
+          const currentStock = checkResult[0].stok;
+          const namaProduk = checkResult[0].namaProduk;
+
+          if (currentStock < quantity) {
+            return reject(
+              new Error(
+                `Stok ${namaProduk} tidak cukup. Tersisa: ${currentStock}`
+              )
+            );
+          }
+
+          // 2. Decrease stock
+          const updateStockQuery =
+            "UPDATE produk SET stok = stok - ?, updated_at = NOW() WHERE id = ?";
+          db.query(updateStockQuery, [quantity, produk_id], (updateErr) => {
+            if (updateErr)
+              return reject(new Error(`Gagal mengurangi stok ${namaProduk}.`));
+
+            // 3. Record transfer in stok_pengiriman
+            const insertTransferQuery = `
+                INSERT INTO stok_pengiriman (produk_id, qty, tujuan, keterangan, tanggal)
+                VALUES (?, ?, ?, ?, NOW())
+              `;
+            db.query(
+              insertTransferQuery,
+              [produk_id, quantity, tujuan, keterangan],
+              (insertErr) => {
+                if (insertErr)
+                  return reject(
+                    new Error(
+                      `Gagal mencatat riwayat pengiriman ${namaProduk}.`
+                    )
+                  );
+                resolve();
+              }
+            );
+          });
+        });
+      });
+    });
+
+    Promise.all(processItems)
+      .then(() => {
+        db.commit((commitErr) => {
+          if (commitErr) {
+            console.error("❌ Error committing transfer:", commitErr);
+            return db.rollback(() => {
+              res
+                .status(500)
+                .json({ message: "Gagal menyelesaikan transaksi." });
+            });
+          }
+          res.json({ message: "Pengiriman barang berhasil dicatat." });
+        });
+      })
+      .catch((error) => {
+        db.rollback(() => {
+          res.status(400).json({ message: error.message });
+        });
+      });
+  });
+});
+
+// API Get Transfer History (Date Filter Support)
+router.get("/inventory/transfer-history", (req, res) => {
+  const { date } = req.query;
+  let query = `
+    SELECT
+      sp.id,
+      sp.tanggal,
+      p.namaProduk,
+      sp.qty,
+      sp.tujuan,
+      sp.keterangan
+    FROM stok_pengiriman sp
+    JOIN produk p ON sp.produk_id = p.id
+  `;
+
+  const params = [];
+  if (date) {
+    query += " WHERE DATE(sp.tanggal) = ? ";
+    params.push(date);
+  }
+
+  query += " ORDER BY sp.tanggal DESC";
+
+  db.query(query, params, (err, result) => {
+    if (err) {
+      console.error("❌ Error fetching transfer history:", err);
+      return res
+        .status(500)
+        .json({ message: "Gagal mengambil riwayat pengiriman." });
+    }
+    res.json(result);
   });
 });
 

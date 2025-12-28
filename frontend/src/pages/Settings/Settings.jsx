@@ -3,7 +3,7 @@ import Sidebar from "../../components/Sidebar";
 import "./style/Settings.scss";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
-import ChangePasswordModal from "./ChangePasswordModal"; // Impor modal
+// import ChangePasswordModal from "./ChangePasswordModal"; // Impor modal
 
 export default function Settings({ onLogout, user, storeName, refreshStore }) {
   const [formData, setFormData] = useState({
@@ -43,8 +43,8 @@ export default function Settings({ onLogout, user, storeName, refreshStore }) {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        `http://localhost:3000/api/user/password/${formData.id}`,
+      const response = await axios.put(
+        `http://localhost:3000/api/setting/${formData.id}`,
         {
           namaToko: formData.namaToko,
           pemilik: formData.pemilik,
@@ -226,10 +226,10 @@ export default function Settings({ onLogout, user, storeName, refreshStore }) {
           </div>
         </div>
       </div>
-      <ChangePasswordModal
+      {/* <ChangePasswordModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-      />
+      /> */}
     </>
   );
 }

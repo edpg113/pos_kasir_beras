@@ -17,7 +17,7 @@ router.get("/pelanggan", (req, res) => {
 });
 
 // API POST Pelanggan
-router.post("/pelanggan", (req, res) => {
+router.post("/addpelanggan", (req, res) => {
   const { nama, telepon, alamat, kategori } = req.body;
   if (!nama || !telepon || !alamat || !kategori) {
     return res

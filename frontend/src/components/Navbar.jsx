@@ -1,13 +1,13 @@
 import React from "react";
 import "./Navbar.css";
 
-export default function Navbar({title, onLogout, user}) {
+export default function Navbar({ title, onLogout, user }) {
   return (
     <div>
       <div className="dashboard-navbar">
         <h2>{title}</h2>
         <div className="navbar-user">
-          <span>👋 Halo, {user?.name}!</span>
+          <span>👋 Halo, {user?.nama}!</span>
           <button className="btn-logout" onClick={onLogout}>
             Logout
           </button>

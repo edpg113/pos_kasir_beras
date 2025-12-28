@@ -12,13 +12,15 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import Products from "./pages/Products/Products";
 import Sales from "./pages/Sales/Sales";
 import Inventory from "./pages/Inventory/Inventory";
+import Retur from "./pages/Retur/Retur";
 import Reports from "./pages/Reports/Reports";
 import Settings from "./pages/Settings/Settings";
 import Pelanggan from "./pages/Pelanggan/Pelanggan";
+import Pengiriman from "./pages/Pengiriman/Pengiriman";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Can be replaced by real auth check
-  const [user, setUser] = useState({ name: "Admin", role: "admin" }); // Default/Mock user
+  const [user, setUser] = useState({ nama: "Admin", role: "admin" }); // Default/Mock user
   const [storeName, setStoreName] = useState("Toko Beras");
 
   useEffect(() => {
@@ -73,6 +75,8 @@ export default function App() {
         <Route path="/sales" element={<Sales {...commonProps} />} />
         <Route path="/pelanggan" element={<Pelanggan {...commonProps} />} />
         <Route path="/inventory" element={<Inventory {...commonProps} />} />
+        <Route path="/pengiriman" element={<Pengiriman {...commonProps} />} />
+        <Route path="/retur" element={<Retur {...commonProps} />} />
         <Route path="/reports" element={<Reports {...commonProps} />} />
         <Route
           path="/settings"

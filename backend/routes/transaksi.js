@@ -2,9 +2,36 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 
+// Ensure kode_transaksi column exists
+const ensureColumn = () => {
+  const query = "SHOW COLUMNS FROM transaksi LIKE 'kode_transaksi'";
+  db.query(query, (err, results) => {
+    if (!err && results.length === 0) {
+      const alterQuery =
+        "ALTER TABLE transaksi ADD COLUMN kode_transaksi VARCHAR(50) AFTER id";
+      db.query(alterQuery, (err2) => {
+        if (err2)
+          console.error("❌ Gagal menambah kolom kode_transaksi:", err2);
+        else console.log("✅ Kolom kode_transaksi berhasil ditambahkan");
+      });
+    }
+  });
+};
+ensureColumn();
+
+// Helper to generate Transaction ID
+const generateTransactionID = () => {
+  const now = new Date();
+  const d = String(now.getDate()).padStart(2, "0");
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const y = now.getFullYear();
+  const random = Math.floor(1000 + Math.random() * 9000); // 4 digit unique random
+  return `TRX-${d}${m}${y}-${random}`;
+};
+
 // API POST Transaksi
 router.post("/transaksi", (req, res) => {
-  const { pembeli, total, bayar, kembalian, items } = req.body;
+  const { pembeli, total, bayar, kembalian, items } = req.body; // remove items check? no it's below
 
   if (!items || items.length === 0) {
     return res.status(400).json({ message: "Item transaksi kosong!" });
@@ -19,12 +46,13 @@ router.post("/transaksi", (req, res) => {
         .json({ message: "Gagal memulai transaksi database." });
     }
 
+    const kodeTransaksi = generateTransactionID();
     const queryTransaksi =
-      "INSERT INTO transaksi (tanggal, pembeli, total, bayar, kembalian) VALUES (NOW(), ?, ?, ?, ?)";
+      "INSERT INTO transaksi (kode_transaksi, tanggal, pembeli, total, bayar, kembalian) VALUES (?, NOW(), ?, ?, ?, ?)";
 
     db.query(
       queryTransaksi,
-      [pembeli, total, bayar, kembalian],
+      [kodeTransaksi, pembeli, total, bayar, kembalian],
       (err, result) => {
         if (err) {
           console.error("❌ Error insert transaksi:", err);
@@ -82,6 +110,7 @@ router.post("/transaksi", (req, res) => {
                 res.json({
                   message: "✅ Transaksi berhasil & stok diperbarui",
                   transaksi_id: transaksiId,
+                  kode_transaksi: kodeTransaksi,
                 });
               });
             })
@@ -110,7 +139,9 @@ router.get("/gettransaksi", (req, res) => {
   let query = `
   SELECT
   td.id AS transaksi_detail_id,
+  td.id AS transaksi_detail_id,
   t.id AS transaksi_id,
+  t.kode_transaksi,
   t.tanggal,
   t.pembeli,
   t.total,

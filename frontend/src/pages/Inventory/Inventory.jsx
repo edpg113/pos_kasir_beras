@@ -3,6 +3,7 @@ import Sidebar from "../../components/Sidebar";
 import "./style/Inventory.scss";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
+import { printStockEntry } from "../../utils/printStockEntry";
 
 export default function Inventory({ onLogout, user, storeName }) {
   const [inventory, setInventory] = useState([]);
@@ -11,6 +12,12 @@ export default function Inventory({ onLogout, user, storeName }) {
   const [editData, setEditData] = useState(null);
   const [supplier, setSupplier] = useState("");
   const [editStok, setEditStok] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [storeSettings, setStoreSettings] = useState(null);
+
+  // Success Modal State
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [lastAddedStock, setLastAddedStock] = useState(null);
 
   // State for multi-item stock update
   const initialItem = {
@@ -30,8 +37,20 @@ export default function Inventory({ onLogout, user, storeName }) {
     }
   };
 
+  const fetchSettings = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/getsetting");
+      if (response.data && response.data.length > 0) {
+        setStoreSettings(response.data[0]);
+      }
+    } catch (error) {
+      console.error("Gagal mengambil setting toko:", error);
+    }
+  };
+
   useEffect(() => {
     fetchInventory();
+    fetchSettings();
   }, []);
 
   // ====== MODAL HANDLERS START ======
@@ -135,9 +154,17 @@ export default function Inventory({ onLogout, user, storeName }) {
       await axios.post(`http://localhost:3000/api/inventory/add-stocks`, {
         items: itemsWithSupplier,
       });
-      alert("✅ Berhasil menambah semua stok");
+
+      // Prepare data for success modal
+      setLastAddedStock({
+        supplier,
+        items: itemsWithSupplier,
+        tanggal: new Date(),
+      });
+
       fetchInventory(); // Refresh data
-      closeModal();
+      setIsModalOpen(false); // Close the input modal
+      setShowSuccessModal(true); // Open the success modal
     } catch (error) {
       console.error("Failed to add stocks", error);
       alert(
@@ -204,7 +231,14 @@ export default function Inventory({ onLogout, user, storeName }) {
             </div>
           </div>
 
-          <div className="inventory-action-bar">
+          <div
+            className="inventory-action-bar"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <button
               className="btn btn-primary"
               style={{ width: "auto" }}
@@ -212,6 +246,20 @@ export default function Inventory({ onLogout, user, storeName }) {
             >
               + Tambah Stok
             </button>
+            <input
+              type="text"
+              placeholder="Cari Produk..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                padding: "10px",
+                borderRadius: "5px",
+                border: "1px solid #ddd",
+                width: "250px",
+                backgroundColor: "#fff",
+                color: "#333",
+              }}
+            />
           </div>
 
           <div className="inventory-card">
@@ -231,35 +279,44 @@ export default function Inventory({ onLogout, user, storeName }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {inventory.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <strong>{item.produk}</strong>
-                      </td>
-                      <td>{item.stok}</td>
-                      <td>{item.minStok}</td>
-                      <td>{item.reorder}</td>
-                      <td>{getStokStatus(item.stok, item.minStok)}</td>
-                      <td>{item.supplier}</td>
-                      <td>
-                        {new Date(item.lastUpdate).toLocaleDateString("id-ID", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-                      <td>
-                        <button
-                          className="btn-edit"
-                          onClick={() => openModal(item)}
-                        >
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {inventory
+                    .filter((item) =>
+                      item.produk
+                        .toLowerCase()
+                        .includes(searchTerm.toLowerCase())
+                    )
+                    .map((item) => (
+                      <tr key={item.id}>
+                        <td>
+                          <strong>{item.produk}</strong>
+                        </td>
+                        <td>{item.stok}</td>
+                        <td>{item.minStok}</td>
+                        <td>{item.reorder}</td>
+                        <td>{getStokStatus(item.stok, item.minStok)}</td>
+                        <td>{item.supplier}</td>
+                        <td>
+                          {new Date(item.lastUpdate).toLocaleDateString(
+                            "id-ID",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                        </td>
+                        <td>
+                          <button
+                            className="btn-edit"
+                            onClick={() => openModal(item)}
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -269,6 +326,7 @@ export default function Inventory({ onLogout, user, storeName }) {
 
       {isModalOpen && (
         <div className="modal-overlay">
+          {/* ... existing modal card ... */}
           <div className="modal-card large">
             <div className="modal-header">
               <h2>{isEditMode ? "Edit Stok Produk" : "Tambah Stok Produk"}</h2>
@@ -317,9 +375,9 @@ export default function Inventory({ onLogout, user, storeName }) {
                 </div>
               ) : (
                 /* Add Mode UI */
-                <>
+                <div className="modal-body">
                   {itemsToAdd.map((item, index) => (
-                    <div key={index} className="modal-body item-row">
+                    <div key={index} className="item-row">
                       <select
                         name="inventoryId"
                         value={item.inventoryId}
@@ -327,6 +385,7 @@ export default function Inventory({ onLogout, user, storeName }) {
                           handleItemChange(index, "inventoryId", e.target.value)
                         }
                         required
+                        style={{ flex: 2 }}
                       >
                         <option value="" disabled>
                           -- Pilih Produk --
@@ -363,7 +422,8 @@ export default function Inventory({ onLogout, user, storeName }) {
                     + Tambah Produk
                   </button>
 
-                  <div className="supplier-row" style={{ marginTop: "15px" }}>
+                  <div className="form-group">
+                    <label>Nama Supplier</label>
                     <input
                       type="text"
                       name="supplier"
@@ -373,7 +433,7 @@ export default function Inventory({ onLogout, user, storeName }) {
                       required
                     />
                   </div>
-                </>
+                </div>
               )}
             </div>
             <div className="modal-footer">
@@ -390,6 +450,79 @@ export default function Inventory({ onLogout, user, storeName }) {
                 onClick={handleAddStock}
               >
                 {isEditMode ? "Simpan Perubahan" : "Simpan Semua"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && lastAddedStock && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h2>Stok Berhasil Ditambahkan!</h2>
+            </div>
+            <div className="modal-body">
+              <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                <div style={{ fontSize: "50px", color: "#27ae60" }}>✅</div>
+                <p>Data stok telah berhasil disimpan ke gudang.</p>
+              </div>
+
+              <div className="stock-summary-card">
+                <h4>Ringkasan Penambahan:</h4>
+                <div className="summary-info">
+                  <p>
+                    <span>Supplier:</span>{" "}
+                    <strong>{lastAddedStock.supplier}</strong>
+                  </p>
+                  <p>
+                    <span>Tanggal:</span>{" "}
+                    <strong>
+                      {new Date(lastAddedStock.tanggal).toLocaleDateString(
+                        "id-ID",
+                        {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        }
+                      )}
+                    </strong>
+                  </p>
+                </div>
+                <table className="summary-table">
+                  <thead>
+                    <tr>
+                      <th>Produk</th>
+                      <th>Qty (kg)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lastAddedStock.items.map((item, idx) => (
+                      <tr key={idx}>
+                        <td>{item.produk}</td>
+                        <td>{item.quantity}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  closeModal();
+                }}
+              >
+                Selesai
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => printStockEntry(storeSettings, lastAddedStock)}
+              >
+                🖨 Cetak PDF
               </button>
             </div>
           </div>

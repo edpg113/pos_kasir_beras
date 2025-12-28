@@ -1,0 +1,85 @@
+@use "../styles/variables.scss" as *;
+
+.stock-entry-receipt {
+  width: 100%;
+  max-width: 350px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: white;
+  color: #333;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 14px;
+
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+
+    img {
+      max-width: 80px;
+      margin-bottom: 10px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin: 5px 0;
+    }
+
+    p {
+      margin: 2px 0;
+    }
+
+    .small {
+      font-size: 12px;
+      color: #666;
+    }
+  }
+
+  .divider {
+    border-top: 1px dashed #ccc;
+    margin: 10px 0;
+  }
+
+  .info {
+    margin: 15px 0;
+    p {
+      margin: 4px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+
+  .items {
+    margin: 15px 0;
+    .item-header {
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      span {
+        flex: 1;
+      }
+      span:last-child {
+        text-align: right;
+      }
+    }
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+    color: #888;
+    p {
+      margin: 2px 0;
+    }
+  }
+}
