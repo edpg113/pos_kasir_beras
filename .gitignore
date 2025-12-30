@@ -1,0 +1,17 @@
+# Node modules
+node_modules/
+
+# Electron build
+dist/
+dist_electron/
+out/
+release/
+
+# Build artifacts
+*.exe
+*.dll
+*.dmg
+*.AppImage
+
+# Env
+.env
