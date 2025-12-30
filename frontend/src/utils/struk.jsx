@@ -1,7 +1,7 @@
 import React from "react";
 import moment from "moment-timezone";
 import "../style/struk.scss";
-import Icon from "../../../assets/logo.png";
+import Icon from "../assets/logo.png";
 import { supabase } from "../../../../../supabase/supabaseClient";
 import { useEffect, useState } from "react";
 

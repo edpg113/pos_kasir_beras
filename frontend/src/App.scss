@@ -1,15 +1,14 @@
-@use './styles/variables.scss' as *;
+@use "./styles/variables.scss" as *;
 
 /* Global Styles */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  transition: $transition;
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: $white;
   color: #333;
 }
@@ -172,17 +171,7 @@ table {
   }
 }
 
-/* Global Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* Global Animations Removed for Electron Stability */
 
 /* Navbar User Styles */
 .navbar-user {

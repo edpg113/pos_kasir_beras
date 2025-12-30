@@ -3,7 +3,8 @@ import Sidebar from "../../components/Sidebar";
 import "./style/Settings.scss";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
-// import ChangePasswordModal from "./ChangePasswordModal"; // Impor modal
+import ChangePasswordModal from "./ChangePasswordModal"; // Impor modal
+import { useToast } from "../../components/Toast/Toast";
 
 export default function Settings({ onLogout, user, storeName, refreshStore }) {
   const [formData, setFormData] = useState({
@@ -18,6 +19,7 @@ export default function Settings({ onLogout, user, storeName, refreshStore }) {
   const [data, setData] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // State untuk modal
+  const toast = useToast();
 
   const fetchSetting = async () => {
     try {
@@ -54,11 +56,15 @@ export default function Settings({ onLogout, user, storeName, refreshStore }) {
         }
       );
       console.log("📥 Settings saved response:", response);
-      alert("✅ Pengaturan berhasil disimpan!");
+      toast.showToast("✅ Pengaturan berhasil disimpan!", {
+        type: "success",
+      });
       refreshStore(); // Refresh store settings in App.jsx
     } catch (error) {
       console.error("❌ Error saving settings:", error);
-      alert("❌ Gagal menyimpan pengaturan!");
+      toast.showToast("❌ Gagal menyimpan pengaturan!", {
+        type: "error",
+      });
     }
     fetchSetting();
     setEditMode(false);
@@ -226,10 +232,10 @@ export default function Settings({ onLogout, user, storeName, refreshStore }) {
           </div>
         </div>
       </div>
-      {/* <ChangePasswordModal
+      <ChangePasswordModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-      /> */}
+      />
     </>
   );
 }

@@ -51,7 +51,8 @@ initTables();
 
 // GET History Retur
 router.get("/retur", (req, res) => {
-  const query = `
+  const { startDate, endDate } = req.query;
+  let query = `
     SELECT 
         r.*, 
         t.kode_transaksi,
@@ -60,10 +61,26 @@ router.get("/retur", (req, res) => {
     LEFT JOIN retur_detail rd ON r.id = rd.retur_id
     LEFT JOIN produk p ON rd.produk_id = p.id
     LEFT JOIN transaksi t ON r.transaksi_id = t.id
+  `;
+
+  const queryParams = [];
+  if (startDate && endDate) {
+    query += ` WHERE DATE(r.tanggal) BETWEEN ? AND ? `;
+    queryParams.push(startDate, endDate);
+  } else if (startDate) {
+    query += ` WHERE DATE(r.tanggal) >= ? `;
+    queryParams.push(startDate);
+  } else if (endDate) {
+    query += ` WHERE DATE(r.tanggal) <= ? `;
+    queryParams.push(endDate);
+  }
+
+  query += `
     GROUP BY r.id
     ORDER BY r.tanggal DESC
   `;
-  db.query(query, (err, results) => {
+
+  db.query(query, queryParams, (err, results) => {
     if (err) return res.status(500).json(err);
     res.json(results);
   });
@@ -183,19 +200,12 @@ router.post("/retur/penjualan/:id", (req, res) => {
 
             Promise.all(detailQueries)
               .then(() => {
-                // 4. Update Total Transaksi (MENGURANGI)
-                const distinctTotal = `UPDATE transaksi SET total = total - ? WHERE id = ?`;
-                db.query(distinctTotal, [totalRetur, transaksiId], (err4) => {
-                  if (err4) {
-                    return db.rollback(() => res.status(500).json(err4));
-                  }
-                  db.commit((err5) => {
-                    if (err5)
-                      return db.rollback(() => res.status(500).json(err5));
-                    res.json({
-                      message: "Retur penjualan berhasil disimpan.",
-                      returId,
-                    });
+                db.commit((err5) => {
+                  if (err5)
+                    return db.rollback(() => res.status(500).json(err5));
+                  res.json({
+                    message: "Retur penjualan berhasil disimpan.",
+                    returId,
                   });
                 });
               })

@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOMServer from "react-dom/server";
 import styles from "./printReceipt.scss?inline";
+import logo from "../assets/logo.png";
 
 /**
  * ReceiptTemplate Component
@@ -32,7 +33,7 @@ const ReceiptTemplate = ({ storeSettings, transactionData }) => {
   return (
     <div className="receipt">
       <div className="header">
-        <img src="/logo.png" alt="logo" />
+        <img src={logo} alt="logo" />
         <p className="title">{namaToko}</p>
 
         <p className="small">{alamat}</p>
@@ -42,7 +43,7 @@ const ReceiptTemplate = ({ storeSettings, transactionData }) => {
 
       <div className="info">
         <p>Kasir : {kasir || "-"}</p>
-        <p>No. Transaksi : {kode_transaksi || id}</p>
+        <p>No : {kode_transaksi || id}</p>
         <p>Tanggal : {dateStr}</p>
         <p>Customer : {pembeli || "-"}</p>
       </div>
@@ -53,9 +54,9 @@ const ReceiptTemplate = ({ storeSettings, transactionData }) => {
         {items.map((item, i) => (
           <div className="row" key={i}>
             <span>
-              {item.nama} x {item.qty}
+              {item.nama} x {item.qty} | {item.harga.toLocaleString("id-ID")}
             </span>
-            <span>Rp. {item.harga.toLocaleString("id-ID")}</span>
+            <span>Rp. {item.subtotal.toLocaleString("id-ID")}</span>
           </div>
         ))}
       </div>
@@ -109,7 +110,9 @@ export const printReceipt = (storeSettings, transactionData) => {
                padding: 0; 
                display: flex; 
                justify-content: center; 
+               align-items: flex-start;
                background-color: #f0f0f0;
+               min-height: 100vh;
              }
              @media print {
                body { background-color: white; }
@@ -119,7 +122,7 @@ export const printReceipt = (storeSettings, transactionData) => {
           </style>
         </head>
         <body>
-          <div style="background-color: white; padding: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin: 20px 0;">
+          <div style="background-color: white;  height: fit-content;">
             ${htmlContent}
           </div>
           <script>

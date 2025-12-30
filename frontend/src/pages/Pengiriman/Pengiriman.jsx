@@ -5,6 +5,7 @@ import ProductAutocomplete from "../../components/ProductAutocomplete";
 import axios from "axios";
 import { printShipmentReport } from "../../utils/printShipment";
 import "./style/pengiriman.scss";
+import { useToast } from "../../components/Toast/Toast";
 
 export default function Pengiriman({ onLogout, user, storeName }) {
   const [products, setProducts] = useState([]);
@@ -25,6 +26,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [lastShipmentData, setLastShipmentData] = useState(null);
+  const toast = useToast();
 
   // Filter State
   const [filterDate, setFilterDate] = useState("");
@@ -118,14 +120,18 @@ export default function Pengiriman({ onLogout, user, storeName }) {
     );
 
     if (validItems.length === 0) {
-      alert("Harap lengkapi data pengiriman minimal satu produk.");
+      toast.showToast("Harap lengkapi data pengiriman minimal satu produk.", {
+        type: "error",
+      });
       return;
     }
 
     // Check all stocks
     for (const item of validItems) {
       if (item.qty > item.currentStock) {
-        alert(`Stok ${item.nama} tidak mencukupi!`);
+        toast.showToast(`Stok ${item.nama} tidak mencukupi!`, {
+          type: "error",
+        });
         return;
       }
     }
@@ -167,10 +173,13 @@ export default function Pengiriman({ onLogout, user, storeName }) {
       fetchHistory();
     } catch (error) {
       console.error("Transfer failed", error);
-      alert(
+      toast.showToast(
         `❌ Gagal mengirim barang: ${
           error.response?.data?.message || error.message
-        }`
+        }`,
+        {
+          type: "error",
+        }
       );
     } finally {
       setIsSubmitting(false);
@@ -179,7 +188,9 @@ export default function Pengiriman({ onLogout, user, storeName }) {
 
   const handlePrint = () => {
     if (!storeSettings || transferHistory.length === 0) {
-      alert("Tidak ada data untuk dicetak.");
+      toast.showToast("Tidak ada data untuk dicetak.", {
+        type: "error",
+      });
       return;
     }
     printShipmentReport(storeSettings, transferHistory, filterDate);
@@ -196,6 +207,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
       keterangan: data.keterangan,
     }));
     printShipmentReport(storeSettings, printData, null);
+    setShowSuccessModal(false);
   };
 
   return (
@@ -209,8 +221,6 @@ export default function Pengiriman({ onLogout, user, storeName }) {
           <div className="pengiriman-card">
             <div
               style={{
-                // display: "flex",
-                // justifyContent: "space-between",
                 alignItems: "center",
                 marginBottom: "15px",
               }}
@@ -358,7 +368,6 @@ export default function Pengiriman({ onLogout, user, storeName }) {
           <div className="history-card">
             <div
               style={{
-                // display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
                 marginBottom: "20px",
@@ -445,7 +454,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
 
         {/* Success Modal */}
         {showSuccessModal && lastShipmentData && (
-          <div className="modal-overlay">
+          <div className="modal-overlay is-active">
             <div className="modal-card">
               <div className="modal-header">
                 <h2>Pengiriman Berhasil!</h2>
@@ -458,8 +467,9 @@ export default function Pengiriman({ onLogout, user, storeName }) {
                     style={{ width: "80px", marginBottom: "10px" }}
                   />
                   <p>
-                    Barang telah berhasil dikirim ke{" "}
-                    <strong>{lastShipmentData.tujuan}</strong>.
+                    Barang telah disiapkan untuk dikirim ke:
+                    <br />
+                    <strong>{lastShipmentData.tujuan}</strong>
                   </p>
                 </div>
 
@@ -526,8 +536,9 @@ export default function Pengiriman({ onLogout, user, storeName }) {
                 <button
                   className="btn btn-primary"
                   onClick={() => handlePrintSingle(lastShipmentData)}
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
                 >
-                  🖨 Cetak Bukti
+                  🖨 Selesai dan Cetak
                 </button>
               </div>
             </div>

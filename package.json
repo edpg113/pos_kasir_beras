@@ -1,5 +1,42 @@
 {
+  "name": "pos-kasir-beras",
+  "version": "1.0.0",
+  "description": "Aplikasi POS Kasir Beras",
+  "author": "User",
+  "main": "main.js",
+  "scripts": {
+    "frontend-build": "cd frontend && npm run build",
+    "backend-install": "cd backend && npm install",
+    "frontend-install": "cd frontend && npm install",
+    "install-all": "npm install && npm run backend-install && npm run frontend-install",
+    "dev": "cross-env NODE_ENV=development electron .",
+    "pre-dist": "taskkill /F /IM \"POS Kasir Beras.exe\" /T || set ERRORLEVEL=0",
+    "dist": "npm run pre-dist && npm run frontend-build && electron-builder"
+  },
+  "build": {
+    "appId": "com.pos.kasirberas",
+    "productName": "POS Kasir Beras",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "main.js",
+      "backend/**/*",
+      "frontend/dist/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "portable"
+    }
+  },
   "devDependencies": {
-    "sass-embedded": "^1.96.0"
+    "cross-env": "^7.0.3",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "sass-embedded": "^1.96.0",
+    "wait-on": "^8.0.5"
+  },
+  "dependencies": {
+    "node-machine-id": "^1.1.12"
   }
 }

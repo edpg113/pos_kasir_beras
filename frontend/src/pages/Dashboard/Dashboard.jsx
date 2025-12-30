@@ -85,15 +85,34 @@ export default function Dashboard({ onLogout, user, storeName }) {
 
         <div className="dashboard-page-content">
           <div className="dashboard-page-header">
-            <h1>Selamat Datang di Dashboard</h1>
+            <h1>Selamat Datang di Toko Beras Sumber Negeri</h1>
             <p>Kelola toko beras Anda dengan mudah dan efisien</p>
           </div>
 
           <div className="dashboard-stats-grid">
             <div className="dashboard-stat-card">
-              <h3>Total Penjualan</h3>
+              <h3>Total Penjualan (Bruto)</h3>
               <div className="value">
                 {Number(stats.total_penjualan).toLocaleString("id-ID")}
+              </div>
+              <div className="unit">Rp</div>
+            </div>
+
+            <div className="dashboard-stat-card">
+              <h3 style={{ color: "#e67e22" }}>Total Retur</h3>
+              <div className="value" style={{ color: "#e67e22" }}>
+                {Number(stats.total_retur || 0).toLocaleString("id-ID")}
+              </div>
+              <div className="unit">Rp</div>
+            </div>
+
+            <div
+              className="dashboard-stat-card"
+              style={{ borderLeft: "4px solid #27ae60" }}
+            >
+              <h3 style={{ color: "#27ae60" }}>Penjualan Bersih (Net)</h3>
+              <div className="value" style={{ color: "#27ae60" }}>
+                {Number(stats.net_sales || 0).toLocaleString("id-ID")}
               </div>
               <div className="unit">Rp</div>
             </div>

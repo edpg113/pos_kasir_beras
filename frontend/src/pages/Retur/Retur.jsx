@@ -3,6 +3,7 @@ import axios from "axios";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 import "./style/Retur.scss";
+import { useToast } from "../../components/Toast/Toast";
 
 export default function Retur({ onLogout, user, storeName }) {
   const [returTab, setReturTab] = useState("history"); // sales, purchase, history
@@ -12,6 +13,7 @@ export default function Retur({ onLogout, user, storeName }) {
   const [returTransactionItems, setReturTransactionItems] = useState([]);
   const [selectedReturItems, setSelectedReturItems] = useState({}); // { produk_id: { ...item, returnQty: 0 } }
   const [keterangan, setKeterangan] = useState("");
+  const toast = useToast();
 
   // Purchase Return State
   const [supplier, setSupplier] = useState("");
@@ -23,6 +25,8 @@ export default function Retur({ onLogout, user, storeName }) {
   // History State
   const [returHistory, setReturHistory] = useState([]);
   const [historySearch, setHistorySearch] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     fetchInventory();
@@ -40,16 +44,28 @@ export default function Retur({ onLogout, user, storeName }) {
 
   const fetchReturHistory = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/retur");
+      const res = await axios.get("http://localhost:3000/api/retur", {
+        params: {
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+        },
+      });
       setReturHistory(res.data);
     } catch (err) {
       console.error(err);
     }
   };
 
+  useEffect(() => {
+    fetchReturHistory();
+  }, [startDate, endDate]);
+
   // --- SALES RETURN LOGIC ---
   const handleSearchTransaction = async () => {
-    if (!returTransactionId) return alert("Masukkan ID Transaksi / Kode TRX");
+    if (!returTransactionId)
+      return toast.showToast("Masukkan ID Transaksi / Kode TRX", {
+        type: "error",
+      });
     try {
       const res = await axios.get(
         `http://localhost:3000/api/retur/transaksi/${returTransactionId}/items`
@@ -66,7 +82,9 @@ export default function Retur({ onLogout, user, storeName }) {
       });
       setSelectedReturItems(initialSelected);
     } catch (error) {
-      alert("Transaksi tidak ditemukan");
+      toast.showToast("Transaksi tidak ditemukan", {
+        type: "error",
+      });
       setReturTransactionItems([]);
     }
   };
@@ -95,7 +113,9 @@ export default function Retur({ onLogout, user, storeName }) {
       }));
 
     if (itemsToReturn.length === 0)
-      return alert("Pilih item dan jumlah yang valid");
+      return toast.showToast("Pilih item dan jumlah yang valid", {
+        type: "error",
+      });
 
     try {
       await axios.post(
@@ -105,7 +125,9 @@ export default function Retur({ onLogout, user, storeName }) {
           keterangan,
         }
       );
-      alert("✅ Retur Penjualan Berhasil");
+      toast.showToast("✅ Retur Penjualan Berhasil", {
+        type: "success",
+      });
       // Reset Form
       setReturTransactionId("");
       setReturTransactionItems([]);
@@ -114,7 +136,9 @@ export default function Retur({ onLogout, user, storeName }) {
       fetchReturHistory();
     } catch (error) {
       console.error(error);
-      alert("Gagal memproses retur");
+      toast.showToast("Gagal memproses retur", {
+        type: "error",
+      });
     }
   };
 
@@ -134,11 +158,17 @@ export default function Retur({ onLogout, user, storeName }) {
   };
 
   const submitReturPurchase = async () => {
-    if (!supplier) return alert("Isi nama supplier");
+    if (!supplier)
+      return toast.showToast("Isi nama supplier", {
+        type: "error",
+      });
     const validItems = returPurchaseItems.filter(
       (i) => i.produk_id && i.qty > 0
     );
-    if (validItems.length === 0) return alert("Isi item retur");
+    if (validItems.length === 0)
+      return toast.showToast("Isi item retur", {
+        type: "error",
+      });
 
     // Map items to include price from inventory modal
     const itemsWithPrice = validItems.map((i) => {
@@ -152,7 +182,9 @@ export default function Retur({ onLogout, user, storeName }) {
         items: itemsWithPrice,
         keterangan,
       });
-      alert("✅ Retur Pembelian Berhasil");
+      toast.showToast("✅ Retur Pembelian Berhasil", {
+        type: "success",
+      });
       // Reset Form
       setSupplier("");
       setReturPurchaseItems([{ produk_id: "", qty: 1 }]);
@@ -161,7 +193,9 @@ export default function Retur({ onLogout, user, storeName }) {
       fetchInventory();
     } catch (error) {
       console.error(error);
-      alert("Gagal memproses retur pembelian");
+      toast.showToast("Gagal memproses retur pembelian", {
+        type: "error",
+      });
     }
   };
 
@@ -267,6 +301,7 @@ export default function Retur({ onLogout, user, storeName }) {
                       value={keterangan}
                       onChange={(e) => setKeterangan(e.target.value)}
                       rows={3}
+                      style={{ backgroundColor: "#fff", color: "#333" }}
                     ></textarea>
                   </div>
                   <div style={{ textAlign: "right" }}>
@@ -390,20 +425,74 @@ export default function Retur({ onLogout, user, storeName }) {
               borderBottom: "1px solid #ecf0f1",
             }}
           >
-            <input
-              type="text"
-              placeholder="Cari Retur (Transaksi ID, Supplier, Produk)..."
-              value={historySearch}
-              onChange={(e) => setHistorySearch(e.target.value)}
-              style={{
-                width: "250px",
-                padding: "10px",
-                borderRadius: "5px",
-                border: "1px solid #ddd",
-                backgroundColor: "#fff",
-                color: "#333",
-              }}
-            />
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <input
+                type="text"
+                placeholder="Cari Retur (Transaksi ID, Supplier, Produk)..."
+                value={historySearch}
+                onChange={(e) => setHistorySearch(e.target.value)}
+                style={{
+                  width: "250px",
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid #ddd",
+                  backgroundColor: "#fff",
+                  color: "#333",
+                }}
+              />
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "5px" }}
+              >
+                <span style={{ fontSize: "14px", color: "#666" }}>Dari:</span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  style={{
+                    padding: "8px",
+                    borderRadius: "5px",
+                    border: "1px solid #ddd",
+                    backgroundColor: "#fff",
+                    color: "#333",
+                  }}
+                />
+              </div>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "5px" }}
+              >
+                <span style={{ fontSize: "14px", color: "#666" }}>Sampai:</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  style={{
+                    padding: "8px",
+                    borderRadius: "5px",
+                    border: "1px solid #ddd",
+                    backgroundColor: "#fff",
+                    color: "#333",
+                  }}
+                />
+              </div>
+              {(startDate || endDate) && (
+                <button
+                  onClick={() => {
+                    setStartDate("");
+                    setEndDate("");
+                  }}
+                  style={{
+                    padding: "8px 15px",
+                    borderRadius: "5px",
+                    border: "none",
+                    backgroundColor: "#e74c3c",
+                    color: "white",
+                    cursor: "pointer",
+                  }}
+                >
+                  Reset Filter
+                </button>
+              )}
+            </div>
           </div>
           <table className="retur-table">
             <thead>

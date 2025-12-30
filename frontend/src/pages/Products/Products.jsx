@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar";
 import "./style/Products.scss";
 import Navbar from "../../components/Navbar";
+import Modal from "../../components/Modal";
 import axios from "axios";
+import { useToast } from "../../components/Toast/Toast";
 
 export default function Products({ onLogout, user, storeName }) {
   const [products, setProducts] = useState([]);
@@ -21,6 +23,7 @@ export default function Products({ onLogout, user, storeName }) {
     modal: "",
     stok: "",
   });
+  const toast = useToast();
 
   const getStokBadge = (stok) => {
     if (stok > 100)
@@ -57,12 +60,16 @@ export default function Products({ onLogout, user, storeName }) {
           },
         }
       );
-      alert("Berhasil menambahkan kategori");
+      toast.showToast("Berhasil menambahkan kategori", {
+        type: "success",
+      });
       setNewCategories("");
       fetchCategories();
     } catch (err) {
       console.log(err);
-      alert("Gagal menambahkan kategori");
+      toast.showToast("Gagal menambahkan kategori", {
+        type: "error",
+      });
     }
   };
 
@@ -90,7 +97,9 @@ export default function Products({ onLogout, user, storeName }) {
         editCategory
       );
       setEditCategory(response.data);
-      alert("✅ Kategori berhasil diperbarui!");
+      toast.showToast("✅ Kategori berhasil diperbarui!", {
+        type: "success",
+      });
       fetchCategories();
       setModalCategory(false);
     } catch (err) {
@@ -104,13 +113,17 @@ export default function Products({ onLogout, user, storeName }) {
   const handleDeleteCategory = async (id) => {
     try {
       await axios.delete(`http://localhost:3000/api/deletecategories/${id}`);
-      alert("✅ Kategori berhasil dihapus!");
+      toast.showToast("✅ Kategori berhasil dihapus!", {
+        type: "success",
+      });
       fetchCategories();
       setEditCategory(null);
       setModalCategory(false);
     } catch (error) {
       console.log("❌ Error updating kategori:", error);
-      alert("❌ Gagal menghapus kategori!");
+      toast.showToast("❌ Gagal menghapus kategori!", {
+        type: "error",
+      });
     }
   };
 
@@ -130,7 +143,9 @@ export default function Products({ onLogout, user, storeName }) {
         }
       );
       console.log("📥 New product added response:", response);
-      alert("✅ Produk baru berhasil ditambahkan!");
+      toast.showToast("✅ Produk baru berhasil ditambahkan!", {
+        type: "success",
+      });
       setNewProduct({
         namaProduk: "",
         kategori: "",
@@ -142,7 +157,9 @@ export default function Products({ onLogout, user, storeName }) {
       setShowModal(false);
     } catch (error) {
       console.log("❌ Error adding new product:", error);
-      alert("❌ Gagal menambahkan produk baru!");
+      toast.showToast("❌ Gagal menambahkan produk baru!", {
+        type: "error",
+      });
     }
   };
 
@@ -186,24 +203,32 @@ export default function Products({ onLogout, user, storeName }) {
         editingProduct
       );
       console.log("🔄 Product updated response:", response);
-      alert("✅ Produk berhasil diperbarui!");
+      toast.showToast("✅ Produk berhasil diperbarui!", {
+        type: "success",
+      });
       fetchProducts();
       setEditingProduct(null);
     } catch (error) {
       console.log("❌ Error updating product:", error);
-      alert("❌ Gagal memperbarui produk!");
+      toast.showToast("❌ Gagal memperbarui produk!", {
+        type: "error",
+      });
     }
   };
 
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:3000/api/deleteproduct/${id}`);
-      alert("✅ Produk berhasil dihapus!");
+      toast.showToast("✅ Produk berhasil dihapus!", {
+        type: "success",
+      });
       fetchProducts();
       setEditingProduct(null);
     } catch (error) {
       console.log("❌ Error updating product:", error);
-      alert("❌ Gagal menghapus produk!");
+      toast.showToast("❌ Gagal menghapus produk!", {
+        type: "error",
+      });
     }
   };
 
@@ -311,231 +336,215 @@ export default function Products({ onLogout, user, storeName }) {
                   ))}
                 </ul>
               </div>
-              {modalCategory && (
-                <div className="modal-overlay">
-                  <div className="modal-card">
-                    <div className="modal-header">
-                      <h2>Edit Kategori</h2>
-                      <button
-                        className="modal-close"
-                        onClick={() => setModalCategory(false)}
-                      >
-                        ✖
-                      </button>
-                    </div>
-                    <form className="modal-body" onSubmit={handleEditCategory}>
-                      <div className="form-group">
-                        <input
-                          type="text"
-                          value={editCategory ? editCategory.kategori : ""}
-                          onChange={(e) =>
-                            setEditCategory({
-                              ...editCategory,
-                              kategori: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          type="button"
-                          className="btn btn-logout"
-                          onClick={() => handleDeleteCategory(editCategory.id)}
-                        >
-                          Hapus
-                        </button>
-                        <button type="submit" className="btn btn-primary">
-                          Simpan
-                        </button>
-                      </div>
-                    </form>
+              <Modal
+                isOpen={modalCategory}
+                onClose={() => setModalCategory(false)}
+                title="Edit Kategori"
+              >
+                <form className="modal-body" onSubmit={handleEditCategory}>
+                  <div className="form-group">
+                    <input
+                      type="text"
+                      value={editCategory ? editCategory.kategori : ""}
+                      onChange={(e) =>
+                        setEditCategory({
+                          ...editCategory,
+                          kategori: e.target.value,
+                        })
+                      }
+                      required
+                    />
                   </div>
-                </div>
-              )}
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-logout"
+                      onClick={() => handleDeleteCategory(editCategory.id)}
+                    >
+                      Hapus
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      Simpan
+                    </button>
+                  </div>
+                </form>
+              </Modal>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Add Product Modal */}
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <div className="modal-header">
-              <h2>Tambah Produk Baru</h2>
+        <Modal
+          key="add-product-modal"
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          title="Tambah Produk Baru"
+        >
+          <form onSubmit={handleSubmit} className="modal-body">
+            <div className="form-group">
+              <label>Nama Produk</label>
+              <input
+                type="text"
+                name="namaProduk"
+                value={newProduct.namaProduk}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Kategori</label>
+              <select
+                name="kategori"
+                value={newProduct.kategori}
+                onChange={handleChange}
+                required
+              >
+                <option value="">-- Pilih Kategori --</option>
+                {getcategory.map((item) => (
+                  <option key={item.id} value={item.kategori}>
+                    {item.kategori}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Harga Beli</label>
+              <input
+                type="number"
+                name="modal"
+                value={newProduct.modal}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Harga Jual (Rp/kg)</label>
+                <input
+                  type="number"
+                  name="harga"
+                  value={newProduct.harga}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Stok (kg)</label>
+                <input
+                  type="number"
+                  name="stok"
+                  value={newProduct.stok}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
               <button
-                className="modal-close"
+                type="button"
+                className="btn btn-secondary"
                 onClick={() => setShowModal(false)}
               >
-                ✖
+                Batal
+              </button>
+              <button type="submit" className="btn btn-primary">
+                Simpan
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="modal-body">
-              <div className="form-group">
-                <label>Nama Produk</label>
-                <input
-                  type="text"
-                  name="namaProduk"
-                  value={newProduct.namaProduk}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Kategori</label>
-                <select
-                  name="kategori"
-                  value={newProduct.kategori}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">-- Pilih Kategori --</option>
-                  {getcategory.map((item) => (
-                    <option key={item.id} value={item.kategori}>
-                      {item.kategori}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Harga Beli</label>
-                <input
-                  type="number"
-                  name="modal"
-                  value={newProduct.modal}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Harga Jual (Rp/kg)</label>
-                  <input
-                    type="number"
-                    name="harga"
-                    value={newProduct.harga}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Stok (kg)</label>
-                  <input
-                    type="number"
-                    name="stok"
-                    value={newProduct.stok}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowModal(false)}
-                >
-                  Batal
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Simpan
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+          </form>
+        </Modal>
       )}
 
-      {editingProduct && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <div className="modal-header">
-              <h2>Edit Produk</h2>
-              <button className="modal-close" onClick={handleEditCancel}>
-                ✖
-              </button>
+      {/* Edit Product Modal */}
+      {editingProduct !== null && (
+        <Modal
+          key={`edit-product-${editingProduct?.id}`}
+          isOpen={editingProduct !== null}
+          onClose={handleEditCancel}
+          title="Edit Produk"
+        >
+          <form onSubmit={handleUpdateProduct} className="modal-body">
+            <div className="form-group">
+              <label>Nama Produk</label>
+              <input
+                type="text"
+                name="namaProduk"
+                value={editingProduct?.namaProduk || ""}
+                onChange={handleEditChange}
+                required
+              />
             </div>
-            <form onSubmit={handleUpdateProduct} className="modal-body">
+            <div className="form-group">
+              <label>Kategori</label>
+              <select
+                name="kategori"
+                value={editingProduct?.kategori || ""}
+                onChange={handleEditChange}
+                required
+              >
+                <option value="">-- Pilih Kategori --</option>
+                {getcategory.map((item) => (
+                  <option key={item.id} value={item.kategori}>
+                    {item.kategori}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Harga Beli</label>
+              <input
+                type="number"
+                name="modal"
+                value={editingProduct?.modal || ""}
+                onChange={handleEditChange}
+                required
+              />
+            </div>
+            <div className="form-row">
               <div className="form-group">
-                <label>Nama Produk</label>
-                <input
-                  type="text"
-                  name="namaProduk"
-                  value={editingProduct.namaProduk}
-                  onChange={handleEditChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Kategori</label>
-                <select
-                  name="kategori"
-                  value={editingProduct.kategori}
-                  onChange={handleEditChange}
-                  required
-                >
-                  <option value="">-- Pilih Kategori --</option>
-                  {getcategory.map((item) => (
-                    <option key={item.id} value={item.kategori}>
-                      {item.kategori}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Harga Beli</label>
+                <label>Harga Jual (Rp/kg)</label>
                 <input
                   type="number"
-                  name="modal"
-                  value={editingProduct.modal}
+                  name="harga"
+                  value={editingProduct?.harga || ""}
                   onChange={handleEditChange}
                   required
                 />
               </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Harga Jual (Rp/kg)</label>
-                  <input
-                    type="number"
-                    name="harga"
-                    value={editingProduct.harga}
-                    onChange={handleEditChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Stok (kg)</label>
-                  <input
-                    type="number"
-                    name="stok"
-                    value={editingProduct.stok}
-                    onChange={handleEditChange}
-                    required
-                  />
-                </div>
+              <div className="form-group">
+                <label>Stok (kg)</label>
+                <input
+                  type="number"
+                  name="stok"
+                  value={editingProduct?.stok || ""}
+                  onChange={handleEditChange}
+                  required
+                />
               </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={handleEditCancel}
-                >
-                  Batal
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-logout"
-                  onClick={() => handleDelete(editingProduct.id)}
-                >
-                  Hapus Produk
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Simpan Perubahan
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleEditCancel}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                className="btn btn-logout"
+                onClick={() => handleDelete(editingProduct.id)}
+              >
+                Hapus Produk
+              </button>
+              <button type="submit" className="btn btn-primary">
+                Simpan Perubahan
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );

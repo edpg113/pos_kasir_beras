@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
+import Modal from "../../components/Modal";
 import "./style/Sales.scss";
 import axios from "axios";
 import { printReceipt } from "../../utils/printReceipt";
 import ProductAutocomplete from "../../components/ProductAutocomplete";
+import done2 from "../../assets/done2.gif";
+import { useToast } from "../../components/Toast/Toast";
 
 export default function Sales({ onLogout, user, storeName }) {
   const [showModal, setShowModal] = useState(false);
@@ -13,12 +16,15 @@ export default function Sales({ onLogout, user, storeName }) {
   const [transaksi, setTransaksi] = useState([]);
   const [storeSettings, setStoreSettings] = useState(null);
   const [lastTransaction, setLastTransaction] = useState(null);
+  const toast = useToast();
 
   // New State for enhancements
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const [dailyTotal, setDailyTotal] = useState(0);
+  const [dailyGross, setDailyGross] = useState(0);
+  const [dailyReturn, setDailyReturn] = useState(0);
+  const [dailyNet, setDailyNet] = useState(0);
 
   const [items, setItems] = useState([
     { produk_id: "", nama: "", harga: 0, qty: 1, subtotal: 0 },
@@ -56,7 +62,11 @@ export default function Sales({ onLogout, user, storeName }) {
       axios
         .get("http://localhost:3000/api/getproducts")
         .then((res) => setProduk(res.data))
-        .catch(() => alert("Gagal mengambil data produk"));
+        .catch(() =>
+          toast.showToast("Gagal mengambil data produk", {
+            type: "error",
+          })
+        );
     } catch (error) {
       console.log(error);
     }
@@ -75,7 +85,9 @@ export default function Sales({ onLogout, user, storeName }) {
     const validItems = items.filter((i) => i.produk_id && i.qty > 0);
 
     if (validItems.length === 0) {
-      alert("❌ Pilih minimal 1 produk");
+      toast.showToast("❌ Pilih minimal 1 produk", {
+        type: "error",
+      });
       return;
     }
 
@@ -107,7 +119,9 @@ export default function Sales({ onLogout, user, storeName }) {
       setBayar(0);
       getTransaksi(selectedDate); // Refresh with current date filter
     } catch (err) {
-      alert("❌ Gagal menyimpan transaksi");
+      toast.showToast("❌ Gagal menyimpan transaksi", {
+        type: "error",
+      });
       console.error(err);
     }
   };
@@ -124,19 +138,27 @@ export default function Sales({ onLogout, user, storeName }) {
   // =============================
   const getTransaksi = async (date) => {
     try {
-      const response = await axios.get(
+      // Ambil transaksi
+      const resTransaksi = await axios.get(
         `http://localhost:3000/api/gettransaksi?date=${date}`
       );
-      setTransaksi(response.data);
-
-      // Calculate daily total from unique transactions displayed
-      // Since response contains joined details, we sum up subtotals to avoid double counting if we just took 'total' from duplicate transaction rows?
-      // Actually, standard practice with joined rows: sum all subtotals = total revenue.
-      const totalRevenue = response.data.reduce(
+      setTransaksi(resTransaksi.data);
+      const grossSales = resTransaksi.data.reduce(
         (sum, item) => sum + item.subtotal,
         0
       );
-      setDailyTotal(totalRevenue);
+      setDailyGross(grossSales);
+
+      // Ambil retur untuk tanggal tersebut
+      const resRetur = await axios.get("http://localhost:3000/api/retur", {
+        params: { startDate: date, endDate: date },
+      });
+      const totalRetur = resRetur.data
+        .filter((r) => r.tipe === "penjualan")
+        .reduce((sum, item) => sum + Number(item.total_nilai), 0);
+
+      setDailyReturn(totalRetur);
+      setDailyNet(grossSales - totalRetur);
     } catch (error) {
       console.log(error);
     }
@@ -144,7 +166,9 @@ export default function Sales({ onLogout, user, storeName }) {
 
   const handlePrint = () => {
     if (!lastTransaction || !storeSettings) {
-      alert("Data transaksi atau setting toko belum siap cetak.");
+      toast.showToast("Data transaksi atau setting toko belum siap cetak.", {
+        type: "error",
+      });
       return;
     }
 
@@ -158,27 +182,90 @@ export default function Sales({ onLogout, user, storeName }) {
       <div className="sales-content-wrapper">
         <Navbar title="Penjualan" onLogout={onLogout} user={user} />
 
-        <div style={{ animation: "fadeIn 0.5s ease" }}>
-          <div
-            className="sales-action-bar"
-            style={{ justifyContent: "space-between", alignItems: "center" }}
-          >
+        <div>
+          <div className="pelanggan-page-content">
             <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
               <div
                 className="dashboard-stat-card"
                 style={{
-                  minWidth: "250px",
-                  // borderLeft: "4px solid #3498db", // Example primary color, adjust match dashboard
+                  minWidth: "200px",
                   padding: "20px",
-                  borderRadius: "15px", // Match border-radius variable
-                  backgroundColor: "#f8f9fa", // Match light-bg
+                  borderRadius: "15px",
+                  backgroundColor: "#f8f9fa",
                   boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
                   marginBottom: "20px",
                 }}
               >
-                <h3 style={{ marginBottom: "10px" }}>Total Pendapatan</h3>
-                <div className="value">
-                  {dailyTotal.toLocaleString("id-ID")}
+                <h3
+                  style={{
+                    marginBottom: "10px",
+                    fontSize: "14px",
+                    color: "#7f8c8d",
+                  }}
+                >
+                  Total Penjualan (Bruto)
+                </h3>
+                <div className="value" style={{ fontSize: "20px" }}>
+                  {dailyGross.toLocaleString("id-ID")}
+                </div>
+                <div className="unit">Rp</div>
+              </div>
+
+              <div
+                className="dashboard-stat-card"
+                style={{
+                  minWidth: "200px",
+                  padding: "20px",
+                  borderRadius: "15px",
+                  backgroundColor: "#f8f9fa",
+                  boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
+                  marginBottom: "20px",
+                }}
+              >
+                <h3
+                  style={{
+                    marginBottom: "10px",
+                    fontSize: "14px",
+                    color: "#e67e22",
+                  }}
+                >
+                  Total Retur
+                </h3>
+                <div
+                  className="value"
+                  style={{ fontSize: "20px", color: "#e67e22" }}
+                >
+                  {dailyReturn.toLocaleString("id-ID")}
+                </div>
+                <div className="unit">Rp</div>
+              </div>
+
+              <div
+                className="dashboard-stat-card"
+                style={{
+                  minWidth: "200px",
+                  padding: "20px",
+                  borderRadius: "15px",
+                  backgroundColor: "#f8f9fa",
+                  boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
+                  marginBottom: "20px",
+                  borderLeft: "4px solid #27ae60",
+                }}
+              >
+                <h3
+                  style={{
+                    marginBottom: "10px",
+                    fontSize: "14px",
+                    color: "#27ae60",
+                  }}
+                >
+                  Penjualan Bersih (Net)
+                </h3>
+                <div
+                  className="value"
+                  style={{ fontSize: "24px", color: "#27ae60" }}
+                >
+                  {dailyNet.toLocaleString("id-ID")}
                 </div>
                 <div className="unit">Rp</div>
               </div>
@@ -246,248 +333,244 @@ export default function Sales({ onLogout, user, storeName }) {
           </div>
 
           {/* ================= MODAL ================= */}
-          {showModal && (
-            <div className="modal-overlay">
-              <div className="modal-card large">
-                <div className="modal-header">
-                  <h2>Tambah Transaksi</h2>
-                </div>
-
-                <div className="modal-body">
-                  {/* ===== ITEMS ===== */}
-                  {items.map((item, index) => (
-                    <div key={index} className="item-row">
-                      <ProductAutocomplete
-                        products={produk}
-                        value={item.produk_id}
-                        onChange={(selectedProduct) => {
-                          // jika belum pilih produk / clear
-                          if (!selectedProduct) {
-                            const newItems = [...items];
-                            newItems[index] = {
-                              ...item,
-                              produk_id: "",
-                              nama: "",
-                              harga: 0,
-                              subtotal: 0,
-                            };
-                            setItems(newItems);
-                            return;
-                          }
-
-                          const newItems = [...items];
-                          newItems[index] = {
-                            ...item,
-                            produk_id: selectedProduct.id,
-                            nama: selectedProduct.namaProduk,
-                            harga: selectedProduct.harga,
-                            subtotal: selectedProduct.harga * item.qty,
-                          };
-                          setItems(newItems);
-                        }}
-                      />
-
-                      <input
-                        type="number"
-                        min="1"
-                        value={item.qty}
-                        onChange={(e) => {
-                          const newItems = [...items];
-                          newItems[index].qty = Number(e.target.value);
-                          newItems[index].subtotal =
-                            newItems[index].qty * newItems[index].harga;
-                          setItems(newItems);
-                        }}
-                      />
-
-                      <div className="price">
-                        Rp {item.subtotal.toLocaleString("id-ID")}
-                      </div>
-
-                      {items.length > 1 && (
-                        <button
-                          className="remove"
-                          onClick={() =>
-                            setItems(items.filter((_, i) => i !== index))
-                          }
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))}
-
-                  <button
-                    className="add-item"
-                    onClick={() =>
-                      setItems([
-                        ...items,
-                        {
+          <Modal
+            isOpen={showModal}
+            onClose={handleCancel}
+            title="Tambah Transaksi"
+            className="large"
+          >
+            <div className="modal-body">
+              {/* ===== ITEMS ===== */}
+              {items.map((item, index) => (
+                <div key={index} className="item-row">
+                  <ProductAutocomplete
+                    products={produk}
+                    value={item.produk_id}
+                    onChange={(selectedProduct) => {
+                      // jika belum pilih produk / clear
+                      if (!selectedProduct) {
+                        const newItems = [...items];
+                        newItems[index] = {
+                          ...item,
                           produk_id: "",
                           nama: "",
                           harga: 0,
-                          qty: 1,
                           subtotal: 0,
-                        },
-                      ])
-                    }
-                  >
-                    + Tambah Produk
-                  </button>
+                        };
+                        setItems(newItems);
+                        return;
+                      }
 
-                  <div className="form-group">
-                    <label>Pembeli</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={pembeli}
-                      onChange={(e) => setPembeli(e.target.value)}
-                      placeholder="Nama pembeli"
-                    />
+                      const newItems = [...items];
+                      newItems[index] = {
+                        ...item,
+                        produk_id: selectedProduct.id,
+                        nama: selectedProduct.namaProduk,
+                        harga: selectedProduct.harga,
+                        subtotal: selectedProduct.harga * item.qty,
+                      };
+                      setItems(newItems);
+                    }}
+                  />
+
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.qty}
+                    onChange={(e) => {
+                      const newItems = [...items];
+                      newItems[index].qty = Number(e.target.value);
+                      newItems[index].subtotal =
+                        newItems[index].qty * newItems[index].harga;
+                      setItems(newItems);
+                    }}
+                  />
+
+                  <div className="price">
+                    Rp {item.subtotal.toLocaleString("id-ID")}
                   </div>
 
-                  {/* ===== RINGKASAN ===== */}
-                  <div className="summary">
-                    <div className="row">
-                      <span>Total</span>
-                      <strong>Rp {total.toLocaleString("id-ID")}</strong>
-                    </div>
+                  {items.length > 1 && (
+                    <button
+                      className="remove"
+                      onClick={() =>
+                        setItems(items.filter((_, i) => i !== index))
+                      }
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
 
-                    <div className="row">
-                      <span>Bayar</span>
-                      <input
-                        type="number"
-                        value={bayar}
-                        onChange={(e) => setBayar(Number(e.target.value))}
-                      />
-                    </div>
+              <button
+                className="add-item"
+                onClick={() =>
+                  setItems([
+                    ...items,
+                    {
+                      produk_id: "",
+                      nama: "",
+                      harga: 0,
+                      qty: 1,
+                      subtotal: 0,
+                    },
+                  ])
+                }
+              >
+                + Tambah Produk
+              </button>
 
-                    <div className={`row ${selisih < 0 ? "minus" : "plus"}`}>
-                      <span>{selisih < 0 ? "Kurang" : "Kembalian"}</span>
-                      <strong>
-                        Rp {Math.abs(selisih).toLocaleString("id-ID")}
-                      </strong>
-                    </div>
+              <div className="form-group">
+                <label>Pembeli</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={pembeli}
+                  onChange={(e) => setPembeli(e.target.value)}
+                  placeholder="Nama pembeli"
+                />
+              </div>
 
-                    {selisih < 0 && (
-                      <div className="warning">⚠ Uang pembayaran kurang</div>
-                    )}
-                  </div>
+              {/* ===== RINGKASAN ===== */}
+              <div className="summary">
+                <div className="row">
+                  <span>Total</span>
+                  <strong>Rp {total.toLocaleString("id-ID")}</strong>
                 </div>
 
-                {/* ===== FOOTER ===== */}
-                <div className="modal-footer">
-                  <button className="btn btn-secondary" onClick={handleCancel}>
-                    Batal
-                  </button>
-                  <button
-                    className="btn btn-primary"
-                    disabled={selisih < 0 || total === 0}
-                    onClick={handleSubmit}
-                  >
-                    Simpan
-                  </button>
+                <div className="row">
+                  <span>Bayar</span>
+                  <input
+                    type="number"
+                    value={bayar}
+                    onChange={(e) => setBayar(Number(e.target.value))}
+                  />
                 </div>
+
+                <div className={`row ${selisih < 0 ? "minus" : "plus"}`}>
+                  <span>{selisih < 0 ? "Kurang" : "Kembalian"}</span>
+                  <strong>
+                    Rp {Math.abs(selisih).toLocaleString("id-ID")}
+                  </strong>
+                </div>
+
+                {selisih < 0 && (
+                  <div className="warning">⚠ Uang pembayaran kurang</div>
+                )}
               </div>
             </div>
-          )}
+
+            {/* ===== FOOTER ===== */}
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={handleCancel}>
+                Batal
+              </button>
+              <button
+                className="btn btn-primary"
+                disabled={selisih < 0 || total === 0}
+                onClick={handleSubmit}
+              >
+                Simpan
+              </button>
+            </div>
+          </Modal>
 
           {/* ================= SUCCESS MODAL ================= */}
-          {showSuccessModal && lastTransaction && (
-            <div className="modal-overlay">
-              <div className="modal-card">
-                <div className="modal-header">
-                  <h2>Transaksi Berhasil!</h2>
-                </div>
-                <div className="modal-body">
-                  <div style={{ textAlign: "center", marginBottom: "20px" }}>
-                    <div style={{ fontSize: "40px", marginBottom: "10px" }}>
-                      <img src="/done2.gif" alt="" />
-                    </div>
-                    <p>Transaksi telah disimpan.</p>
-                    {lastTransaction.kode_transaksi && (
-                      <h3 style={{ color: "#3498db", marginTop: "5px" }}>
-                        {lastTransaction.kode_transaksi}
-                      </h3>
-                    )}
+          <Modal
+            isOpen={showSuccessModal && lastTransaction !== null}
+            onClose={() => setShowSuccessModal(false)}
+            title="Transaksi Berhasil!"
+          >
+            {lastTransaction && (
+              <div className="modal-body">
+                <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                  <div style={{ fontSize: "40px", marginBottom: "10px" }}>
+                    <img src={done2} alt="" />
                   </div>
+                  <p>Transaksi telah disimpan.</p>
+                  {lastTransaction.kode_transaksi && (
+                    <h3 style={{ color: "#3498db", marginTop: "5px" }}>
+                      {lastTransaction.kode_transaksi}
+                    </h3>
+                  )}
+                </div>
 
-                  <div
-                    className="summary"
+                <div
+                  className="summary"
+                  style={{
+                    border: "1px solid #eee",
+                    padding: "15px",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <h4>Ringkasan:</h4>
+                  <ul
                     style={{
-                      border: "1px solid #eee",
-                      padding: "15px",
-                      borderRadius: "8px",
+                      listStyle: "none",
+                      padding: 0,
+                      marginTop: "10px",
                     }}
                   >
-                    <h4>Ringkasan:</h4>
-                    <ul
-                      style={{
-                        listStyle: "none",
-                        padding: 0,
-                        marginTop: "10px",
-                      }}
-                    >
-                      {lastTransaction.items.map((item, idx) => (
-                        <li
-                          key={idx}
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            marginBottom: "5px",
-                          }}
-                        >
-                          <span>
-                            {item.nama} x {item.qty}
-                          </span>
-                          <strong>
-                            Rp {item.subtotal.toLocaleString("id-ID")}
-                          </strong>
-                        </li>
-                      ))}
-                    </ul>
-                    <div
-                      style={{
-                        borderTop: "1px dashed #ccc",
-                        marginTop: "10px",
-                        paddingTop: "10px",
-                      }}
-                    >
-                      <div className="row">
-                        <span>Total</span>
+                    {lastTransaction.items.map((item, idx) => (
+                      <li
+                        key={idx}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: "5px",
+                        }}
+                      >
+                        <span>
+                          {item.nama} x {item.qty}
+                        </span>
                         <strong>
-                          Rp {lastTransaction.total.toLocaleString("id-ID")}
+                          Rp {item.subtotal.toLocaleString("id-ID")}
                         </strong>
-                      </div>
-                      <div className="row">
-                        <span>Bayar</span>
-                        <strong>
-                          Rp {lastTransaction.bayar.toLocaleString("id-ID")}
-                        </strong>
-                      </div>
-                      <div className="row">
-                        <span>Kembalian</span>
-                        <strong>
-                          Rp {lastTransaction.kembalian.toLocaleString("id-ID")}
-                        </strong>
-                      </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <div
+                    style={{
+                      borderTop: "1px dashed #ccc",
+                      marginTop: "10px",
+                      paddingTop: "10px",
+                    }}
+                  >
+                    <div className="row">
+                      <span>Total</span>
+                      <strong>
+                        Rp {lastTransaction.total.toLocaleString("id-ID")}
+                      </strong>
+                    </div>
+                    <div className="row">
+                      <span>Bayar</span>
+                      <strong>
+                        Rp {lastTransaction.bayar.toLocaleString("id-ID")}
+                      </strong>
+                    </div>
+                    <div className="row">
+                      <span>Kembalian</span>
+                      <strong>
+                        Rp {lastTransaction.kembalian.toLocaleString("id-ID")}
+                      </strong>
                     </div>
                   </div>
                 </div>
-                <div className="modal-footer">
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setShowSuccessModal(false)}
-                  >
-                    Selesai
-                  </button>
-                  <button className="btn btn-primary" onClick={handlePrint}>
-                    🖨 Cetak Struk
-                  </button>
-                </div>
               </div>
+            )}
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowSuccessModal(false)}
+              >
+                Selesai
+              </button>
+              <button className="btn btn-primary" onClick={handlePrint}>
+                🖨 Cetak Struk
+              </button>
             </div>
-          )}
+          </Modal>
         </div>
       </div>
     </div>

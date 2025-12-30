@@ -13,7 +13,6 @@
   flex-direction: column;
   background-color: $white;
   margin-top: 8%;
-
 }
 
 .settings-navbar {
@@ -38,7 +37,7 @@
 .settings-page-content {
   flex: 1;
   padding: 30px;
-  animation: fadeIn 0.5s ease;
+  /* animation: fadeIn 0.5s ease; Removed for Electron */
   background-color: $white;
 }
 

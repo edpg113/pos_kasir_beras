@@ -37,7 +37,7 @@
 .inventory-page-content {
   flex: 1;
   padding: 30px;
-  animation: fadeIn 0.5s ease;
+  /* animation: fadeIn 0.5s ease; Removed for Electron */
   background-color: $white;
 }
 
@@ -158,6 +158,12 @@
       background-color: #f0f3f7;
     }
   }
+  button {
+    background-color: #ffc107;
+    width: auto;
+    border: none;
+    outline: none;
+  }
 }
 
 /* Responsive */
@@ -234,58 +240,12 @@
     gap: 12px;
     margin-top: 16px;
   }
-}
 
-.modal-body {
-  input[type="text"] {
-    width: 220px;
-    height: 40px;
-    border-radius: 10px;
-    padding: 3px 5px;
-  }
-
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-
-    label {
-      margin-bottom: 6px;
-      font-weight: 600;
-      font-size: 14px;
-      color: #34495e;
-    }
-
-    input,
-    select {
-      padding: 10px 12px;
-      border: 1px solid #bdc3c7;
-      border-radius: 4px;
-      font-size: 14px;
-      transition: border-color 0.2s;
-
-      &:focus {
-        outline: none;
-        border-color: #3498db;
-        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-      }
-    }
-
-    .readonly-input {
-      background-color: #f4f6f7;
-      cursor: not-allowed;
-      color: #7f8c8d;
-    }
-  }
-
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 16px;
+  input,
+  select,
+  textarea {
+    color: #333 !important;
+    background-color: #fff !important;
   }
 }
 
@@ -441,13 +401,4 @@
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* @keyframes fadeIn removed */

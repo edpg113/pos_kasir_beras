@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useToast } from "../../components/Toast/Toast";
 
-export default function Login() {
+export default function Login({ onLogin }) {
   const [toko, setToko] = useState([]);
   const navigate = useNavigate();
+  const toast = useToast();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -48,7 +50,15 @@ export default function Login() {
 
       if (response.ok) {
         console.log("✅ Login successful");
-        alert("✅ Login berhasil!");
+        toast.showToast("✅ Login berhasil!", "success");
+
+        const userData = {
+          email: formData.email,
+          nama: data.user?.nama || "User",
+          role: data.user?.role || "user",
+        };
+
+        onLogin(userData); // This will set isAuthenticated and trigger activation check
         setFormData({ email: "", password: "" });
         navigate("/dashboard");
       } else {
@@ -81,7 +91,7 @@ export default function Login() {
     <div className="login-container">
       <div className="login-card">
         {toko.map((item) => (
-          <h1>🌾 {item.namaToko}</h1>
+          <h1>{item.namaToko}</h1>
         ))}
         <p className="login-subtitle">Sistem Manajemen Toko Beras</p>
 

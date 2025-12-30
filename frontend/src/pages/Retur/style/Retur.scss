@@ -17,7 +17,7 @@
 .retur-page-content {
   flex: 1;
   padding: 30px;
-  animation: fadeIn 0.5s ease;
+  /* animation: fadeIn 0.5s ease; Removed for Electron */
   background-color: $white;
 }
 
@@ -164,6 +164,8 @@
     border-radius: 4px;
     font-size: 14px;
     transition: border-color 0.2s;
+    background-color: #ffffff !important;
+    color: #333333 !important;
 
     &:focus {
       outline: none;

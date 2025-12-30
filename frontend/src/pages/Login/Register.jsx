@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import axios from "axios";
+import { useToast } from "../../components/Toast/Toast";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [toko, setToko] = useState([]);
+  const toast = useToast();
 
   const handleChange = (e) => {
     setFormData({
@@ -35,7 +37,9 @@ export default function Register() {
       !formData.password ||
       !formData.role
     ) {
-      setError("Semua field harus diisi!");
+      toast.showToast("Semua field harus diisi!", {
+        type: "error",
+      });
       return;
     }
 
@@ -58,16 +62,23 @@ export default function Register() {
       console.log("📥 Response data:", data);
 
       if (response.ok) {
-        alert("✅ Registrasi berhasil! Silakan login.");
+        toast.showToast("✅ Registrasi berhasil! Silakan login.", {
+          type: "success",
+        });
         setFormData({ nama: "", email: "", password: "", role: "" });
         navigate("/");
       } else {
-        setError(data.error || "❌ Registrasi gagal!");
+        toast.showToast(data.error || "❌ Registrasi gagal!", {
+          type: "error",
+        });
       }
     } catch (error) {
       console.error("❌ Error during registration:", error);
-      setError(
-        "❌ Server tidak merespon. Pastikan backend berjalan di http://localhost:3000"
+      toast.showToast(
+        "❌ Server tidak merespon. Pastikan backend berjalan di http://localhost:3000",
+        {
+          type: "error",
+        }
       );
     } finally {
       setLoading(false);
@@ -92,7 +103,7 @@ export default function Register() {
       <div className="login-card">
         {toko.map((item) => (
           <div key={item.id}>
-          <h1>🌾 {item.namaToko}</h1>
+            <h1>{item.namaToko}</h1>
           </div>
         ))}
         <p className="login-subtitle">Sistem Manajemen Toko Beras</p>
@@ -142,7 +153,11 @@ export default function Register() {
           </div>
 
           <div className="login-toggle-form">
-            <button type="submit" disabled={loading} className="btn btn-primary">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary"
+            >
               {loading ? "Membuat Akun..." : "Buat Akun"}
             </button>
           </div>

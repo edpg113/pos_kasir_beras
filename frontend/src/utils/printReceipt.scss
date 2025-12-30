@@ -1,32 +1,33 @@
 .receipt {
   width: 58mm;
   font-family: monospace;
-  font-size: 11px;
+  font-size: 12px;
   color: #000;
-  padding: 6px;
+  padding: 0 2px;
+  font-weight: bold;
 }
 
 .header {
   text-align: center;
 
   img {
-    width: 40px;
-    margin-bottom: 4px;
+    width: 50px;
+    margin-bottom: 3px;
   }
 
   .title {
-    font-weight: bold;
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .small {
-    font-size: 10px;
+    padding: 0 10px;
+    font-size: 12px;
   }
 }
 
 .divider {
   border-top: 1px dashed #000;
-  margin: 6px 0;
+  margin: 6px;
 }
 
 .info p,
@@ -34,16 +35,18 @@
   display: flex;
   justify-content: space-between;
   margin: 2px 0;
+  padding: 0 5px;
 }
 
 .items .row {
   display: flex;
   justify-content: space-between;
   margin: 2px 0;
+  padding: 0 5px;
 }
 
 .footer {
   text-align: center;
-  margin-top: 8px;
-  font-size: 10px;
+  margin-top: 4px;
+  font-size: 9px;
 }

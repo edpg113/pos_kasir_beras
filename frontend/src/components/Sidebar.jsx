@@ -10,7 +10,7 @@ export default function Sidebar({ onLogout, user, storeName }) {
     <div className="sidebar">
       <div className="sidebar-header">
         <div>
-          <h2>🌾 {storeName || "Toko Beras"}</h2>
+          <h2>{storeName || "Toko Beras"}</h2>
         </div>
         <p>
           {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1) ||

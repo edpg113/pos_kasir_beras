@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
+import Modal from "../../components/Modal";
 import "./style/Pelanggan.scss";
 import axios from "axios";
+import { useEffect, useState } from "react";
+import { useToast } from "../../components/Toast/Toast";
 
 export default function Pelanggan({ onLogout, user, storeName }) {
   const [pelanggan, setPelanggan] = useState([]);
@@ -15,6 +17,7 @@ export default function Pelanggan({ onLogout, user, storeName }) {
     alamat: "",
     kategori: "",
   });
+  const toast = useToast();
 
   // Fetch customer data from backend
   const fetchPelanggan = async () => {
@@ -41,12 +44,14 @@ export default function Pelanggan({ onLogout, user, storeName }) {
   const handleAddPelanggan = async () => {
     try {
       await axios.post("http://localhost:3000/api/addpelanggan", formData);
-      alert(`Pelanggan berhasil ditambahkan!`);
+      toast.showToast(`Pelanggan berhasil ditambahkan!`, {
+        type: "success",
+      });
       fetchPelanggan();
       closeModal();
     } catch (error) {
       console.error("Gagal menambahkan pelanggan:", error);
-      alert(
+      toast.showToast(
         "Gagal menambahkan pelanggan: " +
           (error.response?.data?.message || error.message)
       );
@@ -60,12 +65,14 @@ export default function Pelanggan({ onLogout, user, storeName }) {
         `http://localhost:3000/api/pelanggan/${editId}`,
         formData
       );
-      alert(`Pelanggan berhasil diperbarui!`);
+      toast.showToast(`Pelanggan berhasil diperbarui!`, {
+        type: "success",
+      });
       fetchPelanggan();
       closeModal();
     } catch (error) {
       console.error("Gagal memperbarui pelanggan:", error);
-      alert(
+      toast.showToast(
         "Gagal memperbarui pelanggan: " +
           (error.response?.data?.message || error.message)
       );
@@ -88,12 +95,14 @@ export default function Pelanggan({ onLogout, user, storeName }) {
 
     try {
       await axios.delete(`http://localhost:3000/api/pelanggan/${editId}`);
-      alert("Pelanggan berhasil dihapus!");
+      toast.showToast("Pelanggan berhasil dihapus!", {
+        type: "success",
+      });
       fetchPelanggan();
       closeModal();
     } catch (error) {
       console.error("Gagal menghapus pelanggan:", error);
-      alert(
+      toast.showToast(
         "Gagal menghapus pelanggan: " +
           (error.response?.data?.message || error.message)
       );
@@ -131,10 +140,7 @@ export default function Pelanggan({ onLogout, user, storeName }) {
       <div className="pelanggan-content-wrapper">
         <Navbar title="Manajemen Pelanggan" onLogout={onLogout} user={user} />
 
-        <div
-          className="pelanggan-page-content"
-          style={{ animation: "fadeIn 0.5s ease" }}
-        >
+        <div className="pelanggan-page-content">
           <div className="pelanggan-action-bar">
             <button className="btn btn-primary" onClick={() => openModal(null)}>
               + Tambah Pelanggan
@@ -178,89 +184,86 @@ export default function Pelanggan({ onLogout, user, storeName }) {
         </div>
       </div>
 
-      {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <div className="modal-header">
-              <h2>{isEditMode ? "Edit Pelanggan" : "Tambah Pelanggan Baru"}</h2>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={isEditMode ? "Edit Pelanggan" : "Tambah Pelanggan Baru"}
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="modal-body">
+            <div className="form-group">
+              <label htmlFor="nama">Nama Pelanggan</label>
+              <input
+                type="text"
+                id="nama"
+                value={formData.nama}
+                onChange={handleInputChange}
+                required
+              />
             </div>
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body">
-                <div className="form-group">
-                  <label htmlFor="nama">Nama Pelanggan</label>
-                  <input
-                    type="text"
-                    id="nama"
-                    value={formData.nama}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="telepon">Nomor Telepon</label>
-                  <input
-                    type="tel"
-                    id="telepon"
-                    value={formData.telepon}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="alamat">Alamat</label>
-                  <textarea
-                    id="alamat"
-                    value={formData.alamat}
-                    onChange={handleInputChange}
-                    rows="3"
-                    required
-                  ></textarea>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="kategori">Kategori Pelanggan</label>
-                  <select
-                    id="kategori"
-                    name="kategori"
-                    value={formData.kategori}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">-- Pilih Kategori --</option>
-                    <option value="Pelanggan Baru">Pelanggan Baru</option>
-                    <option value="Pelanggan Setia">Pelanggan Setia</option>
-                  </select>
-                </div>
-              </div>
-              <div className="modal-footer">
-                {isEditMode && (
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    onClick={handleDeletePelanggan}
-                    style={{
-                      marginRight: "auto",
-                      backgroundColor: "#dc3545",
-                      color: "white",
-                    }}
-                  >
-                    Hapus
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={closeModal}
-                >
-                  Batal
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Simpan
-                </button>
-              </div>
-            </form>
+            <div className="form-group">
+              <label htmlFor="telepon">Nomor Telepon</label>
+              <input
+                type="tel"
+                id="telepon"
+                value={formData.telepon}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="alamat">Alamat</label>
+              <textarea
+                id="alamat"
+                value={formData.alamat}
+                onChange={handleInputChange}
+                rows="3"
+                required
+              ></textarea>
+            </div>
+            <div className="form-group">
+              <label htmlFor="kategori">Kategori Pelanggan</label>
+              <select
+                id="kategori"
+                name="kategori"
+                value={formData.kategori}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">-- Pilih Kategori --</option>
+                <option value="Pelanggan Baru">Pelanggan Baru</option>
+                <option value="Pelanggan Setia">Pelanggan Setia</option>
+              </select>
+            </div>
           </div>
-        </div>
-      )}
+          <div className="modal-footer">
+            {isEditMode && (
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleDeletePelanggan}
+                style={{
+                  marginRight: "auto",
+                  backgroundColor: "#dc3545",
+                  color: "white",
+                }}
+              >
+                Hapus
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={closeModal}
+            >
+              Batal
+            </button>
+            <button type="submit" className="btn btn-primary">
+              Simpan
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

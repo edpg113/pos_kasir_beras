@@ -11,7 +11,7 @@
   left: 260px; /* $sidebar-width */
   right: 0;
   width: auto;
-  z-index: 50;
+  z-index: 2;
 }
 
 .dashboard-navbar h2 {
