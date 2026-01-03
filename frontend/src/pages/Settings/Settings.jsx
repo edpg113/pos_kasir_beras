@@ -3,7 +3,7 @@ import Sidebar from "../../components/Sidebar";
 import "./style/Settings.scss";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
-import ChangePasswordModal from "./ChangePasswordModal"; // Impor modal
+// import ChangePasswordModal from "./ChangePasswordModal"; // Impor modal
 import { useToast } from "../../components/Toast/Toast";
 
 export default function Settings({ onLogout, user, storeName, refreshStore }) {
@@ -207,7 +207,7 @@ export default function Settings({ onLogout, user, storeName, refreshStore }) {
               )}
             </div>
 
-            <div className="settings-card">
+            {/* <div className="settings-card">
               <h2>Keamanan</h2>
               <div className="settings-info-section">
                 <div className="settings-info-row">
@@ -228,14 +228,14 @@ export default function Settings({ onLogout, user, storeName, refreshStore }) {
                   </button>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
-      <ChangePasswordModal
+      {/* <ChangePasswordModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-      />
+      /> */}
     </>
   );
 }

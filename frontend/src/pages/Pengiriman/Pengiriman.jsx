@@ -23,6 +23,8 @@ export default function Pengiriman({ onLogout, user, storeName }) {
       keterangan: "",
     },
   ]);
+  const [tujuan, setTujuan] = useState("");
+  const [keterangan, setKeterangan] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [lastShipmentData, setLastShipmentData] = useState(null);
@@ -35,11 +37,17 @@ export default function Pengiriman({ onLogout, user, storeName }) {
   useEffect(() => {
     fetchProducts();
     getSettings();
+    // set filter date to today by default
+    const today = new Date().toISOString().split("T")[0];
+    setFilterDate(today);
+    fetchHistoryWithDate(today);
   }, []);
 
   // Fetch history when filterDate changes
   useEffect(() => {
-    fetchHistory();
+    if (filterDate) {
+      fetchHistory();
+    }
   }, [filterDate]);
 
   const getSettings = async () => {
@@ -74,6 +82,17 @@ export default function Pengiriman({ onLogout, user, storeName }) {
     }
   };
 
+  // Fetch history with specific date
+  const fetchHistoryWithDate = async (date) => {
+    try {
+      const url = `http://localhost:3000/api/inventory/transfer-history?date=${date}`;
+      const response = await axios.get(url);
+      setTransferHistory(response.data);
+    } catch (error) {
+      console.error("Failed to fetch history", error);
+    }
+  };
+
   const handleAddItem = () => {
     setItems([
       ...items,
@@ -82,8 +101,6 @@ export default function Pengiriman({ onLogout, user, storeName }) {
         nama: "",
         qty: 1,
         currentStock: 0,
-        tujuan: "",
-        keterangan: "",
       },
     ]);
   };
@@ -115,12 +132,17 @@ export default function Pengiriman({ onLogout, user, storeName }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const validItems = items.filter(
-      (item) => item.produk_id && item.qty > 0 && item.tujuan
-    );
+    const validItems = items.filter((item) => item.produk_id && item.qty > 0);
 
     if (validItems.length === 0) {
       toast.showToast("Harap lengkapi data pengiriman minimal satu produk.", {
+        type: "error",
+      });
+      return;
+    }
+
+    if (!tujuan) {
+      toast.showToast("Harap isi tujuan cabang untuk pengiriman.", {
         type: "error",
       });
       return;
@@ -143,15 +165,15 @@ export default function Pengiriman({ onLogout, user, storeName }) {
         items: validItems.map((i) => ({
           produk_id: i.produk_id,
           qty: i.qty,
-          tujuan: i.tujuan,
-          keterangan: i.keterangan,
+          tujuan: tujuan,
+          keterangan: keterangan,
         })),
       });
 
       setLastShipmentData({
         items: validItems,
-        tujuan: validItems[0].tujuan, // Taking first one for general summary
-        keterangan: validItems[0].keterangan,
+        tujuan: tujuan, // Taking first one for general summary
+        keterangan: keterangan,
         tanggal: new Date(),
       });
       setShowSuccessModal(true);
@@ -163,12 +185,12 @@ export default function Pengiriman({ onLogout, user, storeName }) {
           nama: "",
           qty: 1,
           currentStock: 0,
-          tujuan: "",
-          keterangan: "",
         },
       ]);
 
       // Refresh data
+      setKeterangan("");
+      setTujuan("");
       fetchProducts();
       fetchHistory();
     } catch (error) {
@@ -221,11 +243,13 @@ export default function Pengiriman({ onLogout, user, storeName }) {
           <div className="pengiriman-card">
             <div
               style={{
+                display: "flex",
+                justifyContent: "space-between",
                 alignItems: "center",
                 marginBottom: "15px",
               }}
             >
-              <h2>Form Pengiriman</h2>
+              <h2>Form Pengiriman & Permintaan Barang</h2>
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -237,130 +261,177 @@ export default function Pengiriman({ onLogout, user, storeName }) {
             </div>
 
             <form onSubmit={handleSubmit}>
-              {items.map((item, index) => (
-                <div
-                  key={index}
+              {/* Tujuan Cabang - Fixed */}
+              <div className="form-group" style={{ marginBottom: "20px" }}>
+                <label>Tujuan Cabang / Supplier</label>
+                <input
+                  type="text"
+                  value={tujuan}
+                  onChange={(e) => setTujuan(e.target.value)}
+                  placeholder="Contoh: Cabang A"
+                  required
                   style={{
-                    border: "1px solid #eee",
-                    padding: "20px",
-                    borderRadius: "10px",
-                    marginBottom: "15px",
-                    position: "relative",
-                    backgroundColor: "#fafafa",
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    border: "1px solid #ddd",
                   }}
-                >
-                  {items.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveItem(index)}
-                      style={{
-                        position: "absolute",
-                        top: "10px",
-                        right: "10px",
-                        border: "none",
-                        background: "none",
-                        color: "#e74c3c",
-                        fontSize: "20px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      ×
-                    </button>
-                  )}
-
+                />
+              </div>
+              <div className="form-group" style={{ marginBottom: "16px" }}>
+                <label>Keterangan (opsional)</label>
+                <input
+                  type="text"
+                  value={keterangan}
+                  onChange={(e) => setKeterangan(e.target.value)}
+                  placeholder="Catatan untuk semua produk..."
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    border: "1px solid #ddd",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <small style={{ color: "#7f8c8d", fontSize: "12px" }}>
+                  Catatan ini berlaku untuk semua produk dalam form ini
+                </small>
+              </div>
+              {/* Items Container - Scrollable */}
+              <div
+                style={{
+                  border: "1px solid #ddd",
+                  borderRadius: "10px",
+                  maxHeight: "500px", // Limit tinggi
+                  overflowY: "auto", // Scroll vertikal internal
+                  padding: "15px",
+                  marginBottom: "20px",
+                  backgroundColor: "#fafafa",
+                }}
+              >
+                {items.map((item, index) => (
                   <div
-                    className="form-grid"
+                    key={index}
                     style={{
-                      gridTemplateColumns:
-                        "repeat(auto-fit, minmax(200px, 1fr))",
-                      gap: "15px",
+                      border: "1px solid #eee",
+                      padding: "15px",
+                      borderRadius: "8px",
+                      marginBottom: index !== items.length - 1 ? "15px" : "0",
+                      position: "relative",
+                      backgroundColor: "#fff",
                     }}
                   >
-                    <div className="form-group">
-                      <label>Pilih Produk</label>
-                      <ProductAutocomplete
-                        products={products}
-                        value={item.produk_id}
-                        onChange={(p) => handleProductSelect(index, p)}
-                        placeholder="Ketik produk..."
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Stok Pusat</label>
-                      <input
-                        type="text"
-                        value={item.currentStock}
-                        disabled
-                        style={{ backgroundColor: "#eee" }}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Jumlah</label>
-                      <input
-                        type="number"
-                        value={item.qty}
-                        onChange={(e) =>
-                          handleItemChange(
-                            index,
-                            "qty",
-                            parseInt(e.target.value, 10) || 0
-                          )
-                        }
-                        min="1"
-                        required
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Tujuan Cabang</label>
-                      <input
-                        type="text"
-                        value={item.tujuan}
-                        onChange={(e) =>
-                          handleItemChange(index, "tujuan", e.target.value)
-                        }
-                        placeholder="Contoh: Cabang A"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group" style={{ marginTop: "15px" }}>
-                    <label>Keterangan (Opsional)</label>
-                    <input
-                      type="text"
-                      value={item.keterangan}
-                      onChange={(e) =>
-                        handleItemChange(index, "keterangan", e.target.value)
-                      }
-                      placeholder="Catatan..."
+                    <div
                       style={{
-                        width: "100%",
-                        padding: "10px",
-                        borderRadius: "8px",
-                        border: "1px solid #ddd",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "12px",
                       }}
-                    />
+                    >
+                      <span style={{ fontSize: "13px", color: "#7f8c8d" }}>
+                        Produk #{index + 1}
+                      </span>
+                      {items.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveItem(index)}
+                          style={{
+                            border: "none",
+                            background: "none",
+                            color: "#e74c3c",
+                            fontSize: "20px",
+                            cursor: "pointer",
+                            padding: "0",
+                            width: "24px",
+                            height: "24px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "2fr 1fr 1fr",
+                        gap: "10px",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      <div className="form-group">
+                        <label style={{ fontSize: "12px" }}>Pilih Produk</label>
+                        <ProductAutocomplete
+                          products={products}
+                          value={item.produk_id}
+                          onChange={(p) => handleProductSelect(index, p)}
+                          placeholder="Ketik produk..."
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label style={{ fontSize: "12px" }}>Stok</label>
+                        <input
+                          type="text"
+                          value={item.currentStock}
+                          disabled
+                          style={{
+                            backgroundColor: "#eee",
+                            padding: "8px",
+                            borderRadius: "5px",
+                            border: "1px solid #ddd",
+                            fontSize: "13px",
+                          }}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label style={{ fontSize: "12px" }}>Kirim</label>
+                        <input
+                          type="number"
+                          value={item.qty}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              "qty",
+                              parseInt(e.target.value, 10) || 0
+                            )
+                          }
+                          min="1"
+                          required
+                          style={{
+                            padding: "8px",
+                            borderRadius: "5px",
+                            border: "1px solid #ddd",
+                            fontSize: "13px",
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
 
               <button
                 type="submit"
                 className="btn btn-primary"
-                disabled={isSubmitting || items.some((i) => !i.produk_id)}
+                disabled={
+                  isSubmitting || items.some((i) => !i.produk_id) || !tujuan
+                }
                 style={{
                   width: "100%",
-                  marginTop: "10px",
                   height: "50px",
                   fontSize: "16px",
+                  fontWeight: "600",
                 }}
               >
                 {isSubmitting
                   ? "Processing..."
-                  : `Kirim ${items.length} Produk Sekarang`}
+                  : `📤 Kirim ${items.length} Produk`}
               </button>
             </form>
           </div>

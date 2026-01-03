@@ -249,6 +249,31 @@
   }
 }
 
+/* Ensure item rows inside the add-stock modal are stacked vertically */
+.modal-body-inner .item-row,
+.modal-body-inner > div.item-row {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.modal-body-inner .item-row label {
+  margin: 0 0 4px 0;
+  font-weight: 600;
+}
+
+.modal-body-inner .item-row select,
+.modal-body-inner .item-row input {
+  width: 100%;
+  max-width: none;
+}
+
+.modal-body-inner .add-item {
+  margin-top: 8px;
+}
+
 /* Retur Modal Styles */
 .retur-tabs {
   display: flex;

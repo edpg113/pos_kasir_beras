@@ -21,7 +21,7 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
   return (
     <div className="shipment-report">
       <div className="header">
-        <h1>Laporan Pengiriman Barang</h1>
+        <h1>Laporan Pengiriman / Permintaan Barang</h1>
         <div className="store-info">
           {namaToko} | {alamat}
         </div>
@@ -35,40 +35,41 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
           <span>Filter Tanggal:</span> {displayDate}
         </div>
       </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Waktu</th>
-            <th>Nama Produk</th>
-            <th className="qty-cell">Qty</th>
-            <th>Tujuan</th>
-            <th>Keterangan</th>
-          </tr>
-        </thead>
-        <tbody>
-          {historyData.map((item) => (
-            <tr key={item.id}>
-              <td>
-                {new Date(item.tanggal).toLocaleTimeString("id-ID", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </td>
-              <td style={{ fontWeight: 600 }}>{item.namaProduk}</td>
-              <td className="qty-cell">{item.qty}</td>
-              <td>{item.tujuan}</td>
-              <td>{item.keterangan || "-"}</td>
+      <div className="shipment-table">
+        <table border="1" style={{ borderCollapse: "collapse"}}>
+          <thead>
+            <tr>
+              <th>Waktu</th>
+              <th>Nama Produk</th>
+              <th className="qty-cell">Qty</th>
+              <th>Tujuan</th>
+              <th>Keterangan</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {historyData.map((item) => (
+              <tr key={item.id}>
+                <td>
+                  {new Date(item.tanggal).toLocaleTimeString("id-ID", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </td>
+                <td style={{ fontWeight: 600 }}>{item.namaProduk}</td>
+                <td className="qty-cell">{item.qty}</td>
+                <td>{item.tujuan}</td>
+                <td>{item.keterangan || "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <div className="footer">
         <div className="signature-box">
           <p>Dicetak pada: {today}</p>
           <div className="line" />
-          <div className="name">Petugas Gudang</div>
+          {/* <div className="name">Petugas Gudang</div> */}
         </div>
       </div>
     </div>

@@ -16,6 +16,7 @@ export default function Pelanggan({ onLogout, user, storeName }) {
     telepon: "",
     alamat: "",
     kategori: "",
+    keterangan: "",
   });
   const toast = useToast();
 
@@ -118,11 +119,12 @@ export default function Pelanggan({ onLogout, user, storeName }) {
         telepon: pelangganData.telepon,
         alamat: pelangganData.alamat,
         kategori: pelangganData.kategori,
+        keterangan: pelangganData.keterangan,
       });
     } else {
       setIsEditMode(false);
       setEditId(null);
-      setFormData({ nama: "", telepon: "", alamat: "", kategori: "" });
+      setFormData({ nama: "", telepon: "", alamat: "", kategori: "", keterangan: "" });
     }
     setIsModalOpen(true);
   };
@@ -131,7 +133,7 @@ export default function Pelanggan({ onLogout, user, storeName }) {
     setIsModalOpen(false);
     setIsEditMode(false);
     setEditId(null);
-    setFormData({ nama: "", telepon: "", alamat: "", kategori: "" }); // Reset form
+    setFormData({ nama: "", telepon: "", alamat: "", kategori: "", keterangan: "" }); // Reset form
   };
 
   return (
@@ -157,6 +159,7 @@ export default function Pelanggan({ onLogout, user, storeName }) {
                     <th>Telepon</th>
                     <th>Alamat</th>
                     <th>Kategori</th>
+                    <th>Keterangan</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
@@ -167,6 +170,7 @@ export default function Pelanggan({ onLogout, user, storeName }) {
                       <td>{p.telepon}</td>
                       <td>{p.alamat}</td>
                       <td>{p.kategori}</td>
+                      <td>{p.keterangan}</td>
                       <td>
                         <button
                           className="btn-edit"
@@ -234,6 +238,17 @@ export default function Pelanggan({ onLogout, user, storeName }) {
                 <option value="Pelanggan Baru">Pelanggan Baru</option>
                 <option value="Pelanggan Setia">Pelanggan Setia</option>
               </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="keterangan">Keterangan</label>
+              <textarea
+                id="keterangan"
+                name="keterangan"
+                value={formData.keterangan}
+                onChange={handleInputChange}
+                rows="3"
+                required
+              ></textarea>
             </div>
           </div>
           <div className="modal-footer">

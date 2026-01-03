@@ -12,7 +12,7 @@ const StockEntryTemplate = ({ storeSettings, stockData }) => {
     email: "-",
     telepon: "-",
   };
-  const { supplier, items, tanggal } = stockData;
+  const { supplier, items, tanggal, total } = stockData;
 
   const dateStr = new Date(tanggal || new Date()).toLocaleString("id-ID", {
     day: "2-digit",
@@ -50,12 +50,14 @@ const StockEntryTemplate = ({ storeSettings, stockData }) => {
       <div className="items">
         <div className="item-header">
           <span>Produk</span>
-          <span style={{ textAlign: "right" }}>Qty</span>
+          <span style={{ textAlign: "center" }}>Qty</span>
+          <span style={{ textAlign: "right" }}>Total</span>
         </div>
         {items.map((item, i) => (
           <div className="row" key={i}>
             <span>{item.produk}</span>
-            <span>{item.quantity} kg</span>
+            <span style={{ textAlign: "center" }}>{item.quantity} kg</span>
+            <span>Rp.{Number(item.total).toLocaleString("id-ID")}</span>
           </div>
         ))}
       </div>
@@ -64,9 +66,6 @@ const StockEntryTemplate = ({ storeSettings, stockData }) => {
 
       <div className="footer">
         <p>Laporan ini dihasilkan secara otomatis oleh sistem.</p>
-        <p className="small">
-          {email} | {telepon}
-        </p>
       </div>
     </div>
   );
@@ -92,7 +91,7 @@ export const printStockEntry = (storeSettings, stockData) => {
         <head>
           <title>Cetak Laporan Tambah Stok</title>
           <style>
-             body { margin: 0; padding: 0; display: flex; justify-content: center; background-color: #f0f0f0; }
+             body { margin: 0; padding: 0; display: flex; justify-content: center; }
              @media print {
                body { background-color: white; }
                @page { margin: 0; }
@@ -101,7 +100,7 @@ export const printStockEntry = (storeSettings, stockData) => {
           </style>
         </head>
         <body>
-          <div style="background-color: white; padding: 0px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin: 20px 0;">
+          <div style="background-color: white; padding: 0px; margin: 20px 0;">
             ${htmlContent}
           </div>
           <script>

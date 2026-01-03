@@ -18,16 +18,16 @@ router.get("/pelanggan", (req, res) => {
 
 // API POST Pelanggan
 router.post("/addpelanggan", (req, res) => {
-  const { nama, telepon, alamat, kategori } = req.body;
+  const { nama, telepon, alamat, kategori, keterangan } = req.body;
   if (!nama || !telepon || !alamat || !kategori) {
     return res
       .status(400)
-      .json({ message: "Nama, telepon, alamat, dan kategori harus diisi." });
+      .json({ message: "Nama, telepon, alamat, kategori, dan keterangan harus diisi." });
   }
 
   const query =
-    "INSERT INTO pelanggan (nama, telepon, alamat, kategori) VALUES (?, ?, ?, ?)";
-  db.query(query, [nama, telepon, alamat, kategori], (err, result) => {
+    "INSERT INTO pelanggan (nama, telepon, alamat, kategori, keterangan) VALUES (?, ?, ?, ?, ?)";
+  db.query(query, [nama, telepon, alamat, kategori, keterangan], (err, result) => {
     if (err) {
       console.error("❌ DB error on add pelanggan:", err);
       return res.status(500).json({ message: "Gagal menambahkan pelanggan." });
@@ -40,6 +40,7 @@ router.post("/addpelanggan", (req, res) => {
       telepon,
       alamat,
       kategori,
+      keterangan,
     };
     res
       .status(201)
@@ -50,17 +51,17 @@ router.post("/addpelanggan", (req, res) => {
 // API UPDATE Pelanggan
 router.put("/pelanggan/:id", (req, res) => {
   const { id } = req.params;
-  const { nama, telepon, alamat, kategori } = req.body;
+  const { nama, telepon, alamat, kategori, keterangan } = req.body;
 
-  if (!nama || !telepon || !alamat || !kategori) {
+  if (!nama || !telepon || !alamat || !kategori || !keterangan) {
     return res
       .status(400)
-      .json({ message: "Nama, telepon, alamat, dan kategori harus diisi." });
+      .json({ message: "Nama, telepon, alamat, kategori, dan keterangan harus diisi." });
   }
 
   const query =
-    "UPDATE pelanggan SET nama = ?, telepon = ?, alamat = ?, kategori = ? WHERE id = ?";
-  db.query(query, [nama, telepon, alamat, kategori, id], (err, result) => {
+    "UPDATE pelanggan SET nama = ?, telepon = ?, alamat = ?, kategori = ?, keterangan = ? WHERE id = ?";
+  db.query(query, [nama, telepon, alamat, kategori, keterangan, id], (err, result) => {
     if (err) {
       console.error("❌ DB error on update pelanggan:", err);
       return res.status(500).json({ message: "Gagal mengupdate pelanggan." });

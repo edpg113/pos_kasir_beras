@@ -22,6 +22,7 @@ export default function Products({ onLogout, user, storeName }) {
     harga: "",
     modal: "",
     stok: "",
+    hargaPerKg: "",
   });
   const toast = useToast();
 
@@ -34,10 +35,35 @@ export default function Products({ onLogout, user, storeName }) {
   };
 
   const handleChange = (e) => {
-    setNewProduct({
+    const updated = {
       ...newProduct,
       [e.target.name]: e.target.value,
-    });
+    };
+
+    // compute harga per kg when modal or kategori changes
+    if (e.target.name === "modal" || e.target.name === "kategori") {
+      const modalVal = parseFloat(
+        e.target.name === "modal" ? e.target.value : updated.modal || 0
+      );
+      const kategoriVal =
+        e.target.name === "kategori" ? e.target.value : updated.kategori;
+      const perKg = computeHargaPerKg(modalVal, kategoriVal);
+      updated.hargaPerKg = perKg;
+    }
+
+    setNewProduct(updated);
+  };
+
+  // helper to compute harga per kg from modal and kategori
+  const computeHargaPerKg = (modalVal, kategoriVal) => {
+    const hb = parseFloat(modalVal || 0);
+    if (!kategoriVal) return "";
+    // try parse numeric from kategori (e.g., "10" or "10 kg")
+    const m = String(kategoriVal).match(/(\d+(?:\.\d+)?)/);
+    const qty = m ? parseFloat(m[0]) : NaN;
+    const divisor = !isNaN(qty) && qty > 0 ? qty : 1;
+    if (hb === 0) return "";
+    return Math.round((hb / divisor) * 100) / 100;
   };
 
   // =============================
@@ -133,13 +159,15 @@ export default function Products({ onLogout, user, storeName }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        ...newProduct,
+        hargaPerKg: newProduct.hargaPerKg || "",
+      };
       const response = await axios.post(
         "http://localhost:3000/api/products",
-        newProduct,
+        payload,
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         }
       );
       console.log("📥 New product added response:", response);
@@ -161,6 +189,11 @@ export default function Products({ onLogout, user, storeName }) {
         type: "error",
       });
     }
+  };
+
+  const handleExportProducts = () => {
+    window.location.href = `http://localhost:3000/api/products/export`;
+    toast.showToast("Mencetak daftar produk...", { type: "success" });
   };
 
   const fetchProducts = async () => {
@@ -187,10 +220,21 @@ export default function Products({ onLogout, user, storeName }) {
   };
 
   const handleEditChange = (e) => {
-    setEditingProduct({
+    const updated = {
       ...editingProduct,
       [e.target.name]: e.target.value,
-    });
+    };
+
+    if (e.target.name === "modal" || e.target.name === "kategori") {
+      const modalVal = parseFloat(
+        e.target.name === "modal" ? e.target.value : updated.modal || 0
+      );
+      const kategoriVal =
+        e.target.name === "kategori" ? e.target.value : updated.kategori;
+      updated.hargaPerKg = computeHargaPerKg(modalVal, kategoriVal);
+    }
+
+    setEditingProduct(updated);
   };
 
   const handleUpdateProduct = async (e) => {
@@ -198,9 +242,13 @@ export default function Products({ onLogout, user, storeName }) {
     if (!editingProduct) return;
 
     try {
+      const payload = {
+        ...editingProduct,
+        hargaPerKg: editingProduct.hargaPerKg || "",
+      };
       const response = await axios.put(
         `http://localhost:3000/api/editproduct/${editingProduct.id}`,
-        editingProduct
+        payload
       );
       console.log("🔄 Product updated response:", response);
       toast.showToast("✅ Produk berhasil diperbarui!", {
@@ -260,6 +308,13 @@ export default function Products({ onLogout, user, storeName }) {
                 >
                   + Tambah Produk
                 </button>
+                <button
+                  className="btn btn-secondary"
+                  style={{ marginLeft: 8 }}
+                  onClick={() => handleExportProducts()}
+                >
+                  📥 Cetak PDF
+                </button>
               </div>
               <div className="products-card">
                 <div className="products-table-container">
@@ -267,10 +322,11 @@ export default function Products({ onLogout, user, storeName }) {
                     <thead>
                       <tr>
                         <th>Nama Produk</th>
-                        <th>Kategori</th>
-                        <th>Harga Jual (Rp/kg)</th>
-                        <th>Harga Beli</th>
-                        <th>Stok (kg)</th>
+                        <th>Satuan</th>
+                        <th>Harga Jual / Karung</th>
+                        <th>Harga Beli / Karung</th>
+                        <th>Harga / 1kg</th>
+                        <th>Stok</th>
                         <th>Status</th>
                         <th>Aksi</th>
                       </tr>
@@ -284,6 +340,17 @@ export default function Products({ onLogout, user, storeName }) {
                           <td>{product.kategori}</td>
                           <td>Rp. {product.harga.toLocaleString("id-ID")}</td>
                           <td>Rp. {product.modal.toLocaleString("id-ID")}</td>
+                          <td>
+                            {(() => {
+                              const perKg = computeHargaPerKg(
+                                product.modal,
+                                product.kategori
+                              );
+                              return perKg
+                                ? `Rp. ${Number(perKg).toLocaleString("id-ID")}`
+                                : "-";
+                            })()}
+                          </td>
                           <td>{product.stok}</td>
                           <td>{getStokBadge(product.stok)}</td>
                           <td>
@@ -410,7 +477,7 @@ export default function Products({ onLogout, user, storeName }) {
               </select>
             </div>
             <div className="form-group">
-              <label>Harga Beli</label>
+              <label>Harga Beli/Karung</label>
               <input
                 type="number"
                 name="modal"
@@ -419,9 +486,24 @@ export default function Products({ onLogout, user, storeName }) {
                 required
               />
             </div>
+            <div className="form-group">
+              <label>Harga / 1kg (readonly)</label>
+              <input
+                type="text"
+                name="hargaPerKg"
+                value={
+                  newProduct.hargaPerKg
+                    ? `Rp. ${Number(newProduct.hargaPerKg).toLocaleString(
+                        "id-ID"
+                      )}`
+                    : ""
+                }
+                readOnly
+              />
+            </div>
             <div className="form-row">
               <div className="form-group">
-                <label>Harga Jual (Rp/kg)</label>
+                <label>Harga Jual/Karung</label>
                 <input
                   type="number"
                   name="harga"
@@ -493,7 +575,7 @@ export default function Products({ onLogout, user, storeName }) {
               </select>
             </div>
             <div className="form-group">
-              <label>Harga Beli</label>
+              <label>Harga Beli/Karung</label>
               <input
                 type="number"
                 name="modal"
@@ -502,9 +584,24 @@ export default function Products({ onLogout, user, storeName }) {
                 required
               />
             </div>
+            <div className="form-group">
+              <label>Harga / 1kg (readonly)</label>
+              <input
+                type="text"
+                name="hargaPerKg"
+                value={
+                  editingProduct?.hargaPerKg
+                    ? `Rp. ${Number(editingProduct.hargaPerKg).toLocaleString(
+                        "id-ID"
+                      )}`
+                    : ""
+                }
+                readOnly
+              />
+            </div>
             <div className="form-row">
               <div className="form-group">
-                <label>Harga Jual (Rp/kg)</label>
+                <label>Harga Jual/Karung</label>
                 <input
                   type="number"
                   name="harga"

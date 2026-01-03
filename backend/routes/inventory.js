@@ -13,9 +13,12 @@ router.get("/inventory", (req, res) => {
             p.modal,
             p.stok,
             p.min_stok AS minStok,
-            (SELECT qty FROM stok_masuk WHERE produk_id = p.id ORDER BY tanggal DESC LIMIT 1) AS reorder,
-            p.updated_at AS lastUpdate,
-            (SELECT supplier FROM stok_masuk WHERE produk_id = p.id ORDER BY tanggal DESC LIMIT 1) AS supplier
+        (SELECT qty FROM stok_masuk WHERE produk_id = p.id ORDER BY tanggal DESC LIMIT 1) AS reorder,
+        p.updated_at AS lastUpdate,
+        (SELECT supplier FROM stok_masuk WHERE produk_id = p.id ORDER BY tanggal DESC LIMIT 1) AS supplier,
+        (SELECT harga_beli FROM stok_masuk WHERE produk_id = p.id ORDER BY tanggal DESC LIMIT 1) AS lastHargaBeli,
+        (SELECT harga_jual FROM stok_masuk WHERE produk_id = p.id ORDER BY tanggal DESC LIMIT 1) AS lastHargaJual,
+        (SELECT qty * harga_beli FROM stok_masuk WHERE produk_id = p.id ORDER BY tanggal DESC LIMIT 1) AS lastTotal
         FROM produk p
         WHERE p.is_active = 1
         ORDER BY p.namaProduk ASC
@@ -32,9 +35,12 @@ router.get("/inventory", (req, res) => {
 // API ADD STOCK to Inventory
 router.patch("/inventory/:id/add-stock", (req, res) => {
   const { id } = req.params;
-  const { quantity, supplier } = req.body;
+  const { quantity, supplier, hargaBeli, hargaJual } = req.body;
 
   const qty = parseInt(quantity, 10);
+  const hb = parseFloat(hargaBeli || 0);
+  const hj = parseFloat(hargaJual || 0);
+  const total = Math.round((hb * qty) * 100) / 100;
 
   if (!qty || qty <= 0) {
     return res
@@ -73,12 +79,12 @@ router.patch("/inventory/:id/add-stock", (req, res) => {
         });
       }
 
-      // 2. Catat riwayat di tabel stok_masuk
-      const logStockQuery = `
-        INSERT INTO stok_masuk (produk_id, supplier, qty, tanggal)
-        VALUES (?, ?, ?, NOW())
-      `;
-      db.query(logStockQuery, [id, supplier, qty], (logErr, logResult) => {
+        // 2. Catat riwayat di tabel stok_masuk (tambahkan harga dan total jika kolom ada)
+        const logStockQuery = `
+          INSERT INTO stok_masuk (produk_id, supplier, qty, tanggal, harga_beli, harga_jual, total)
+          VALUES (?, ?, ?, NOW(), ?, ?, ?)
+        `;
+        db.query(logStockQuery, [id, supplier, qty, hb, hj, total], (logErr, logResult) => {
         if (logErr) {
           console.error("❌ DB error on logging stock:", logErr);
           return db.rollback(() => {
@@ -145,8 +151,11 @@ router.post("/inventory/add-stocks", (req, res) => {
     try {
       // Prepare all queries
       items.forEach((item) => {
-        const { inventoryId, quantity, supplier } = item;
+        const { inventoryId, quantity, supplier, hargaBeli, hargaJual, total } = item;
         const qty = parseInt(quantity, 10);
+        const hb = parseFloat(hargaBeli || 0);
+        const hj = parseFloat(hargaJual || 0);
+        const ttl = typeof total !== 'undefined' ? parseFloat(total) : Math.round((hb * qty) * 100) / 100;
 
         if (!inventoryId || !supplier || !qty || qty <= 0) {
           // This check is basic. More robust validation might be needed.
@@ -163,9 +172,9 @@ router.post("/inventory/add-stocks", (req, res) => {
 
         // 2. Catat riwayat di tabel stok_masuk
         const logStockQuery =
-          "INSERT INTO stok_masuk (produk_id, supplier, qty, tanggal) VALUES (?, ?, ?, NOW())";
+          "INSERT INTO stok_masuk (produk_id, supplier, qty, tanggal, harga_beli, harga_jual, total) VALUES (?, ?, ?, NOW(), ?, ?, ?)";
         queries.push(
-          db.promise().query(logStockQuery, [inventoryId, supplier, qty])
+          db.promise().query(logStockQuery, [inventoryId, supplier, qty, hb, hj, ttl])
         );
       });
     } catch (error) {
@@ -205,9 +214,11 @@ router.post("/inventory/add-stocks", (req, res) => {
 // API UPDATE Inventory (Edit Stok & Supplier)
 router.put("/inventory/:id", (req, res) => {
   const { id } = req.params;
-  const { stok, supplier } = req.body;
+  const { stok, supplier, hargaBeli, hargaJual } = req.body;
 
   const newStok = parseInt(stok, 10);
+  const hb = parseFloat(hargaBeli || 0);
+  const hj = parseFloat(hargaJual || 0);
 
   if (isNaN(newStok) || newStok < 0) {
     return res
@@ -226,10 +237,10 @@ router.put("/inventory/:id", (req, res) => {
         .json({ message: "Gagal memulai transaksi database." });
     }
 
-    // 1. Update stok di tabel produk
+    // 1. Update stok and optionally harga/modal di tabel produk
     const updateProductQuery =
-      "UPDATE produk SET stok = ?, updated_at = NOW() WHERE id = ?";
-    db.query(updateProductQuery, [newStok, id], (productErr, productResult) => {
+      "UPDATE produk SET stok = ?, modal = ?, harga = ?, updated_at = NOW() WHERE id = ?";
+    db.query(updateProductQuery, [newStok, hb, hj, id], (productErr, productResult) => {
       if (productErr) {
         return db.rollback(() => {
           console.error("❌ DB error on product update:", productErr);
@@ -259,8 +270,8 @@ router.put("/inventory/:id", (req, res) => {
         if (findResult.length > 0) {
           const lastEntryId = findResult[0].id;
           const updateSupplierQuery =
-            "UPDATE stok_masuk SET supplier = ? WHERE id = ?";
-          db.query(updateSupplierQuery, [supplier, lastEntryId], (suppErr) => {
+            "UPDATE stok_masuk SET supplier = ?, harga_beli = ?, harga_jual = ?, total = qty * ? WHERE id = ?";
+          db.query(updateSupplierQuery, [supplier, hb, hj, hb, lastEntryId], (suppErr) => {
             if (suppErr) {
               return db.rollback(() => {
                 console.error("❌ DB error on updating supplier:", suppErr);

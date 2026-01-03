@@ -5,45 +5,45 @@ const db = require("../db");
 // ==========================================
 // INITIALIZE TABLES (IF NOT EXIST)
 // ==========================================
-const initTables = () => {
-  const createReturTable = `
-    CREATE TABLE IF NOT EXISTS retur (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      tanggal DATETIME NOT NULL,
-      tipe ENUM('penjualan', 'pembelian') NOT NULL,
-      transaksi_id INT DEFAULT NULL,
-      supplier VARCHAR(255) DEFAULT NULL,
-      total_nilai DECIMAL(15, 2) NOT NULL,
-      keterangan TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `;
+// const initTables = () => {
+//   const createReturTable = `
+//     CREATE TABLE IF NOT EXISTS retur (
+//       id INT AUTO_INCREMENT PRIMARY KEY,
+//       tanggal DATETIME NOT NULL,
+//       tipe ENUM('penjualan', 'pembelian') NOT NULL,
+//       transaksi_id INT DEFAULT NULL,
+//       supplier VARCHAR(255) DEFAULT NULL,
+//       total_nilai DECIMAL(15, 2) NOT NULL,
+//       keterangan TEXT,
+//       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+//     )
+//   `;
 
-  const createReturDetailTable = `
-    CREATE TABLE IF NOT EXISTS retur_detail (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      retur_id INT NOT NULL,
-      produk_id INT NOT NULL,
-      qty INT NOT NULL,
-      harga DECIMAL(15, 2) NOT NULL,
-      subtotal DECIMAL(15, 2) NOT NULL,
-      FOREIGN KEY (retur_id) REFERENCES retur(id) ON DELETE CASCADE
-    )
-  `;
+//   const createReturDetailTable = `
+//     CREATE TABLE IF NOT EXISTS retur_detail (
+//       id INT AUTO_INCREMENT PRIMARY KEY,
+//       retur_id INT NOT NULL,
+//       produk_id INT NOT NULL,
+//       qty INT NOT NULL,
+//       harga DECIMAL(15, 2) NOT NULL,
+//       subtotal DECIMAL(15, 2) NOT NULL,
+//       FOREIGN KEY (retur_id) REFERENCES retur(id) ON DELETE CASCADE
+//     )
+//   `;
 
-  db.query(createReturTable, (err) => {
-    if (err) console.error("❌ Error creating retur table:", err);
-    else {
-      // Create detail table only after main table ensures it exists (async check ideally, but flow here is simplified)
-      db.query(createReturDetailTable, (err2) => {
-        if (err2) console.error("❌ Error creating retur_detail table:", err2);
-      });
-    }
-  });
-};
+//   db.query(createReturTable, (err) => {
+//     if (err) console.error("❌ Error creating retur table:", err);
+//     else {
+//       // Create detail table only after main table ensures it exists (async check ideally, but flow here is simplified)
+//       db.query(createReturDetailTable, (err2) => {
+//         if (err2) console.error("❌ Error creating retur_detail table:", err2);
+//       });
+//     }
+//   });
+// };
 
-// Run initialization immediately when module is loaded
-initTables();
+// // Run initialization immediately when module is loaded
+// initTables();
 
 // ==========================================
 // ENDPOINTS

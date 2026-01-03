@@ -152,7 +152,7 @@ export default function Reports({ onLogout, user, storeName }) {
               style={{ width: "auto", marginLeft: "auto" }}
               onClick={handleExport}
             >
-              📥 Export Excel (Range)
+              📥 Cetak PDF (Range)
             </button>
           </div>
 

@@ -14,6 +14,8 @@ export default function Inventory({ onLogout, user, storeName }) {
   const [editData, setEditData] = useState(null);
   const [supplier, setSupplier] = useState("");
   const [editStok, setEditStok] = useState("");
+  const [editHargaBeli, setEditHargaBeli] = useState(0);
+  const [editHargaJual, setEditHargaJual] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [storeSettings, setStoreSettings] = useState(null);
 
@@ -28,6 +30,9 @@ export default function Inventory({ onLogout, user, storeName }) {
     produk: "",
     stok: 0,
     quantity: 1,
+    hargaBeli: 0,
+    hargaJual: 0,
+    total: 0,
   };
   const [itemsToAdd, setItemsToAdd] = useState([initialItem]);
 
@@ -68,7 +73,20 @@ export default function Inventory({ onLogout, user, storeName }) {
       if (selectedProduct) {
         item.produk = selectedProduct.produk;
         item.stok = selectedProduct.stok;
+        // fill prices from product
+        item.hargaBeli = selectedProduct.modal || 0;
+        item.hargaJual = selectedProduct.harga || 0;
+        // recompute total
+        const q = parseFloat(item.quantity || 0);
+        item.total = Math.round((parseFloat(item.hargaBeli || 0) * q) * 100) / 100;
       }
+    }
+
+    // If qty or hargaBeli changed, recompute total
+    if (field === "quantity" || field === "hargaBeli") {
+      const q = parseFloat(item.quantity || 0);
+      const hb = parseFloat(item.hargaBeli || 0);
+      item.total = Math.round((hb * q) * 100) / 100;
     }
 
     setItemsToAdd(newItems);
@@ -91,6 +109,8 @@ export default function Inventory({ onLogout, user, storeName }) {
       setEditData(item);
       setSupplier(item.supplier || "");
       setEditStok(item.stok); // Pre-fill with current stock
+      setEditHargaBeli(item.modal || 0);
+      setEditHargaJual(item.harga || 0);
     } else {
       setIsEditMode(false);
       setEditData(null);
@@ -125,6 +145,8 @@ export default function Inventory({ onLogout, user, storeName }) {
         await axios.put(`http://localhost:3000/api/inventory/${editData.id}`, {
           stok: editStok,
           supplier: supplier,
+          hargaBeli: editHargaBeli,
+          hargaJual: editHargaJual,
         });
         toast.showToast("✅ Inventori berhasil diupdate", {
           type: "success",
@@ -155,8 +177,13 @@ export default function Inventory({ onLogout, user, storeName }) {
     }
 
     const itemsWithSupplier = validItems.map((item) => ({
-      ...item,
+      inventoryId: item.inventoryId,
+      produk: item.produk,
+      quantity: parseInt(item.quantity, 10),
       supplier,
+      hargaBeli: parseFloat(item.hargaBeli || 0),
+      hargaJual: parseFloat(item.hargaJual || 0),
+      total: Math.round((parseFloat(item.hargaBeli || 0) * parseInt(item.quantity, 10)) * 100) / 100,
     }));
 
     try {
@@ -282,6 +309,7 @@ export default function Inventory({ onLogout, user, storeName }) {
                   <tr>
                     <th>Produk</th>
                     <th>Stok Saat Ini (kg)</th>
+                    <th>Last Total (Rp)</th>
                     <th>Min Stok (kg)</th>
                     <th>Qty Reorder (kg)</th>
                     <th>Status</th>
@@ -303,6 +331,13 @@ export default function Inventory({ onLogout, user, storeName }) {
                           <strong>{item.produk}</strong>
                         </td>
                         <td>{item.stok}</td>
+                        <td>
+                          {item.lastTotal
+                            ? Number(item.lastTotal).toLocaleString("id-ID")
+                            : item.reorder && item.lastHargaBeli
+                            ? (item.reorder * item.lastHargaBeli).toLocaleString("id-ID")
+                            : "-"}
+                        </td>
                         <td>{item.minStok}</td>
                         <td>{item.reorder}</td>
                         <td>{getStokStatus(item.stok, item.minStok)}</td>
@@ -378,6 +413,24 @@ export default function Inventory({ onLogout, user, storeName }) {
                   />
                 </div>
                 <div className="form-group">
+                  <label>Harga Beli (Rp)</label>
+                  <input
+                    type="number"
+                    value={editHargaBeli}
+                    onChange={(e) => setEditHargaBeli(e.target.value)}
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Harga Jual (Rp)</label>
+                  <input
+                    type="number"
+                    value={editHargaJual}
+                    onChange={(e) => setEditHargaJual(e.target.value)}
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
                   <label>Nama Supplier</label>
                   <input
                     type="text"
@@ -392,6 +445,7 @@ export default function Inventory({ onLogout, user, storeName }) {
               <div className="modal-body-inner" style={{ padding: 0 }}>
                 {itemsToAdd.map((item, index) => (
                   <div key={index} className="item-row">
+                    <label>Nama Produk</label>
                     <select
                       name="inventoryId"
                       value={item.inventoryId}
@@ -410,6 +464,32 @@ export default function Inventory({ onLogout, user, storeName }) {
                         </option>
                       ))}
                     </select>
+                    <label>Harga Beli/Karung</label>
+                    <input
+                      type="number"
+                      name="hargaBeli"
+                      placeholder="Harga Beli"
+                      value={item.hargaBeli}
+                      readOnly
+
+                      onChange={(e) =>
+                        handleItemChange(index, "hargaBeli", e.target.value)
+                      }
+                      style={{ width: "120px", marginLeft: "8px" }}
+                    />
+                    <label>Harga Jual/Karung</label>
+                    <input
+                      type="number"
+                      name="hargaJual"
+                      placeholder="Harga Jual"
+                      readOnly
+                      value={item.hargaJual}
+                      onChange={(e) =>
+                        handleItemChange(index, "hargaJual", e.target.value)
+                      }
+                      style={{ width: "120px", marginLeft: "8px" }}
+                    />
+                    <label>Jumlah</label>
                     <input
                       type="number"
                       name="quantity"
@@ -420,7 +500,16 @@ export default function Inventory({ onLogout, user, storeName }) {
                       }
                       required
                       min="1"
-                      style={{ width: "80px" }}
+                      style={{ width: "80px", marginLeft: "8px" }}
+                    />
+                    <label>Total Yang perlu dibayarkan</label>
+                    <input
+                      type="text"
+                      name="total"
+                      placeholder="Total"
+                      value={item.total}
+                      readOnly
+                      style={{ width: "140px", marginLeft: "8px" }}
                     />
                     {itemsToAdd.length > 1 && (
                       <button
@@ -512,14 +601,18 @@ export default function Inventory({ onLogout, user, storeName }) {
                   <thead>
                     <tr>
                       <th>Produk</th>
+                      <th>Harga Beli (Rp)</th>
                       <th>Qty (kg)</th>
+                      <th>Total (Rp)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {lastAddedStock.items.map((item, idx) => (
                       <tr key={idx}>
                         <td>{item.produk}</td>
+                        <td>{item.hargaBeli ? Number(item.hargaBeli).toLocaleString('id-ID') : '-'}</td>
                         <td>{item.quantity}</td>
+                        <td>{item.total ? Number(item.total).toLocaleString('id-ID') : '-'}</td>
                       </tr>
                     ))}
                   </tbody>
