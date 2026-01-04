@@ -212,17 +212,22 @@ router.get("/reports/export", async (req, res) => {
 
       doc.fontSize(16).text("Laporan Penjualan", { align: "center" });
       doc.moveDown(0.5);
-      doc.fontSize(10).text(`Periode: ${start} sampai ${end}`, { align: "center" });
+      doc
+        .fontSize(10)
+        .text(`Periode: ${start} sampai ${end}`, { align: "center" });
       doc.moveDown(1);
 
       // Improved table rendering with wrapping, lines and repeated header
       const tableTop = doc.y + 10;
       const marginLeft = doc.page.margins.left || 40;
-      const pageWidth = doc.page.width - (doc.page.margins.left || 40) - (doc.page.margins.right || 40);
+      const pageWidth =
+        doc.page.width -
+        (doc.page.margins.left || 40) -
+        (doc.page.margins.right || 40);
 
       // Use relative widths so table fits the page regardless of paper size
       const colPercents = {
-        tanggal: 0.10,
+        tanggal: 0.1,
         produk: 0.18,
         qty: 0.05,
         harga_per_kg: 0.12,
@@ -260,31 +265,54 @@ router.get("/reports/export", async (req, res) => {
 
       const headerHeight = 18;
       const rowPadding = 6;
-      const usableHeight = doc.page.height - doc.page.margins.top - doc.page.margins.bottom;
+      const usableHeight =
+        doc.page.height - doc.page.margins.top - doc.page.margins.bottom;
 
       function drawHeader(y) {
-        doc.font("Helvetica-Bold").fontSize(9);
+        doc.font("Times-Bold").fontSize(9);
         doc.fillColor("black");
         cols.forEach((c) => {
-          const title = c === "tanggal" ? "Tanggal" : c === "produk" ? "Produk" : c === "harga_per_kg" ? "Harga/1kg" : c.charAt(0).toUpperCase() + c.slice(1);
+          const title =
+            c === "tanggal"
+              ? "Tanggal"
+              : c === "produk"
+              ? "Produk"
+              : c === "harga_per_kg"
+              ? "Harga/1kg"
+              : c.charAt(0).toUpperCase() + c.slice(1);
           const align = c === "produk" || c === "tanggal" ? "left" : "right";
           doc.text(title, colX[c], y, { width: colWidths[c], align });
         });
         // draw line under header
-        doc.strokeColor('#cccccc').moveTo(marginLeft, y + headerHeight - 4).lineTo(curX, y + headerHeight - 4).stroke();
+        doc
+          .strokeColor("#cccccc")
+          .moveTo(marginLeft, y + headerHeight - 4)
+          .lineTo(curX, y + headerHeight - 4)
+          .stroke();
         return y + headerHeight;
       }
 
       let y = tableTop;
       y = drawHeader(y);
 
-      doc.font("Helvetica").fontSize(9);
+      doc.font("Times-Roman").fontSize(9);
+
+      // Calculate totals
+      let totalSubtotal = 0;
+      let totalKeuntungan = 0;
+      let totalAmount = 0;
 
       result.forEach((row) => {
         // measure height needed for product cell (wrap)
-        const productHeight = doc.heightOfString(String(row.namaProduk || ""), { width: colWidths.produk });
-        const tanggalHeight = doc.heightOfString(new Date(row.tanggal).toLocaleDateString("id-ID"), { width: colWidths.tanggal });
-        const rowHeight = Math.max(productHeight, tanggalHeight, 12) + rowPadding;
+        const productHeight = doc.heightOfString(String(row.namaProduk || ""), {
+          width: colWidths.produk,
+        });
+        const tanggalHeight = doc.heightOfString(
+          new Date(row.tanggal).toLocaleDateString("id-ID"),
+          { width: colWidths.tanggal }
+        );
+        const rowHeight =
+          Math.max(productHeight, tanggalHeight, 12) + rowPadding;
 
         // add new page and header if not enough space
         if (y + rowHeight > doc.page.height - doc.page.margins.bottom - 20) {
@@ -294,25 +322,123 @@ router.get("/reports/export", async (req, res) => {
         }
 
         // draw cells
-        doc.text(new Date(row.tanggal).toLocaleDateString("id-ID"), colX.tanggal, y, { width: colWidths.tanggal, align: "left" });
-        doc.text(String(row.namaProduk || ""), colX.produk, y, { width: colWidths.produk, align: "left" });
+        doc.text(
+          new Date(row.tanggal).toLocaleDateString("id-ID"),
+          colX.tanggal,
+          y,
+          { width: colWidths.tanggal, align: "left" }
+        );
+        doc.text(String(row.namaProduk || ""), colX.produk, y, {
+          width: colWidths.produk,
+          align: "left",
+        });
 
-        const hargaPerKg = row.harga_per_kg ? `Rp. ${Number(row.harga_per_kg).toLocaleString("id-ID")}` : "-";
-        doc.text(hargaPerKg, colX.harga_per_kg, y, { width: colWidths.harga_per_kg, align: "right" });
+        const hargaPerKg = row.harga_per_kg
+          ? `Rp. ${Number(row.harga_per_kg).toLocaleString("id-ID")}`
+          : "-";
+        doc.text(hargaPerKg, colX.harga_per_kg, y, {
+          width: colWidths.harga_per_kg,
+          align: "right",
+        });
 
-        doc.text(row.modal ? `Rp. ${Number(row.modal).toLocaleString("id-ID")}` : "-", colX.modal, y, { width: colWidths.modal, align: "right" });
-        doc.text(row.harga ? `Rp. ${Number(row.harga).toLocaleString("id-ID")}` : "-", colX.harga, y, { width: colWidths.harga, align: "right" });
-        doc.text(row.qty != null ? String(row.qty) : "-", colX.qty, y, { width: colWidths.qty, align: "right" });
-        doc.text(row.subtotal ? `Rp. ${Number(row.subtotal).toLocaleString("id-ID")}` : "-", colX.subtotal, y, { width: colWidths.subtotal, align: "right" });
-        doc.text(row.keuntungan ? `Rp. ${Number(row.keuntungan).toLocaleString("id-ID")}` : "-", colX.keuntungan, y, { width: colWidths.keuntungan, align: "right" });
-        doc.text(row.total ? `Rp. ${Number(row.total).toLocaleString("id-ID")}` : "-", colX.total, y, { width: colWidths.total, align: "right" });
+        doc.text(
+          row.modal ? `Rp. ${Number(row.modal).toLocaleString("id-ID")}` : "-",
+          colX.modal,
+          y,
+          { width: colWidths.modal, align: "right" }
+        );
+        doc.text(
+          row.harga ? `Rp. ${Number(row.harga).toLocaleString("id-ID")}` : "-",
+          colX.harga,
+          y,
+          { width: colWidths.harga, align: "right" }
+        );
+        doc.text(row.qty != null ? String(row.qty) : "-", colX.qty, y, {
+          width: colWidths.qty,
+          align: "right",
+        });
+        doc.text(
+          row.subtotal
+            ? `Rp. ${Number(row.subtotal).toLocaleString("id-ID")}`
+            : "-",
+          colX.subtotal,
+          y,
+          { width: colWidths.subtotal, align: "right" }
+        );
+        doc.text(
+          row.keuntungan
+            ? `Rp. ${Number(row.keuntungan).toLocaleString("id-ID")}`
+            : "-",
+          colX.keuntungan,
+          y,
+          { width: colWidths.keuntungan, align: "right" }
+        );
+        doc.text(
+          row.total ? `Rp. ${Number(row.total).toLocaleString("id-ID")}` : "-",
+          colX.total,
+          y,
+          { width: colWidths.total, align: "right" }
+        );
 
         // draw horizontal separator (light)
-        const sepY = y + rowHeight - (rowPadding / 2);
-        doc.strokeColor('#eeeeee').moveTo(marginLeft, sepY).lineTo(curX, sepY).stroke();
+        const sepY = y + rowHeight - rowPadding / 2;
+        doc
+          .strokeColor("#eeeeee")
+          .moveTo(marginLeft, sepY)
+          .lineTo(curX, sepY)
+          .stroke();
+
+        // Accumulate totals
+        totalSubtotal += row.subtotal || 0;
+        totalKeuntungan += row.keuntungan || 0;
+        totalAmount += row.total || 0;
 
         y += rowHeight;
       });
+
+      // Add total row
+      const totalRowHeight = 18 + rowPadding;
+      if (y + totalRowHeight > doc.page.height - doc.page.margins.bottom - 20) {
+        doc.addPage();
+        y = doc.page.margins.top;
+      }
+
+      y += 10;
+      doc.font("Times-Bold").fontSize(9);
+      doc.fillColor("black");
+      doc.text("TOTAL", colX.tanggal, y, { width: colWidths.tanggal, align: "left" });
+      doc.text(
+        `Rp. ${Number(totalSubtotal).toLocaleString("id-ID")}`,
+        colX.subtotal,
+        y,
+        { width: colWidths.subtotal, align: "right" }
+      );
+      doc.text(
+        `Rp. ${Number(totalKeuntungan).toLocaleString("id-ID")}`,
+        colX.keuntungan,
+        y,
+        { width: colWidths.keuntungan, align: "right" }
+      );
+      doc.text(
+        `Rp. ${Number(totalAmount).toLocaleString("id-ID")}`,
+        colX.total,
+        y,
+        { width: colWidths.total, align: "right" }
+      );
+
+      // draw line above total
+      doc
+        .strokeColor("#000000")
+        .moveTo(marginLeft, y - 5)
+        .lineTo(curX, y - 5)
+        .stroke();
+
+      // draw line below total
+      doc
+        .strokeColor("#000000")
+        .moveTo(marginLeft, y + 18)
+        .lineTo(curX, y + 18)
+        .stroke();
 
       doc.end();
     } catch (exportErr) {

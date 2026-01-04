@@ -369,12 +369,12 @@ export default function Products({ onLogout, user, storeName }) {
             {/* Right Column: Category Management */}
             <div className="products-side-column">
               <div className="category-card">
-                <h3>Buat Kategori Baru</h3>
+                <h3>Buat Satuan Kategori Baru</h3>
                 <form onSubmit={handleAddCategories} className="category-form">
                   <div className="form-group">
                     <input
                       type="text"
-                      placeholder="Nama Kategori"
+                      placeholder="Angka Satuan Kategori"
                       value={newCategories.category}
                       onChange={(e) => setNewCategories(e.target.value)}
                       required
@@ -386,7 +386,7 @@ export default function Products({ onLogout, user, storeName }) {
                 </form>
               </div>
               <div className="category-card">
-                <h3>Daftar Kategori</h3>
+                <h3>Daftar Satuan Kategori</h3>
                 <ul className="category-list">
                   {getcategory.map((item) => (
                     <li key={item.id}>

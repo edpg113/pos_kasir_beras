@@ -21,7 +21,7 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
   return (
     <div className="shipment-report">
       <div className="header">
-        <h1>Laporan Pengiriman / Permintaan Barang</h1>
+        <h1>Laporan Pengiriman Barang</h1>
         <div className="store-info">
           {namaToko} | {alamat}
         </div>
@@ -42,6 +42,7 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
               <th>Waktu</th>
               <th>Nama Produk</th>
               <th className="qty-cell">Qty</th>
+              <th>Harga/1kg</th>
               <th>Tujuan</th>
               <th>Keterangan</th>
             </tr>
@@ -57,6 +58,11 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
                 </td>
                 <td style={{ fontWeight: 600 }}>{item.namaProduk}</td>
                 <td className="qty-cell">{item.qty}</td>
+                <td>
+                  {item.harga_per_kg
+                    ? `Rp. ${Number(item.harga_per_kg).toLocaleString("id-ID")}`
+                    : "-"}
+                </td>
                 <td>{item.tujuan}</td>
                 <td>{item.keterangan || "-"}</td>
               </tr>

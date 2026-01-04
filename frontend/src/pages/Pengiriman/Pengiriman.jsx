@@ -6,6 +6,7 @@ import axios from "axios";
 import { printShipmentReport } from "../../utils/printShipment";
 import "./style/pengiriman.scss";
 import { useToast } from "../../components/Toast/Toast";
+import DoneGif from "../../assets/done2.gif";
 
 export default function Pengiriman({ onLogout, user, storeName }) {
   const [products, setProducts] = useState([]);
@@ -21,6 +22,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
       currentStock: 0,
       tujuan: "",
       keterangan: "",
+      harga_per_kg: 0,
     },
   ]);
   const [tujuan, setTujuan] = useState("");
@@ -101,6 +103,9 @@ export default function Pengiriman({ onLogout, user, storeName }) {
         nama: "",
         qty: 1,
         currentStock: 0,
+        tujuan: "",
+        keterangan: "",
+        harga_per_kg: 0,
       },
     ]);
   };
@@ -121,10 +126,12 @@ export default function Pengiriman({ onLogout, user, storeName }) {
       newItems[index].produk_id = product.id;
       newItems[index].nama = product.namaProduk;
       newItems[index].currentStock = product.stok;
+      newItems[index].harga_per_kg = product.harga_per_kg || 0;
     } else {
       newItems[index].produk_id = "";
       newItems[index].nama = "";
       newItems[index].currentStock = 0;
+      newItems[index].harga_per_kg = 0;
     }
     setItems(newItems);
   };
@@ -225,6 +232,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
       tanggal: data.tanggal,
       namaProduk: item.nama,
       qty: item.qty,
+      harga_per_kg: item.harga_per_kg,
       tujuan: data.tujuan,
       keterangan: data.keterangan,
     }));
@@ -249,7 +257,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
                 marginBottom: "15px",
               }}
             >
-              <h2>Form Pengiriman & Permintaan Barang</h2>
+              <h2>Form Pengiriman Barang</h2>
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -358,7 +366,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
                     <div
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "2fr 1fr 1fr",
+                        gridTemplateColumns: "2fr 1fr 1fr 1fr",
                         gap: "10px",
                         marginBottom: "12px",
                       }}
@@ -378,6 +386,22 @@ export default function Pengiriman({ onLogout, user, storeName }) {
                         <input
                           type="text"
                           value={item.currentStock}
+                          disabled
+                          style={{
+                            backgroundColor: "#eee",
+                            padding: "8px",
+                            borderRadius: "5px",
+                            border: "1px solid #ddd",
+                            fontSize: "13px",
+                          }}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label style={{ fontSize: "12px" }}>Harga/1kg</label>
+                        <input
+                          type="text"
+                          value={item.harga_per_kg ? Number(item.harga_per_kg).toLocaleString("id-ID") : "-"}
                           disabled
                           style={{
                             backgroundColor: "#eee",
@@ -479,6 +503,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
                       <th>Waktu</th>
                       <th>Produk</th>
                       <th>Jumlah</th>
+                      <th>Harga/1kg (Rp)</th>
                       <th>Tujuan</th>
                       <th>Keterangan</th>
                     </tr>
@@ -499,6 +524,11 @@ export default function Pengiriman({ onLogout, user, storeName }) {
                         </td>
                         <td style={{ fontWeight: 600 }}>{item.namaProduk}</td>
                         <td>{item.qty}</td>
+                        <td>
+                          {item.harga_per_kg
+                            ? Number(item.harga_per_kg).toLocaleString("id-ID")
+                            : "-"}
+                        </td>
                         <td>
                           <span
                             style={{
@@ -533,7 +563,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
               <div className="modal-body">
                 <div style={{ textAlign: "center", marginBottom: "20px" }}>
                   <img
-                    src="/done2.gif"
+                    src={DoneGif}
                     alt="success"
                     style={{ width: "80px", marginBottom: "10px" }}
                   />

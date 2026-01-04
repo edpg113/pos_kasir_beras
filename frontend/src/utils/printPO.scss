@@ -1,0 +1,91 @@
+.po-report {
+  font-family: Arial, sans-serif;
+  color: #333;
+  line-height: 1.6;
+
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #333;
+    padding-bottom: 15px;
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+  }
+
+  .store-info {
+    font-size: 12px;
+    color: #666;
+  }
+
+  .report-meta {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+    font-size: 12px;
+
+    .meta-item {
+      padding: 5px 0;
+
+      span {
+        font-weight: bold;
+      }
+    }
+  }
+
+  .po-table {
+    margin: 20px 0;
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+
+      th {
+        background-color: #f0f0f0;
+        padding: 10px;
+        text-align: left;
+        border: 1px solid #ddd;
+        font-weight: bold;
+      }
+
+      td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        vertical-align: top;
+
+        &.qty-cell {
+          text-align: center;
+        }
+      }
+
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+    }
+  }
+
+  .footer {
+    margin-top: 30px;
+    border-top: 1px solid #ddd;
+    padding-top: 15px;
+    font-size: 12px;
+    text-align: center;
+    color: #666;
+
+    p {
+      margin: 5px 0;
+    }
+  }
+}
+
+@media print {
+  .po-report {
+    .footer {
+      page-break-inside: avoid;
+    }
+  }
+}

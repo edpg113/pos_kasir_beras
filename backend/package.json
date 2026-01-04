@@ -6,10 +6,16 @@
   "bin": "index.js",
   "pkg": {
     "assets": [
-      "node_modules/**/*",
       "config/**/*",
-      "routes/**/*"
-    ]
+      "routes/**/*",
+      "node_modules/pdfkit/js/data/**/*"
+    ],
+    "scripts": [
+      "routes/**/*.js",
+      "index.js"
+    ],
+    "targets": ["node16-win-x64"],
+    "outputPath": "dist"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

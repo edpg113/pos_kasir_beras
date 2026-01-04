@@ -309,6 +309,7 @@ export default function Inventory({ onLogout, user, storeName }) {
                   <tr>
                     <th>Produk</th>
                     <th>Stok Saat Ini (kg)</th>
+                    <th>Harga/1kg (Rp)</th>
                     <th>Last Total (Rp)</th>
                     <th>Min Stok (kg)</th>
                     <th>Qty Reorder (kg)</th>
@@ -331,6 +332,11 @@ export default function Inventory({ onLogout, user, storeName }) {
                           <strong>{item.produk}</strong>
                         </td>
                         <td>{item.stok}</td>
+                        <td>
+                          {item.harga_per_kg
+                            ? Number(item.harga_per_kg).toLocaleString("id-ID")
+                            : "-"}
+                        </td>
                         <td>
                           {item.lastTotal
                             ? Number(item.lastTotal).toLocaleString("id-ID")

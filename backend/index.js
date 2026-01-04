@@ -20,6 +20,7 @@ const inventoryRoutes = require("./routes/inventory");
 const settingsRoutes = require("./routes/settings");
 const reportsRoutes = require("./routes/reports");
 const returRoutes = require("./routes/retur");
+const pobarangRoutes = require("./routes/pobarang");
 
 // Use Routes
 app.use("/api", authRoutes);
@@ -32,6 +33,7 @@ app.use("/api", inventoryRoutes);
 app.use("/api", settingsRoutes);
 app.use("/api", reportsRoutes);
 app.use("/api", returRoutes);
+app.use("/api", pobarangRoutes);
 
 // Test route
 app.get("/", (req, res) => {

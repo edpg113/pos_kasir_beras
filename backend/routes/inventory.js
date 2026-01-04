@@ -13,6 +13,7 @@ router.get("/inventory", (req, res) => {
             p.modal,
             p.stok,
             p.min_stok AS minStok,
+            p.harga_per_kg,
         (SELECT qty FROM stok_masuk WHERE produk_id = p.id ORDER BY tanggal DESC LIMIT 1) AS reorder,
         p.updated_at AS lastUpdate,
         (SELECT supplier FROM stok_masuk WHERE produk_id = p.id ORDER BY tanggal DESC LIMIT 1) AS supplier,
@@ -420,24 +421,32 @@ router.post("/inventory/transfer", (req, res) => {
             if (updateErr)
               return reject(new Error(`Gagal mengurangi stok ${namaProduk}.`));
 
-            // 3. Record transfer in stok_pengiriman
-            const insertTransferQuery = `
-                INSERT INTO stok_pengiriman (produk_id, qty, tujuan, keterangan, tanggal)
-                VALUES (?, ?, ?, ?, NOW())
-              `;
-            db.query(
-              insertTransferQuery,
-              [produk_id, quantity, tujuan, keterangan],
-              (insertErr) => {
-                if (insertErr)
-                  return reject(
-                    new Error(
-                      `Gagal mencatat riwayat pengiriman ${namaProduk}.`
-                    )
-                  );
-                resolve();
-              }
-            );
+            // 3. Get harga_per_kg from produk
+            const getProductQuery = "SELECT harga_per_kg FROM produk WHERE id = ?";
+            db.query(getProductQuery, [produk_id], (getProdErr, prodResult) => {
+              if (getProdErr) return reject(new Error("Gagal mengambil harga produk."));
+              
+              const hargaPerKg = prodResult[0]?.harga_per_kg || 0;
+
+              // 4. Record transfer in stok_pengiriman with harga_per_kg
+              const insertTransferQuery = `
+                  INSERT INTO stok_pengiriman (produk_id, qty, tujuan, keterangan, harga_per_kg, tanggal)
+                  VALUES (?, ?, ?, ?, ?, NOW())
+                `;
+              db.query(
+                insertTransferQuery,
+                [produk_id, quantity, tujuan, keterangan, hargaPerKg],
+                (insertErr) => {
+                  if (insertErr)
+                    return reject(
+                      new Error(
+                        `Gagal mencatat riwayat pengiriman ${namaProduk}.`
+                      )
+                    );
+                  resolve();
+                }
+              );
+            });
           });
         });
       });
@@ -474,6 +483,7 @@ router.get("/inventory/transfer-history", (req, res) => {
       sp.tanggal,
       p.namaProduk,
       sp.qty,
+      sp.harga_per_kg,
       sp.tujuan,
       sp.keterangan
     FROM stok_pengiriman sp

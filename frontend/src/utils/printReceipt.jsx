@@ -54,9 +54,9 @@ const ReceiptTemplate = ({ storeSettings, transactionData }) => {
         {items.map((item, i) => (
           <div className="row" key={i}>
             <span>
-              {item.nama} x{item.qty} {item.harga}
+              {item.nama}x{item.qty} {item.harga}
             </span>
-            <span>Rp. {item.subtotal.toLocaleString("id-ID")}</span>
+            <span>Rp.{item.subtotal.toLocaleString("id-ID")}</span>
           </div>
         ))}
       </div>
