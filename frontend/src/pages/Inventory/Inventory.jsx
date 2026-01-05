@@ -5,6 +5,7 @@ import Navbar from "../../components/Navbar";
 import Modal from "../../components/Modal";
 import axios from "axios";
 import { printStockEntry } from "../../utils/printStockEntry";
+import { printInventory } from "../../utils/printInventory";
 import { useToast } from "../../components/Toast/Toast";
 
 export default function Inventory({ onLogout, user, storeName }) {
@@ -32,6 +33,7 @@ export default function Inventory({ onLogout, user, storeName }) {
     quantity: 1,
     hargaBeli: 0,
     hargaJual: 0,
+    hargaPerKg: 0,
     total: 0,
   };
   const [itemsToAdd, setItemsToAdd] = useState([initialItem]);
@@ -76,6 +78,8 @@ export default function Inventory({ onLogout, user, storeName }) {
         // fill prices from product
         item.hargaBeli = selectedProduct.modal || 0;
         item.hargaJual = selectedProduct.harga || 0;
+        // fill harga per 1kg
+        item.hargaPerKg = selectedProduct.harga_per_kg || 0;
         // recompute total
         const q = parseFloat(item.quantity || 0);
         item.total = Math.round((parseFloat(item.hargaBeli || 0) * q) * 100) / 100;
@@ -285,20 +289,33 @@ export default function Inventory({ onLogout, user, storeName }) {
             >
               + Tambah Stok
             </button>
-            <input
-              type="text"
-              placeholder="Cari Produk..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                padding: "10px",
-                borderRadius: "5px",
-                border: "1px solid #ddd",
-                width: "250px",
-                backgroundColor: "#fff",
-                color: "#333",
-              }}
-            />
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="text"
+                placeholder="Cari Produk..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid #ddd",
+                  width: "250px",
+                  backgroundColor: "#fff",
+                  color: "#333",
+                }}
+              />
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  const filtered = inventory.filter((item) =>
+                    item.produk.toLowerCase().includes(searchTerm.toLowerCase())
+                  );
+                  printInventory(storeSettings, filtered);
+                }}
+              >
+                🖨 Cetak Inventory
+              </button>
+            </div>
           </div>
 
           <div className="inventory-card">
@@ -493,6 +510,15 @@ export default function Inventory({ onLogout, user, storeName }) {
                       onChange={(e) =>
                         handleItemChange(index, "hargaJual", e.target.value)
                       }
+                      style={{ width: "120px", marginLeft: "8px" }}
+                    />
+                    <label>Harga/1kg</label>
+                    <input
+                      type="text"
+                      name="hargaPerKg"
+                      placeholder="Harga/1kg"
+                      value={item.hargaPerKg ? Number(item.hargaPerKg).toLocaleString('id-ID') : '-'}
+                      readOnly
                       style={{ width: "120px", marginLeft: "8px" }}
                     />
                     <label>Jumlah</label>

@@ -43,30 +43,39 @@ const POReportTemplate = ({ storeSettings, historyData, filterDate }) => {
               <th>Nama Produk</th>
               <th className="qty-cell">Qty</th>
               <th>Harga/1kg</th>
+              <th>Total</th>
               <th>Supplier</th>
               <th>Keterangan</th>
             </tr>
           </thead>
           <tbody>
-            {historyData && historyData.map((item) => (
-              <tr key={item.id}>
-                <td>
-                  {new Date(item.tanggal).toLocaleTimeString("id-ID", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </td>
-                <td style={{ fontWeight: 600 }}>{item.namaProduk}</td>
-                <td className="qty-cell">{item.qty}</td>
-                <td>
-                  {item.harga_per_kg
-                    ? `Rp. ${Number(item.harga_per_kg).toLocaleString("id-ID")}`
-                    : "-"}
-                </td>
-                <td>{item.tujuan}</td>
-                <td>{item.keterangan || "-"}</td>
-              </tr>
-            ))}
+            {historyData &&
+              historyData.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    {new Date(item.tanggal).toLocaleTimeString("id-ID", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
+                  <td style={{ fontWeight: 600 }}>{item.namaProduk}</td>
+                  <td className="qty-cell">{item.qty}</td>
+                  <td>
+                    {item.harga_per_kg
+                      ? `Rp. ${Number(item.harga_per_kg).toLocaleString(
+                          "id-ID"
+                        )}`
+                      : "-"}
+                  </td>
+                  <td>
+                    {item.total
+                      ? `Rp. ${Number(item.total).toLocaleString("id-ID")}`
+                      : "-"}
+                  </td>
+                  <td>{item.tujuan}</td>
+                  <td>{item.keterangan || "-"}</td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>

@@ -2,6 +2,37 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 
+// Ensure columns exist in stok_pengiriman table
+const ensureColumns = () => {
+  const columns = [
+    "harga_beli DECIMAL(15,2) DEFAULT 0",
+    "stok_awal INT DEFAULT 0",
+    "total DECIMAL(15,2) DEFAULT 0",
+  ];
+
+  columns.forEach((col) => {
+    const colName = col.split(" ")[0];
+    const query = `SHOW COLUMNS FROM stok_pengiriman LIKE '${colName}'`;
+    db.query(query, (err, results) => {
+      if (!err && results.length === 0) {
+        const alterQuery = `ALTER TABLE stok_pengiriman ADD COLUMN ${col}`;
+        db.query(alterQuery, (err2) => {
+          if (err2)
+            console.error(
+              `❌ Gagal menambah kolom ${colName} ke stok_pengiriman:`,
+              err2
+            );
+          else
+            console.log(
+              `✅ Kolom ${colName} berhasil ditambahkan ke stok_pengiriman`
+            );
+        });
+      }
+    });
+  });
+};
+ensureColumns();
+
 // API GET Inventory
 router.get("/inventory", (req, res) => {
   const query = `
@@ -41,7 +72,7 @@ router.patch("/inventory/:id/add-stock", (req, res) => {
   const qty = parseInt(quantity, 10);
   const hb = parseFloat(hargaBeli || 0);
   const hj = parseFloat(hargaJual || 0);
-  const total = Math.round((hb * qty) * 100) / 100;
+  const total = Math.round(hb * qty * 100) / 100;
 
   if (!qty || qty <= 0) {
     return res
@@ -80,51 +111,58 @@ router.patch("/inventory/:id/add-stock", (req, res) => {
         });
       }
 
-        // 2. Catat riwayat di tabel stok_masuk (tambahkan harga dan total jika kolom ada)
-        const logStockQuery = `
+      // 2. Catat riwayat di tabel stok_masuk (tambahkan harga dan total jika kolom ada)
+      const logStockQuery = `
           INSERT INTO stok_masuk (produk_id, supplier, qty, tanggal, harga_beli, harga_jual, total)
           VALUES (?, ?, ?, NOW(), ?, ?, ?)
         `;
-        db.query(logStockQuery, [id, supplier, qty, hb, hj, total], (logErr, logResult) => {
-        if (logErr) {
-          console.error("❌ DB error on logging stock:", logErr);
-          return db.rollback(() => {
-            res.status(500).json({ message: "Gagal mencatat riwayat stok." });
-          });
-        }
-
-        const newStockEntryId = logResult.insertId;
-
-        // Jika semua berhasil, commit transaksi
-        db.commit((commitErr) => {
-          if (commitErr) {
-            console.error("❌ DB error on commit:", commitErr);
+      db.query(
+        logStockQuery,
+        [id, supplier, qty, hb, hj, total],
+        (logErr, logResult) => {
+          if (logErr) {
+            console.error("❌ DB error on logging stock:", logErr);
             return db.rollback(() => {
-              res
-                .status(500)
-                .json({ message: "Gagal menyelesaikan transaksi." });
+              res.status(500).json({ message: "Gagal mencatat riwayat stok." });
             });
           }
 
-          // 3. Ambil data stok masuk yang baru untuk dikembalikan ke client
-          const getNewEntryQuery = `SELECT * FROM stok_masuk WHERE id = ?`;
-          db.query(getNewEntryQuery, [newStockEntryId], (getErr, rows) => {
-            if (getErr) {
-              console.error("❌ DB error on fetching new stock entry:", getErr);
-              // Transaksi sudah di-commit, jadi kita hanya bisa melaporkan error
-              return res.status(500).json({
-                message:
-                  "Stok berhasil ditambahkan, namun gagal mengambil data terbaru.",
-                error: getErr,
+          const newStockEntryId = logResult.insertId;
+
+          // Jika semua berhasil, commit transaksi
+          db.commit((commitErr) => {
+            if (commitErr) {
+              console.error("❌ DB error on commit:", commitErr);
+              return db.rollback(() => {
+                res
+                  .status(500)
+                  .json({ message: "Gagal menyelesaikan transaksi." });
               });
             }
-            res.json({
-              message: "Stok berhasil ditambahkan dan dicatat.",
-              data: rows[0],
+
+            // 3. Ambil data stok masuk yang baru untuk dikembalikan ke client
+            const getNewEntryQuery = `SELECT * FROM stok_masuk WHERE id = ?`;
+            db.query(getNewEntryQuery, [newStockEntryId], (getErr, rows) => {
+              if (getErr) {
+                console.error(
+                  "❌ DB error on fetching new stock entry:",
+                  getErr
+                );
+                // Transaksi sudah di-commit, jadi kita hanya bisa melaporkan error
+                return res.status(500).json({
+                  message:
+                    "Stok berhasil ditambahkan, namun gagal mengambil data terbaru.",
+                  error: getErr,
+                });
+              }
+              res.json({
+                message: "Stok berhasil ditambahkan dan dicatat.",
+                data: rows[0],
+              });
             });
           });
-        });
-      });
+        }
+      );
     });
   });
 });
@@ -152,11 +190,15 @@ router.post("/inventory/add-stocks", (req, res) => {
     try {
       // Prepare all queries
       items.forEach((item) => {
-        const { inventoryId, quantity, supplier, hargaBeli, hargaJual, total } = item;
+        const { inventoryId, quantity, supplier, hargaBeli, hargaJual, total } =
+          item;
         const qty = parseInt(quantity, 10);
         const hb = parseFloat(hargaBeli || 0);
         const hj = parseFloat(hargaJual || 0);
-        const ttl = typeof total !== 'undefined' ? parseFloat(total) : Math.round((hb * qty) * 100) / 100;
+        const ttl =
+          typeof total !== "undefined"
+            ? parseFloat(total)
+            : Math.round(hb * qty * 100) / 100;
 
         if (!inventoryId || !supplier || !qty || qty <= 0) {
           // This check is basic. More robust validation might be needed.
@@ -175,7 +217,9 @@ router.post("/inventory/add-stocks", (req, res) => {
         const logStockQuery =
           "INSERT INTO stok_masuk (produk_id, supplier, qty, tanggal, harga_beli, harga_jual, total) VALUES (?, ?, ?, NOW(), ?, ?, ?)";
         queries.push(
-          db.promise().query(logStockQuery, [inventoryId, supplier, qty, hb, hj, ttl])
+          db
+            .promise()
+            .query(logStockQuery, [inventoryId, supplier, qty, hb, hj, ttl])
         );
       });
     } catch (error) {
@@ -241,68 +285,83 @@ router.put("/inventory/:id", (req, res) => {
     // 1. Update stok and optionally harga/modal di tabel produk
     const updateProductQuery =
       "UPDATE produk SET stok = ?, modal = ?, harga = ?, updated_at = NOW() WHERE id = ?";
-    db.query(updateProductQuery, [newStok, hb, hj, id], (productErr, productResult) => {
-      if (productErr) {
-        return db.rollback(() => {
-          console.error("❌ DB error on product update:", productErr);
-          res.status(500).json({ message: "Gagal mengupdate stok produk." });
-        });
-      }
-
-      if (productResult.affectedRows === 0) {
-        return db.rollback(() => {
-          res.status(404).json({ message: "Produk tidak ditemukan." });
-        });
-      }
-
-      // 2. Update supplier di entry stok_masuk terakhir (jika ada)
-      // Kita cari entry terakhir untuk produk ini
-      const findLastEntryQuery =
-        "SELECT id FROM stok_masuk WHERE produk_id = ? ORDER BY tanggal DESC LIMIT 1";
-      db.query(findLastEntryQuery, [id], (findErr, findResult) => {
-        if (findErr) {
+    db.query(
+      updateProductQuery,
+      [newStok, hb, hj, id],
+      (productErr, productResult) => {
+        if (productErr) {
           return db.rollback(() => {
-            console.error("❌ DB error on finding last stock entry:", findErr);
-            res.status(500).json({ message: "Gagal mencari data stok masuk." });
+            console.error("❌ DB error on product update:", productErr);
+            res.status(500).json({ message: "Gagal mengupdate stok produk." });
           });
         }
 
-        // Jika ada history stok masuk, update supplier-nya
-        if (findResult.length > 0) {
-          const lastEntryId = findResult[0].id;
-          const updateSupplierQuery =
-            "UPDATE stok_masuk SET supplier = ?, harga_beli = ?, harga_jual = ?, total = qty * ? WHERE id = ?";
-          db.query(updateSupplierQuery, [supplier, hb, hj, hb, lastEntryId], (suppErr) => {
-            if (suppErr) {
-              return db.rollback(() => {
-                console.error("❌ DB error on updating supplier:", suppErr);
-                res.status(500).json({ message: "Gagal mengupdate supplier." });
-              });
-            }
+        if (productResult.affectedRows === 0) {
+          return db.rollback(() => {
+            res.status(404).json({ message: "Produk tidak ditemukan." });
+          });
+        }
+
+        // 2. Update supplier di entry stok_masuk terakhir (jika ada)
+        // Kita cari entry terakhir untuk produk ini
+        const findLastEntryQuery =
+          "SELECT id FROM stok_masuk WHERE produk_id = ? ORDER BY tanggal DESC LIMIT 1";
+        db.query(findLastEntryQuery, [id], (findErr, findResult) => {
+          if (findErr) {
+            return db.rollback(() => {
+              console.error(
+                "❌ DB error on finding last stock entry:",
+                findErr
+              );
+              res
+                .status(500)
+                .json({ message: "Gagal mencari data stok masuk." });
+            });
+          }
+
+          // Jika ada history stok masuk, update supplier-nya
+          if (findResult.length > 0) {
+            const lastEntryId = findResult[0].id;
+            const updateSupplierQuery =
+              "UPDATE stok_masuk SET supplier = ?, harga_beli = ?, harga_jual = ?, total = qty * ? WHERE id = ?";
+            db.query(
+              updateSupplierQuery,
+              [supplier, hb, hj, hb, lastEntryId],
+              (suppErr) => {
+                if (suppErr) {
+                  return db.rollback(() => {
+                    console.error("❌ DB error on updating supplier:", suppErr);
+                    res
+                      .status(500)
+                      .json({ message: "Gagal mengupdate supplier." });
+                  });
+                }
+                commitTransaction();
+              }
+            );
+          } else {
+            // Jika tidak ada history (mungkin produk baru manual di DB), kita skip update supplier di stok_masuk
+            // Tapi idealnya produk selalu punya stok_masuk kalau lewat app.
+            // Kita bisa juga insert dummy record, tapi untuk sekarang kita biarkan saja.
             commitTransaction();
-          });
-        } else {
-          // Jika tidak ada history (mungkin produk baru manual di DB), kita skip update supplier di stok_masuk
-          // Tapi idealnya produk selalu punya stok_masuk kalau lewat app.
-          // Kita bisa juga insert dummy record, tapi untuk sekarang kita biarkan saja.
-          commitTransaction();
-        }
+          }
 
-        function commitTransaction() {
-          db.commit((commitErr) => {
-            if (commitErr) {
-              return db.rollback(() => {
-                console.error("❌ DB error on commit:", commitErr);
-                res
-                  .status(500)
-                  .json({ message: "Gagal menyelesaikan transaksi." });
-              });
-            }
-            res.json({ message: "Inventori berhasil diupdate." });
-          });
-        }
-      });
-    });
+          function commitTransaction() {
+            db.commit((commitErr) => {
+              if (commitErr) {
+                return db.rollback(() => {
+                  console.error("❌ DB error on commit:", commitErr);
+                  res
+                    .status(500)
+                    .json({ message: "Gagal menyelesaikan transaksi." });
+                });
+              }
+              res.json({ message: "Inventori berhasil diupdate." });
+            });
+          }
+        });
+      }
+    );
   });
 });
 
@@ -421,21 +480,41 @@ router.post("/inventory/transfer", (req, res) => {
             if (updateErr)
               return reject(new Error(`Gagal mengurangi stok ${namaProduk}.`));
 
-            // 3. Get harga_per_kg from produk
-            const getProductQuery = "SELECT harga_per_kg FROM produk WHERE id = ?";
+            // 3. Get harga_per_kg and modal from produk
+            const getProductQuery =
+              "SELECT harga_per_kg, modal FROM produk WHERE id = ?";
             db.query(getProductQuery, [produk_id], (getProdErr, prodResult) => {
-              if (getProdErr) return reject(new Error("Gagal mengambil harga produk."));
-              
-              const hargaPerKg = prodResult[0]?.harga_per_kg || 0;
+              if (getProdErr)
+                return reject(new Error("Gagal mengambil harga produk."));
 
-              // 4. Record transfer in stok_pengiriman with harga_per_kg
+              const hargaPerKg = prodResult[0]?.harga_per_kg || 0;
+              const modal = prodResult[0]?.modal || 0;
+              const currentStock = checkResult[0].stok; // Stock BEFORE subtraction? No, checks were done before update, but we updated already.
+              // Logic check:
+              // Step 1: Check stock (got `currentStock` from checkResult which is from BEFORE update)
+              // Step 2: Update stock (stok = stok - qty)
+              // Step 3: Insert log. We want "stok_awal" (stock before sending). That is `currentStock`.
+              // We also want total = modal * qty.
+
+              const total = modal * quantity;
+
+              // 4. Record transfer in stok_pengiriman with harga_per_kg, harga_beli, stok_awal, total
               const insertTransferQuery = `
-                  INSERT INTO stok_pengiriman (produk_id, qty, tujuan, keterangan, harga_per_kg, tanggal)
-                  VALUES (?, ?, ?, ?, ?, NOW())
+                  INSERT INTO stok_pengiriman (produk_id, qty, tujuan, keterangan, harga_per_kg, harga_beli, stok_awal, total, tanggal)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
                 `;
               db.query(
                 insertTransferQuery,
-                [produk_id, quantity, tujuan, keterangan, hargaPerKg],
+                [
+                  produk_id,
+                  quantity,
+                  tujuan,
+                  keterangan,
+                  hargaPerKg,
+                  modal,
+                  currentStock,
+                  total,
+                ],
                 (insertErr) => {
                   if (insertErr)
                     return reject(
@@ -485,7 +564,10 @@ router.get("/inventory/transfer-history", (req, res) => {
       sp.qty,
       sp.harga_per_kg,
       sp.tujuan,
-      sp.keterangan
+      sp.keterangan,
+      sp.harga_beli,
+      sp.stok_awal,
+      sp.total
     FROM stok_pengiriman sp
     JOIN produk p ON sp.produk_id = p.id
   `;

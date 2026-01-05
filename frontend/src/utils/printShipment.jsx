@@ -36,13 +36,14 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
         </div>
       </div>
       <div className="shipment-table">
-        <table border="1" style={{ borderCollapse: "collapse"}}>
+        <table border="1" style={{ borderCollapse: "collapse" }}>
           <thead>
             <tr>
               <th>Waktu</th>
               <th>Nama Produk</th>
               <th className="qty-cell">Qty</th>
               <th>Harga/1kg</th>
+              <th>Total</th>
               <th>Tujuan</th>
               <th>Keterangan</th>
             </tr>
@@ -61,6 +62,11 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
                 <td>
                   {item.harga_per_kg
                     ? `Rp. ${Number(item.harga_per_kg).toLocaleString("id-ID")}`
+                    : "-"}
+                </td>
+                <td>
+                  {item.total
+                    ? `Rp. ${Number(item.total).toLocaleString("id-ID")}`
                     : "-"}
                 </td>
                 <td>{item.tujuan}</td>

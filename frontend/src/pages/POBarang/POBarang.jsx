@@ -21,7 +21,11 @@ export default function POBarang({ onLogout, user, storeName }) {
       qty: 1,
       tujuan: "",
       keterangan: "",
+      keterangan: "",
       harga_per_kg: 0,
+      harga_beli: 0,
+      stok: 0,
+      total: 0,
     },
   ]);
   const [tujuan, setTujuan] = useState("");
@@ -103,7 +107,11 @@ export default function POBarang({ onLogout, user, storeName }) {
         qty: 1,
         tujuan: "",
         keterangan: "",
+        keterangan: "",
         harga_per_kg: 0,
+        harga_beli: 0,
+        stok: 0,
+        total: 0,
       },
     ]);
   };
@@ -124,10 +132,16 @@ export default function POBarang({ onLogout, user, storeName }) {
       newItems[index].produk_id = product.id;
       newItems[index].nama = product.namaProduk;
       newItems[index].harga_per_kg = product.harga_per_kg || 0;
+      newItems[index].harga_beli = product.modal || 0;
+      newItems[index].stok = product.stok || 0;
+      newItems[index].total = (product.modal || 0) * newItems[index].qty;
     } else {
       newItems[index].produk_id = "";
       newItems[index].nama = "";
       newItems[index].harga_per_kg = 0;
+      newItems[index].harga_beli = 0;
+      newItems[index].stok = 0;
+      newItems[index].total = 0;
     }
     setItems(newItems);
   };
@@ -219,6 +233,8 @@ export default function POBarang({ onLogout, user, storeName }) {
       tanggal: data.tanggal,
       namaProduk: item.nama,
       qty: item.qty,
+      harga_per_kg: item.harga_per_kg,
+      total: item.total,
       tujuan: data.tujuan,
       keterangan: data.keterangan,
     }));
@@ -351,7 +367,7 @@ export default function POBarang({ onLogout, user, storeName }) {
                     <div
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "2fr 1fr",
+                        gridTemplateColumns: "1fr 1fr 1fr",
                         gap: "10px",
                         marginBottom: "12px",
                       }}
@@ -367,10 +383,18 @@ export default function POBarang({ onLogout, user, storeName }) {
                       </div>
 
                       <div className="form-group">
-                        <label style={{ fontSize: "12px" }}>Harga/1kg (Rp)</label>
+                        <label style={{ fontSize: "12px" }}>
+                          Harga/1kg (Rp)
+                        </label>
                         <input
                           type="text"
-                          value={item.harga_per_kg ? Number(item.harga_per_kg).toLocaleString("id-ID") : "-"}
+                          value={
+                            item.harga_per_kg
+                              ? Number(item.harga_per_kg).toLocaleString(
+                                  "id-ID"
+                                )
+                              : "-"
+                          }
                           disabled
                           style={{
                             backgroundColor: "#eee",
@@ -383,20 +407,80 @@ export default function POBarang({ onLogout, user, storeName }) {
                       </div>
 
                       <div className="form-group">
-                        <label style={{ fontSize: "12px" }}>Jumlah Pesan</label>
+                        <label style={{ fontSize: "12px" }}>
+                          Harga Beli/Karung
+                        </label>
+                        <input
+                          type="text"
+                          value={
+                            item.harga_beli
+                              ? Number(item.harga_beli).toLocaleString("id-ID")
+                              : "-"
+                          }
+                          disabled
+                          style={{
+                            backgroundColor: "#eee",
+                            padding: "8px",
+                            borderRadius: "5px",
+                            border: "1px solid #ddd",
+                            fontSize: "13px",
+                          }}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label style={{ fontSize: "12px" }}>Stok</label>
+                        <input
+                          type="text"
+                          value={item.stok}
+                          disabled
+                          style={{
+                            backgroundColor: "#eee",
+                            padding: "8px",
+                            borderRadius: "5px",
+                            border: "1px solid #ddd",
+                            fontSize: "13px",
+                          }}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Jumlah</label>
                         <input
                           type="number"
                           value={item.qty}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const qty = parseInt(e.target.value, 10) || 0;
+                            handleItemChange(index, "qty", qty);
                             handleItemChange(
                               index,
-                              "qty",
-                              parseInt(e.target.value, 10) || 0
-                            )
-                          }
+                              "total",
+                              qty * item.harga_beli
+                            );
+                          }}
                           min="1"
                           required
                           style={{
+                            padding: "8px",
+                            borderRadius: "5px",
+                            border: "1px solid #ddd",
+                            fontSize: "13px",
+                          }}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label style={{ fontSize: "12px" }}>Total (Rp)</label>
+                        <input
+                          type="text"
+                          value={
+                            item.total
+                              ? Number(item.total).toLocaleString("id-ID")
+                              : "-"
+                          }
+                          disabled
+                          style={{
+                            backgroundColor: "#eee",
                             padding: "8px",
                             borderRadius: "5px",
                             border: "1px solid #ddd",
@@ -472,7 +556,10 @@ export default function POBarang({ onLogout, user, storeName }) {
                       <th>Waktu</th>
                       <th>Produk</th>
                       <th>Jumlah</th>
-                      <th>Harga/1kg (Rp)</th>
+                      <th>Harga/1kg</th>
+                      <th>Harga Beli</th>
+                      <th>Stok Awal</th>
+                      <th>Total</th>
                       <th>Supplier</th>
                       <th>Keterangan</th>
                     </tr>
@@ -496,6 +583,17 @@ export default function POBarang({ onLogout, user, storeName }) {
                         <td>
                           {item.harga_per_kg
                             ? Number(item.harga_per_kg).toLocaleString("id-ID")
+                            : "-"}
+                        </td>
+                        <td>
+                          {item.harga_beli
+                            ? Number(item.harga_beli).toLocaleString("id-ID")
+                            : "-"}
+                        </td>
+                        <td>{item.stok_awal}</td>
+                        <td>
+                          {item.total
+                            ? Number(item.total).toLocaleString("id-ID")
                             : "-"}
                         </td>
                         <td>

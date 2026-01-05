@@ -175,6 +175,7 @@ router.get("/reports/export", async (req, res) => {
 
   const query = `
     SELECT 
+      t.id as transaksi_id,
       t.tanggal,
       p.namaProduk,
       p.modal,
@@ -300,7 +301,6 @@ router.get("/reports/export", async (req, res) => {
       // Calculate totals
       let totalSubtotal = 0;
       let totalKeuntungan = 0;
-      let totalAmount = 0;
 
       result.forEach((row) => {
         // measure height needed for product cell (wrap)
@@ -373,8 +373,9 @@ router.get("/reports/export", async (req, res) => {
           y,
           { width: colWidths.keuntungan, align: "right" }
         );
+        // show per-product subtotal in the "total" column (not transaksi total)
         doc.text(
-          row.total ? `Rp. ${Number(row.total).toLocaleString("id-ID")}` : "-",
+          row.subtotal ? `Rp. ${Number(row.subtotal).toLocaleString("id-ID")}` : "-",
           colX.total,
           y,
           { width: colWidths.total, align: "right" }
@@ -388,10 +389,9 @@ router.get("/reports/export", async (req, res) => {
           .lineTo(curX, sepY)
           .stroke();
 
-        // Accumulate totals
+        // Accumulate totals per-detail
         totalSubtotal += row.subtotal || 0;
         totalKeuntungan += row.keuntungan || 0;
-        totalAmount += row.total || 0;
 
         y += rowHeight;
       });
@@ -407,20 +407,21 @@ router.get("/reports/export", async (req, res) => {
       doc.font("Times-Bold").fontSize(9);
       doc.fillColor("black");
       doc.text("TOTAL", colX.tanggal, y, { width: colWidths.tanggal, align: "left" });
-      doc.text(
-        `Rp. ${Number(totalSubtotal).toLocaleString("id-ID")}`,
-        colX.subtotal,
-        y,
-        { width: colWidths.subtotal, align: "right" }
-      );
+      // doc.text(
+      //   `Rp. ${Number(totalSubtotal).toLocaleString("id-ID")}`,
+      //   colX.subtotal,
+      //   y,
+      //   { width: colWidths.subtotal, align: "right" }
+      // );
       doc.text(
         `Rp. ${Number(totalKeuntungan).toLocaleString("id-ID")}`,
         colX.keuntungan,
         y,
         { width: colWidths.keuntungan, align: "right" }
       );
+      // show grand total equal to sum of per-product subtotals
       doc.text(
-        `Rp. ${Number(totalAmount).toLocaleString("id-ID")}`,
+        `Rp. ${Number(totalSubtotal).toLocaleString("id-ID")}`,
         colX.total,
         y,
         { width: colWidths.total, align: "right" }
