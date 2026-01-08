@@ -14,10 +14,16 @@
 <!-- * tambahkan input pada modal inventory harga beli dan input total (read only) hasil dari harga beli * qty masuk -->
 <!-- * pada form pengiriman tambahkan input harga beli dan total (hasil dari harga beli per 1kg x qty minta) -->
 
-command untuk build backend
-pkg . --targets node16-win-x64 --out-path dist --assets "node_modules/pdfkit/js/data/\*_/_"
+_command untuk build backend_
+pkg . --targets node16-win-x64 --out-path dist --assets "node\*modules/pdfkit/js/data/\*\*/\_"
 hasil -> backend/dist -> backend.exe
 
 _command untuk build frontend_
 npm run dist
 hasil -> dist_electron -> POS Kasir Beras 1.1.0.exe
+
+# REVISI
+
+<!-- - Tambah Total dari qty dan total hasil export laporan Produk,PO,Pengiriman
+- Harga per karung masukan ke hasil export Pengiriman dan PO
+- Hilangkan data stok min di hasil export laporan stok -->

@@ -66,9 +66,9 @@
     border-radius: $border-radius-sm;
     border: 1px solid $light-border;
     cursor: pointer;
-    background-color: $white;
+    // background-color: transparent;
     transition: $transition;
-    color: $secondary-color;
+    color: white;
 
     &:focus {
       outline: none;

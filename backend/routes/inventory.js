@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const PDFDocument = require("pdfkit");
 
 // Ensure columns exist in stok_pengiriman table
 const ensureColumns = () => {
@@ -567,7 +568,9 @@ router.get("/inventory/transfer-history", (req, res) => {
       sp.keterangan,
       sp.harga_beli,
       sp.stok_awal,
-      sp.total
+      sp.total,
+      p.harga,
+      p.modal
     FROM stok_pengiriman sp
     JOIN produk p ON sp.produk_id = p.id
   `;
@@ -588,6 +591,244 @@ router.get("/inventory/transfer-history", (req, res) => {
         .json({ message: "Gagal mengambil riwayat pengiriman." });
     }
     res.json(result);
+  });
+});
+
+// API Export Transfer History to PDF
+router.get("/inventory/transfer/export", (req, res) => {
+  const { date } = req.query;
+
+  let query = `
+    SELECT
+      sp.id,
+      sp.tanggal,
+      p.namaProduk,
+      sp.qty,
+      sp.harga_per_kg,
+      sp.tujuan,
+      sp.keterangan,
+      sp.harga_beli,
+      sp.stok_awal,
+      sp.total,
+      p.modal
+    FROM stok_pengiriman sp
+    JOIN produk p ON sp.produk_id = p.id
+  `;
+
+  const params = [];
+  if (date) {
+    query += " WHERE DATE(sp.tanggal) = ? ";
+    params.push(date);
+  }
+
+  query += " ORDER BY sp.tanggal DESC";
+
+  db.query(query, params, (err, result) => {
+    if (err) {
+      console.error("❌ Error fetching transfer history:", err);
+      return res.status(500).json(err);
+    }
+
+    try {
+      const doc = new PDFDocument({ size: "A4", margin: 40 });
+      const filename = date
+        ? `Riwayat_Pengiriman_${date}.pdf`
+        : `Riwayat_Pengiriman.pdf`;
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename=${filename}`);
+
+      doc.pipe(res);
+
+      // Header
+      doc.fontSize(16).text("Laporan Pengiriman Barang", { align: "center" });
+      doc.moveDown(0.5);
+      doc
+        .fontSize(10)
+        .text(date ? `Tanggal: ${date}` : `Semua Riwayat Pengiriman`, {
+          align: "center",
+        });
+      doc.moveDown(1);
+
+      // Table layout
+      const marginLeft = 40;
+      const pageWidth = doc.page.width - 80;
+
+      const colPercents = {
+        tanggal: 0.15,
+        produk: 0.2,
+        qty: 0.08,
+        harga_per_kg: 0.12,
+        harga: 0.12, // Harga/Karung
+        total: 0.15,
+        tujuan: 0.12,
+        // keterangan: 0.15, // Might need to adjust or remove if too wide
+      };
+
+      const colWidths = {};
+      Object.keys(colPercents).forEach((k) => {
+        colWidths[k] = Math.floor(pageWidth * colPercents[k]);
+      });
+
+      const cols = [
+        "tanggal",
+        "produk",
+        "qty",
+        "harga_per_kg",
+        "harga",
+        "total",
+        "tujuan",
+        // "keterangan",
+      ];
+      const colX = {};
+      let curX = marginLeft;
+      cols.forEach((c) => {
+        colX[c] = curX;
+        curX += colWidths[c];
+      });
+
+      // Header Row
+      doc.font("Times-Bold").fontSize(9);
+      cols.forEach((c) => {
+        const title =
+          c === "tanggal"
+            ? "Tanggal"
+            : c === "produk"
+            ? "Produk"
+            : c === "qty"
+            ? "Qty"
+            : c === "harga_per_kg"
+            ? "Harga/1kg"
+            : c === "harga"
+            ? "Harga/Karung"
+            : c === "total"
+            ? "Total Modal"
+            : c === "tujuan"
+            ? "Tujuan"
+            : "Keterangan";
+        doc.text(title, colX[c], doc.y, {
+          width: colWidths[c],
+          align: c === "produk" || c === "tujuan" ? "left" : "right",
+        });
+      });
+
+      doc.moveDown(0.5);
+      doc
+        .strokeColor("#cccccc")
+        .moveTo(marginLeft, doc.y)
+        .lineTo(curX, doc.y)
+        .stroke();
+      doc.moveDown(0.3);
+
+      // Data Rows
+      doc.font("Times-Roman").fontSize(9);
+      let grandTotal = 0;
+      let grandTotalQty = 0;
+
+      result.forEach((row) => {
+        if (doc.y + 20 > doc.page.height - doc.page.margins.bottom - 20) {
+          doc.addPage();
+          // Optional: redraw header here if needed, but simple is fine
+        }
+
+        doc.text(
+          new Date(row.tanggal).toLocaleDateString("id-ID"),
+          colX.tanggal,
+          doc.y,
+          { width: colWidths.tanggal, align: "center" }
+        );
+        doc.text(row.namaProduk, colX.produk, doc.y - 13, {
+          width: colWidths.produk,
+          align: "left",
+        });
+        doc.text(row.qty, colX.qty, doc.y - 13, {
+          width: colWidths.qty,
+          align: "right",
+        });
+        doc.text(
+          row.harga_per_kg
+            ? `Rp ${Number(row.harga_per_kg).toLocaleString("id-ID")}`
+            : "-",
+          colX.harga_per_kg,
+          doc.y - 13,
+          { width: colWidths.harga_per_kg, align: "right" }
+        );
+
+        doc.text(
+          row.harga_beli
+            ? `Rp ${Number(row.harga_beli).toLocaleString("id-ID")}`
+            : "-",
+          colX.harga,
+          doc.y - 13,
+          { width: colWidths.harga, align: "right" }
+        );
+
+        const total = row.total || 0;
+        grandTotal += Number(total);
+        grandTotalQty += Number(row.qty || 0);
+
+        doc.text(
+          row.total ? `Rp ${Number(row.total).toLocaleString("id-ID")}` : "-",
+          colX.total,
+          doc.y - 13,
+          { width: colWidths.total, align: "right" }
+        );
+        doc.text(row.tujuan, colX.tujuan, doc.y - 13, {
+          width: colWidths.tujuan,
+          align: "left",
+        });
+        // doc.text(row.keterangan || "-", colX.keterangan, doc.y - 13, {
+        //   width: colWidths.keterangan,
+        //   align: "left",
+        // });
+
+        doc.moveDown(1);
+        doc
+          .strokeColor("#eeeeee")
+          .moveTo(marginLeft, doc.y)
+          .lineTo(curX, doc.y)
+          .stroke();
+        doc.moveDown(0.3);
+      });
+
+      // Grand Total
+      doc.moveDown(1);
+      if (doc.y + 20 > doc.page.height - doc.page.margins.bottom - 20) {
+        doc.addPage();
+      }
+
+      doc
+        .strokeColor("#000000")
+        .lineWidth(1)
+        .moveTo(marginLeft, doc.y)
+        .lineTo(curX, doc.y)
+        .stroke();
+
+      doc.moveDown(0.5);
+
+      doc.font("Times-Bold").fontSize(10);
+      doc.text("Total :", marginLeft, doc.y, {
+        width: colX.qty - marginLeft - 10,
+        align: "right",
+      });
+
+      doc.text(String(grandTotalQty), colX.qty, doc.y, {
+        width: colWidths.qty,
+        align: "right",
+      });
+
+      doc.text(
+        `Rp ${Number(grandTotal).toLocaleString("id-ID")}`,
+        colX.total,
+        doc.y,
+        { width: colWidths.total, align: "right" }
+      );
+
+      doc.end();
+    } catch (exportErr) {
+      console.error("❌ Error generating PDF:", exportErr);
+      res.status(500).send("Error generating PDF");
+    }
   });
 });
 

@@ -74,26 +74,18 @@ export default function Sidebar({ onLogout, user, storeName }) {
           </Link>
         </li>
         <li className="menu-item">
+          <Link to="/pengeluaran" className={isActive("/pengeluaran")}>
+            <span className="menu-icon">📠</span>
+            Pengeluaran
+          </Link>
+        </li>
+        <li className="menu-item">
           <Link to="/settings" className={isActive("/settings")}>
             <span className="menu-icon">⚙️</span>
             Pengaturan
           </Link>
         </li>
       </ul>
-
-      <div
-        style={{
-          position: "absolute",
-          bottom: "20px",
-          left: "0",
-          right: "0",
-          padding: "0 20px",
-        }}
-      >
-        <Link to="/">
-          <button className="sidebar-logout-btn">🚪 Keluar</button>
-        </Link>
-      </div>
     </div>
   );
 }

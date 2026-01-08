@@ -1,0 +1,215 @@
+@use "../../../styles/variables" as *;
+
+.pengeluaran-container {
+  display: flex;
+  min-height: 100vh;
+
+  .main-content {
+    flex: 1;
+    padding: 30px;
+    margin-left: 280px; // Standard sidebar offset
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    transition: margin-left 0.3s ease;
+    z-index: 1;
+
+    @media (max-width: 1200px) {
+      margin-left: 80px; // Collapsed state if applicable
+    }
+
+    .header-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10%;
+
+      h1 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .filter-section {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: white;
+        padding: 8px 16px;
+        border-radius: 12px;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+
+        label {
+          font-size: 14px;
+          color: #a3aed0;
+          font-weight: 600;
+        }
+
+        input {
+          border: 1px solid #e0e5f2;
+          border-radius: 8px;
+          padding: 6px 12px;
+          font-size: 14px;
+          color: #edeef1;
+          outline: none;
+
+          &:focus {
+            border-color: #d3d3d3;
+          }
+        }
+      }
+    }
+
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr); // 3 cards side by side
+      gap: 20px;
+
+      @media (max-width: 900px) {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        background: white;
+        padding: 24px;
+        border-radius: 20px; // Matching POBarang radius
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        width: 100%;
+        z-index: 1;
+
+        h3 {
+          font-size: 14px;
+          color: #a3aed0;
+          font-weight: 500;
+          margin-bottom: 10px;
+        }
+
+        .amount {
+          font-size: 24px;
+          font-weight: 700;
+          color: #2b3674;
+        }
+
+        &.modal-card {
+          border-left: 4px solid #05cd99; // Greenish
+          .amount {
+            color: #05cd99;
+          }
+        }
+        &.expense-card {
+          border-left: 4px solid #ee5d50; // Reddish
+          .amount {
+            color: #ee5d50;
+          }
+        }
+        &.balance-card {
+          border-left: 4px solid #4318ff; // Blueish
+          .amount {
+            color: #4318ff;
+          }
+        }
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+
+      button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        color: white;
+
+        &.btn-add-modal {
+          background-color: #05cd99;
+          &:hover {
+            background-color: darkened(#05cd99, 10%);
+          }
+        }
+
+        &.btn-add-expense {
+          background-color: #ee5d50;
+          &:hover {
+            background-color: darkened(#ee5d50, 10%);
+          }
+        }
+
+        &.btn-export-pdf {
+          background-color: #4318ff;
+          &:hover {
+            background-color: darkened(#4318ff, 10%);
+          }
+        }
+      }
+    }
+
+    .history-section {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+
+      h2 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2b3674;
+        margin-bottom: 24px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+
+        thead {
+          tr {
+            border-bottom: 1px solid #e9edf7;
+          }
+          th {
+            text-align: left;
+            padding: 12px;
+            color: #a3aed0;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+          }
+        }
+
+        tbody {
+          tr {
+            border-bottom: 1px solid #f4f7fe;
+            &:last-child {
+              border-bottom: none;
+            }
+            &:hover {
+              background-color: #f4f7fe;
+            }
+          }
+          td {
+            padding: 16px 12px;
+            font-size: 14px;
+            color: #2b3674;
+            font-weight: 600;
+
+            &.text-green {
+              color: #05cd99;
+            }
+            &.text-red {
+              color: #ee5d50;
+            }
+          }
+        }
+      }
+    }
+  }
+}

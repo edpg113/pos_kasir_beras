@@ -18,6 +18,14 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
       })
     : "Semua Tanggal";
 
+  const totalQty = historyData
+    ? historyData.reduce((sum, item) => sum + (Number(item.qty) || 0), 0)
+    : 0;
+
+  const totalModal = historyData
+    ? historyData.reduce((sum, item) => sum + (Number(item.total) || 0), 0)
+    : 0;
+
   return (
     <div className="shipment-report">
       <div className="header">
@@ -43,6 +51,7 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
               <th>Nama Produk</th>
               <th className="qty-cell">Qty</th>
               <th>Harga/1kg</th>
+              <th>Modal/krg</th>
               <th>Total</th>
               <th>Tujuan</th>
               <th>Keterangan</th>
@@ -65,6 +74,11 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
                     : "-"}
                 </td>
                 <td>
+                  {item.modal
+                    ? `Rp. ${Number(item.modal).toLocaleString("id-ID")}`
+                    : "-"}
+                </td>
+                <td>
                   {item.total
                     ? `Rp. ${Number(item.total).toLocaleString("id-ID")}`
                     : "-"}
@@ -74,6 +88,29 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
               </tr>
             ))}
           </tbody>
+          <tfoot>
+            <tr>
+              <td
+                colSpan={2}
+                style={{ textAlign: "right", fontWeight: "bold" }}
+              >
+                Total Qty:
+              </td>
+              <td className="qty-cell" style={{ fontWeight: "bold" }}>
+                {totalQty}
+              </td>
+              <td
+                colSpan={2}
+                style={{ textAlign: "right", fontWeight: "bold" }}
+              >
+                Total Modal:
+              </td>
+              <td style={{ fontWeight: "bold" }}>
+                {`Rp. ${Number(totalModal).toLocaleString("id-ID")}`}
+              </td>
+              <td colSpan={2}></td>
+            </tr>
+          </tfoot>
         </table>
       </div>
 

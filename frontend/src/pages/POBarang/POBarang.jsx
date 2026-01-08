@@ -21,7 +21,6 @@ export default function POBarang({ onLogout, user, storeName }) {
       qty: 1,
       tujuan: "",
       keterangan: "",
-      keterangan: "",
       harga_per_kg: 0,
       harga_beli: 0,
       stok: 0,
@@ -106,7 +105,6 @@ export default function POBarang({ onLogout, user, storeName }) {
         nama: "",
         qty: 1,
         tujuan: "",
-        keterangan: "",
         keterangan: "",
         harga_per_kg: 0,
         harga_beli: 0,
@@ -234,6 +232,7 @@ export default function POBarang({ onLogout, user, storeName }) {
       namaProduk: item.nama,
       qty: item.qty,
       harga_per_kg: item.harga_per_kg,
+      modal: item.harga_beli,
       total: item.total,
       tujuan: data.tujuan,
       keterangan: data.keterangan,
@@ -247,7 +246,7 @@ export default function POBarang({ onLogout, user, storeName }) {
       <Sidebar onLogout={onLogout} user={user} storeName={storeName} />
 
       <div className="main-content">
-        <Navbar title="PO Barang" onLogout={onLogout} user={user} />
+        <Navbar title="Purchase Order Barang" onLogout={onLogout} user={user} />
 
         <div className="shipment-layout">
           <div className="pobarang-card">
@@ -557,6 +556,7 @@ export default function POBarang({ onLogout, user, storeName }) {
                       <th>Produk</th>
                       <th>Jumlah</th>
                       <th>Harga/1kg</th>
+                      <th>Harga/Krg</th>
                       <th>Harga Beli</th>
                       <th>Stok Awal</th>
                       <th>Total</th>
@@ -583,6 +583,11 @@ export default function POBarang({ onLogout, user, storeName }) {
                         <td>
                           {item.harga_per_kg
                             ? Number(item.harga_per_kg).toLocaleString("id-ID")
+                            : "-"}
+                        </td>
+                        <td>
+                          {item.harga
+                            ? Number(item.harga).toLocaleString("id-ID")
                             : "-"}
                         </td>
                         <td>

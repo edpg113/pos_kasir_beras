@@ -82,7 +82,8 @@ export default function Inventory({ onLogout, user, storeName }) {
         item.hargaPerKg = selectedProduct.harga_per_kg || 0;
         // recompute total
         const q = parseFloat(item.quantity || 0);
-        item.total = Math.round((parseFloat(item.hargaBeli || 0) * q) * 100) / 100;
+        item.total =
+          Math.round(parseFloat(item.hargaBeli || 0) * q * 100) / 100;
       }
     }
 
@@ -90,7 +91,7 @@ export default function Inventory({ onLogout, user, storeName }) {
     if (field === "quantity" || field === "hargaBeli") {
       const q = parseFloat(item.quantity || 0);
       const hb = parseFloat(item.hargaBeli || 0);
-      item.total = Math.round((hb * q) * 100) / 100;
+      item.total = Math.round(hb * q * 100) / 100;
     }
 
     setItemsToAdd(newItems);
@@ -187,7 +188,10 @@ export default function Inventory({ onLogout, user, storeName }) {
       supplier,
       hargaBeli: parseFloat(item.hargaBeli || 0),
       hargaJual: parseFloat(item.hargaJual || 0),
-      total: Math.round((parseFloat(item.hargaBeli || 0) * parseInt(item.quantity, 10)) * 100) / 100,
+      total:
+        Math.round(
+          parseFloat(item.hargaBeli || 0) * parseInt(item.quantity, 10) * 100
+        ) / 100,
     }));
 
     try {
@@ -358,7 +362,9 @@ export default function Inventory({ onLogout, user, storeName }) {
                           {item.lastTotal
                             ? Number(item.lastTotal).toLocaleString("id-ID")
                             : item.reorder && item.lastHargaBeli
-                            ? (item.reorder * item.lastHargaBeli).toLocaleString("id-ID")
+                            ? (
+                                item.reorder * item.lastHargaBeli
+                              ).toLocaleString("id-ID")
                             : "-"}
                         </td>
                         <td>{item.minStok}</td>
@@ -494,7 +500,6 @@ export default function Inventory({ onLogout, user, storeName }) {
                       placeholder="Harga Beli"
                       value={item.hargaBeli}
                       readOnly
-
                       onChange={(e) =>
                         handleItemChange(index, "hargaBeli", e.target.value)
                       }
@@ -517,7 +522,11 @@ export default function Inventory({ onLogout, user, storeName }) {
                       type="text"
                       name="hargaPerKg"
                       placeholder="Harga/1kg"
-                      value={item.hargaPerKg ? Number(item.hargaPerKg).toLocaleString('id-ID') : '-'}
+                      value={
+                        item.hargaPerKg
+                          ? Number(item.hargaPerKg).toLocaleString("id-ID")
+                          : "-"
+                      }
                       readOnly
                       style={{ width: "120px", marginLeft: "8px" }}
                     />
@@ -642,12 +651,46 @@ export default function Inventory({ onLogout, user, storeName }) {
                     {lastAddedStock.items.map((item, idx) => (
                       <tr key={idx}>
                         <td>{item.produk}</td>
-                        <td>{item.hargaBeli ? Number(item.hargaBeli).toLocaleString('id-ID') : '-'}</td>
+                        <td>
+                          {item.hargaBeli
+                            ? Number(item.hargaBeli).toLocaleString("id-ID")
+                            : "-"}
+                        </td>
                         <td>{item.quantity}</td>
-                        <td>{item.total ? Number(item.total).toLocaleString('id-ID') : '-'}</td>
+                        <td>
+                          {item.total
+                            ? Number(item.total).toLocaleString("id-ID")
+                            : "-"}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
+                  <tfoot>
+                    <tr
+                      style={{
+                        fontWeight: "bold",
+                        borderTop: "2px solid #ddd",
+                      }}
+                    >
+                      <td colSpan="2" style={{ textAlign: "right" }}>
+                        Total:
+                      </td>
+                      <td>
+                        {lastAddedStock.items.reduce(
+                          (sum, item) => sum + (Number(item.quantity) || 0),
+                          0
+                        )}
+                      </td>
+                      <td>
+                        {Number(
+                          lastAddedStock.items.reduce(
+                            (sum, item) => sum + (Number(item.total) || 0),
+                            0
+                          )
+                        ).toLocaleString("id-ID")}
+                      </td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
             </div>

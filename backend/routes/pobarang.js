@@ -72,6 +72,8 @@ router.get("/pobarang/history", (req, res) => {
       pb.produk_id,
       p.namaProduk,
       p.harga_per_kg,
+      p.harga,
+      p.modal,
       pb.qty,
       pb.tujuan,
       pb.keterangan,
@@ -189,8 +191,11 @@ router.get("/pobarang/export", (req, res) => {
       pb.keterangan,
       pb.tanggal,
       pb.harga_beli,
+      pb.modal,
       pb.total,
-      p.harga_per_kg
+      p.harga_per_kg,
+      p.harga,
+      p.modal
     FROM po_barang pb
     JOIN produk p ON pb.produk_id = p.id
   `;
@@ -236,9 +241,10 @@ router.get("/pobarang/export", (req, res) => {
         produk: 0.2,
         qty: 0.08,
         harga_per_kg: 0.12,
+        harga: 0.12, // Harga/Karung
         total: 0.15,
-        tujuan: 0.15,
-        keterangan: 0.15,
+        tujuan: 0.12,
+        // keterangan: 0.15,
       };
 
       const colWidths = {};
@@ -251,9 +257,10 @@ router.get("/pobarang/export", (req, res) => {
         "produk",
         "qty",
         "harga_per_kg",
+        "harga",
         "total",
         "tujuan",
-        "keterangan",
+        // "keterangan",
       ];
       const colX = {};
       let curX = marginLeft;
@@ -274,14 +281,16 @@ router.get("/pobarang/export", (req, res) => {
             ? "Qty"
             : c === "harga_per_kg"
             ? "Harga/1kg"
+            : c === "harga"
+            ? "Harga/Karung"
             : c === "total"
-            ? "Total"
+            ? "Total Modal"
             : c === "tujuan"
-            ? "Tujuan"
+            ? "Supplier"
             : "Keterangan";
         doc.text(title, colX[c], doc.y, {
           width: colWidths[c],
-          align: c === "produk" || c === "tujuan" ? "left" : "center",
+          align: c === "produk" || c === "tujuan" ? "left" : "right",
         });
       });
 
@@ -296,6 +305,9 @@ router.get("/pobarang/export", (req, res) => {
       // Data rows
       doc.font("Times-Roman").fontSize(9);
 
+      let grandTotal = 0;
+      let grandTotalQty = 0;
+
       result.forEach((row) => {
         doc.text(
           new Date(row.tanggal).toLocaleDateString("id-ID"),
@@ -307,9 +319,9 @@ router.get("/pobarang/export", (req, res) => {
           width: colWidths.produk,
           align: "left",
         });
-        doc.text(row.qty, colX.qty, doc.y, {
+        doc.text(row.qty, colX.qty, doc.y - 13, {
           width: colWidths.qty,
-          align: "center",
+          align: "right",
         });
         doc.text(
           row.harga_per_kg
@@ -319,6 +331,20 @@ router.get("/pobarang/export", (req, res) => {
           doc.y - 13,
           { width: colWidths.harga_per_kg, align: "right" }
         );
+
+        doc.text(
+          row.harga_beli
+            ? `Rp ${Number(row.harga_beli).toLocaleString("id-ID")}`
+            : "-",
+          colX.harga,
+          doc.y - 13,
+          { width: colWidths.harga, align: "right" }
+        );
+
+        const total = row.total || 0;
+        grandTotal += Number(total);
+        grandTotalQty += Number(row.qty || 0);
+
         doc.text(
           row.total ? `Rp ${Number(row.total).toLocaleString("id-ID")}` : "-",
           colX.total,
@@ -329,10 +355,10 @@ router.get("/pobarang/export", (req, res) => {
           width: colWidths.tujuan,
           align: "left",
         });
-        doc.text(row.keterangan || "-", colX.keterangan, doc.y - 13, {
-          width: colWidths.keterangan,
-          align: "left",
-        });
+        // doc.text(row.keterangan || "-", colX.keterangan, doc.y - 13, {
+        //   width: colWidths.keterangan,
+        //   align: "left",
+        // });
 
         doc.moveDown(1);
         doc
@@ -342,6 +368,39 @@ router.get("/pobarang/export", (req, res) => {
           .stroke();
         doc.moveDown(0.3);
       });
+
+      // Draw Grand Total
+      doc.moveDown(1);
+      if (doc.y + 20 > doc.page.height - doc.page.margins.bottom - 20) {
+        doc.addPage();
+      }
+
+      doc
+        .strokeColor("#000000")
+        .lineWidth(1)
+        .moveTo(marginLeft, doc.y)
+        .lineTo(curX, doc.y)
+        .stroke();
+
+      doc.moveDown(0.5);
+
+      doc.font("Times-Bold").fontSize(10);
+      doc.text("Total :", marginLeft, doc.y, {
+        width: colX.qty - marginLeft - 10,
+        align: "right",
+      });
+
+      doc.text(String(grandTotalQty), colX.qty, doc.y, {
+        width: colWidths.qty,
+        align: "right",
+      });
+
+      doc.text(
+        `Rp ${Number(grandTotal).toLocaleString("id-ID")}`,
+        colX.total,
+        doc.y,
+        { width: colWidths.total, align: "right" }
+      );
 
       doc.end();
     } catch (exportErr) {

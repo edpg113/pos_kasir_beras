@@ -31,7 +31,7 @@ const InventoryTemplate = ({ storeSettings, inventory }) => {
             <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "right" }}>Stok (kg)</th>
             <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "right" }}>Harga/1kg</th>
             <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "right" }}>Last Total</th>
-            <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "right" }}>Min Stok</th>
+            {/* <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "right" }}>Min Stok</th> */}
             <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "right" }}>Reorder</th>
             <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "left" }}>Supplier</th>
           </tr>
@@ -43,7 +43,7 @@ const InventoryTemplate = ({ storeSettings, inventory }) => {
               <td style={{ border: "1px solid #eee", padding: 6, textAlign: "right" }}>{item.stok != null ? item.stok : "-"}</td>
               <td style={{ border: "1px solid #eee", padding: 6, textAlign: "right" }}>{item.harga_per_kg ? Number(item.harga_per_kg).toLocaleString('id-ID') : "-"}</td>
               <td style={{ border: "1px solid #eee", padding: 6, textAlign: "right" }}>{item.lastTotal ? Number(item.lastTotal).toLocaleString('id-ID') : (item.reorder && item.lastHargaBeli ? Number(item.reorder * item.lastHargaBeli).toLocaleString('id-ID') : "-")}</td>
-              <td style={{ border: "1px solid #eee", padding: 6, textAlign: "right" }}>{item.minStok != null ? item.minStok : "-"}</td>
+              {/* <td style={{ border: "1px solid #eee", padding: 6, textAlign: "right" }}>{item.minStok != null ? item.minStok : "-"}</td> */}
               <td style={{ border: "1px solid #eee", padding: 6, textAlign: "right" }}>{item.reorder != null ? item.reorder : "-"}</td>
               <td style={{ border: "1px solid #eee", padding: 6 }}>{item.supplier || "-"}</td>
             </tr>

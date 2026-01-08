@@ -101,7 +101,9 @@ router.get("/products/export", (req, res) => {
 
       doc.pipe(res);
 
-      doc.fontSize(16).text("Daftar Produk", { align: "center" });
+      doc
+        .fontSize(16)
+        .text("Laporan Produk, Stok dan Modal", { align: "center" });
       doc.moveDown(0.5);
       doc
         .fontSize(10)
@@ -183,6 +185,9 @@ router.get("/products/export", (req, res) => {
       y = drawHeader(y);
       doc.font("Times-Roman").fontSize(9);
 
+      let grandTotal = 0;
+      let grandTotalStok = 0;
+
       result.forEach((row) => {
         const namaH = doc.heightOfString(String(row.namaProduk || ""), {
           width: colWidths.namaProduk,
@@ -233,6 +238,9 @@ router.get("/products/export", (req, res) => {
         });
 
         const totalValue = row.modal && row.stok ? row.modal * row.stok : 0;
+        grandTotal += totalValue;
+        grandTotalStok += row.stok || 0;
+
         doc.text(
           totalValue > 0
             ? `Rp. ${Number(totalValue).toLocaleString("id-ID")}`
@@ -252,6 +260,40 @@ router.get("/products/export", (req, res) => {
 
         y += rowHeight;
       });
+
+      // Draw Grand Total
+      y += 5;
+      if (y + 20 > doc.page.height - doc.page.margins.bottom - 20) {
+        doc.addPage();
+        y = doc.page.margins.top;
+      }
+
+      doc
+        .strokeColor("#000000")
+        .lineWidth(1)
+        .moveTo(marginLeft, y)
+        .lineTo(curX, y)
+        .stroke();
+
+      y += 8;
+
+      doc.font("Times-Bold").fontSize(10);
+      doc.text("Total Stok dan Modal :", marginLeft, y, {
+        width: colX.stok - marginLeft - 10,
+        align: "right",
+      });
+
+      doc.text(String(grandTotalStok), colX.stok, y, {
+        width: colWidths.stok,
+        align: "right",
+      });
+
+      doc.text(
+        `Rp. ${Number(grandTotal).toLocaleString("id-ID")}`,
+        colX.total,
+        y,
+        { width: colWidths.total, align: "right" }
+      );
 
       doc.end();
     } catch (pdfErr) {

@@ -29,7 +29,7 @@ export default function Sales({ onLogout, user, storeName }) {
   const [items, setItems] = useState([
     { produk_id: "", nama: "", harga: 0, qty: 1, subtotal: 0 },
   ]);
-
+  const [metode, setMetode] = useState("cash");
   const [pembeli, setPembeli] = useState("");
   const [bayar, setBayar] = useState(0);
 
@@ -98,6 +98,7 @@ export default function Sales({ onLogout, user, storeName }) {
         bayar,
         kembalian: selisih,
         items: validItems,
+        metode,
       });
 
       setLastTransaction({
@@ -304,6 +305,7 @@ export default function Sales({ onLogout, user, storeName }) {
                     <th>total</th>
                     <th>bayar</th>
                     <th>kembalian</th>
+                    <th>metode</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -325,6 +327,7 @@ export default function Sales({ onLogout, user, storeName }) {
                       <td>Rp.{item.total.toLocaleString("id-ID")}</td>
                       <td>Rp.{item.bayar.toLocaleString("id-ID")}</td>
                       <td>Rp.{item.kembalian.toLocaleString("id-ID")}</td>
+                      <td>{item.metode}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -430,6 +433,18 @@ export default function Sales({ onLogout, user, storeName }) {
                   onChange={(e) => setPembeli(e.target.value)}
                   placeholder="Nama pembeli"
                 />
+              </div>
+              <div className="form-group">
+                <label>Metode Pembayaran</label>
+                <select
+                  className="form-control"
+                  value={metode}
+                  onChange={(e) => setMetode(e.target.value)}
+                >
+                  <option value="cash">Tunai</option>
+                  <option value="transfer">Transfer</option>
+                  <option value="kasbon">Kasbon</option>
+                </select>
               </div>
 
               {/* ===== RINGKASAN ===== */}

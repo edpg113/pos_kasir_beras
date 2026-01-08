@@ -91,9 +91,6 @@ export default function Pelanggan({ onLogout, user, storeName }) {
   };
 
   const handleDeletePelanggan = async () => {
-    if (!window.confirm("Apakah Anda yakin ingin menghapus pelanggan ini?"))
-      return;
-
     try {
       await axios.delete(`http://localhost:3000/api/pelanggan/${editId}`);
       toast.showToast("Pelanggan berhasil dihapus!", {
@@ -124,7 +121,13 @@ export default function Pelanggan({ onLogout, user, storeName }) {
     } else {
       setIsEditMode(false);
       setEditId(null);
-      setFormData({ nama: "", telepon: "", alamat: "", kategori: "", keterangan: "" });
+      setFormData({
+        nama: "",
+        telepon: "",
+        alamat: "",
+        kategori: "",
+        keterangan: "",
+      });
     }
     setIsModalOpen(true);
   };
@@ -133,7 +136,13 @@ export default function Pelanggan({ onLogout, user, storeName }) {
     setIsModalOpen(false);
     setIsEditMode(false);
     setEditId(null);
-    setFormData({ nama: "", telepon: "", alamat: "", kategori: "", keterangan: "" }); // Reset form
+    setFormData({
+      nama: "",
+      telepon: "",
+      alamat: "",
+      kategori: "",
+      keterangan: "",
+    }); // Reset form
   };
 
   return (

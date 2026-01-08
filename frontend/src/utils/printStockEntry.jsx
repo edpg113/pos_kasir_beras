@@ -12,7 +12,16 @@ const StockEntryTemplate = ({ storeSettings, stockData }) => {
     email: "-",
     telepon: "-",
   };
-  const { supplier, items, tanggal, total } = stockData;
+  const { supplier, items, tanggal } = stockData;
+
+  const grandTotalQty = items.reduce(
+    (sum, item) => sum + (Number(item.quantity) || 0),
+    0
+  );
+  const grandTotalCost = items.reduce(
+    (sum, item) => sum + (Number(item.total) || 0),
+    0
+  );
 
   const dateStr = new Date(tanggal || new Date()).toLocaleString("id-ID", {
     day: "2-digit",
@@ -60,6 +69,19 @@ const StockEntryTemplate = ({ storeSettings, stockData }) => {
             <span>Rp.{Number(item.total).toLocaleString("id-ID")}</span>
           </div>
         ))}
+      </div>
+
+      <div className="divider" />
+
+      <div className="totals">
+        <p>
+          <span>Total Qty:</span>
+          <span>{grandTotalQty} kg</span>
+        </p>
+        <p>
+          <span>Total Biaya:</span>
+          <span>Rp.{grandTotalCost.toLocaleString("id-ID")}</span>
+        </p>
       </div>
 
       <div className="divider" />

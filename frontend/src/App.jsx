@@ -18,6 +18,7 @@ import Settings from "./pages/Settings/Settings";
 import Pelanggan from "./pages/Pelanggan/Pelanggan";
 import Pengiriman from "./pages/Pengiriman/Pengiriman";
 import POBarang from "./pages/POBarang/POBarang";
+import Pengeluaran from "./pages/Pengeluaran/Pengeluaran";
 import LicenseModal from "./components/LicenseModal/LicenseModal";
 import { licenseService } from "./utils/licenseService";
 import { ToastProvider } from "./components/Toast/Toast";
@@ -282,6 +283,16 @@ export default function App() {
             element={
               isAuthenticated ? (
                 <Reports {...commonProps} />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/pengeluaran"
+            element={
+              isAuthenticated ? (
+                <Pengeluaran {...commonProps} />
               ) : (
                 <Navigate to="/login" replace />
               )

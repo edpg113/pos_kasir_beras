@@ -31,7 +31,7 @@ const generateTransactionID = () => {
 
 // API POST Transaksi
 router.post("/transaksi", (req, res) => {
-  const { pembeli, total, bayar, kembalian, items } = req.body; // remove items check? no it's below
+  const { pembeli, total, bayar, kembalian, items, metode } = req.body; // remove items check? no it's below
 
   if (!items || items.length === 0) {
     return res.status(400).json({ message: "Item transaksi kosong!" });
@@ -48,11 +48,11 @@ router.post("/transaksi", (req, res) => {
 
     const kodeTransaksi = generateTransactionID();
     const queryTransaksi =
-      "INSERT INTO transaksi (kode_transaksi, tanggal, pembeli, total, bayar, kembalian) VALUES (?, NOW(), ?, ?, ?, ?)";
+      "INSERT INTO transaksi (kode_transaksi, tanggal, pembeli, total, bayar, kembalian, metode) VALUES (?, NOW(), ?, ?, ?, ?, ?)";
 
     db.query(
       queryTransaksi,
-      [kodeTransaksi, pembeli, total, bayar, kembalian],
+      [kodeTransaksi, pembeli, total, bayar, kembalian, metode],
       (err, result) => {
         if (err) {
           console.error("❌ Error insert transaksi:", err);
@@ -147,6 +147,7 @@ router.get("/gettransaksi", (req, res) => {
   t.total,
   t.bayar,
   t.kembalian,
+  t.metode,
   p.namaProduk,
   td.qty,
   td.harga,

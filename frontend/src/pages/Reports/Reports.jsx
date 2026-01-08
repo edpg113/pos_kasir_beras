@@ -120,8 +120,8 @@ export default function Reports({ onLogout, user, storeName }) {
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 style={{
-                  backgroundColor: "#fff",
-                  color: "#333",
+                  // backgroundColor: "#fff",
+                  // color: "#333",
                   padding: "8px",
                   borderRadius: "5px",
                   border: "1px solid #ddd",
@@ -139,8 +139,8 @@ export default function Reports({ onLogout, user, storeName }) {
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 style={{
-                  backgroundColor: "#fff",
-                  color: "#333",
+                  // backgroundColor: "#fff",
+                  // color: "#333",
                   padding: "8px",
                   borderRadius: "5px",
                   border: "1px solid #ddd",

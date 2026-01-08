@@ -22,7 +22,6 @@ export default function Pengiriman({ onLogout, user, storeName }) {
       currentStock: 0,
       tujuan: "",
       keterangan: "",
-      keterangan: "",
       harga_per_kg: 0,
       harga_beli: 0,
       total: 0,
@@ -242,6 +241,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
       namaProduk: item.nama,
       qty: item.qty,
       harga_per_kg: item.harga_per_kg,
+      modal: item.harga_beli,
       total: item.total,
       tujuan: data.tujuan,
       keterangan: data.keterangan,
@@ -564,6 +564,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
                       <th>Produk</th>
                       <th>Jumlah</th>
                       <th>Harga/1kg</th>
+                      <th>Harga/krg</th>
                       <th>Harga Beli</th>
                       <th>Stok Awal</th>
                       <th>Total</th>
@@ -590,6 +591,11 @@ export default function Pengiriman({ onLogout, user, storeName }) {
                         <td>
                           {item.harga_per_kg
                             ? Number(item.harga_per_kg).toLocaleString("id-ID")
+                            : "-"}
+                        </td>
+                        <td>
+                          {item.harga
+                            ? Number(item.harga).toLocaleString("id-ID")
                             : "-"}
                         </td>
                         <td>
