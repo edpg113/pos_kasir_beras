@@ -144,12 +144,14 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-
-  td {
-    padding: 15px;
-    border-bottom: 1px solid $light-border;
-    color: $dark-text;
-    font-size: 13px;
+  tbody {
+    td {
+      padding: 15px;
+      border-bottom: 1px solid $light-border;
+      color: $dark-text;
+      font-size: 13px;
+      font-weight: 500;
+    }
   }
 
   tbody tr {

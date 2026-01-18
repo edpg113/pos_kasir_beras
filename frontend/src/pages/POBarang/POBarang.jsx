@@ -548,7 +548,7 @@ export default function POBarang({ onLogout, user, storeName }) {
             {poHistory.length === 0 ? (
               <div className="empty-state">Data tidak ditemukan.</div>
             ) : (
-              <div className="table-responsive">
+              <div className="table-container">
                 <table>
                   <thead>
                     <tr>

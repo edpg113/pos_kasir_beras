@@ -4,18 +4,17 @@ const db = require("../db");
 
 // API Create User
 router.post("/newusers", (req, res) => {
-  const { nama, email, password, role } = req.body;
+  const { nama, email, password } = req.body;
 
   // Validasi input
-  if (!nama || !email || !password || !role) {
+  if (!nama || !email || !password) {
     console.log("❌ Validation failed - missing fields");
     return res.status(400).json({ error: "Semua field harus diisi!" });
   }
 
-  const query =
-    "INSERT INTO user (nama, email, password, role) VALUES (?, ?, ?, ?)";
+  const query = "INSERT INTO user (nama, email, password) VALUES (?, ?, ?)";
 
-  db.query(query, [nama, email, password, role], (err, result) => {
+  db.query(query, [nama, email, password], (err, result) => {
     if (err) {
       console.error("❌ Database error:", err);
       return res.status(500).json({

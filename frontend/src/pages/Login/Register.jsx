@@ -12,7 +12,7 @@ export default function Register() {
     nama: "",
     email: "",
     password: "",
-    role: "",
+    // role: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -31,12 +31,7 @@ export default function Register() {
     setError("");
 
     // Validasi input
-    if (
-      !formData.nama ||
-      !formData.email ||
-      !formData.password ||
-      !formData.role
-    ) {
+    if (!formData.nama || !formData.email || !formData.password) {
       toast.showToast("Semua field harus diisi!", {
         type: "error",
       });
@@ -65,7 +60,7 @@ export default function Register() {
         toast.showToast("✅ Registrasi berhasil! Silakan login.", {
           type: "success",
         });
-        setFormData({ nama: "", email: "", password: "", role: "" });
+        setFormData({ nama: "", email: "", password: "" });
         navigate("/");
       } else {
         toast.showToast(data.error || "❌ Registrasi gagal!", {
@@ -143,14 +138,14 @@ export default function Register() {
             />
           </div>
 
-          <div className="form-group">
+          {/* <div className="form-group">
             <label>Peran</label>
             <select id="role" value={formData.role} onChange={handleChange}>
               <option value="">-- Pilih Peran --</option>
               <option value="Owner">Owner</option>
               <option value="Karyawan">Karyawan</option>
             </select>
-          </div>
+          </div> */}
 
           <div className="login-toggle-form">
             <button

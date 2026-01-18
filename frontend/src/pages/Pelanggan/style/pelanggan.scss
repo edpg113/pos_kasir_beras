@@ -61,6 +61,7 @@
       padding: 12px 15px;
       text-align: left;
       border-bottom: 1px solid #ddd;
+      font-weight: 500;
     }
 
     th {
@@ -105,29 +106,6 @@
     }
   }
 }
-
-// General Button Styles (reusable)
-// .btn {
-//   padding: 10px 20px;
-//   border: none;
-//   border-radius: 6px;
-//   cursor: pointer;
-//   font-size: 15px;
-//   font-weight: 500;
-//   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-
-//   &-primary {
-//     background-color: #007bff;
-//     color: white;
-//     &:hover { background-color: #0056b3; }
-//   }
-//   &-secondary {
-//     background-color: #6c757d;
-//     color: white;
-//     margin-right: 10px;
-//     &:hover { background-color: #5a6268; }
-//   }
-// }
 
 // Form styles are now mostly handled by Modal.scss for consistent UI
 .form-group {

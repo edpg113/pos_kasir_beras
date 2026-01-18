@@ -69,8 +69,6 @@ router.get("/", (req, res) => {
       return res.status(500).json({ message: "Gagal mengambil ringkasan" });
     }
 
-    console.log("Summary Result from DB:", summaryResult);
-
     const totalModalVal =
       summaryResult && summaryResult[0] ? summaryResult[0].totalModal : 0;
     const totalKeluarVal =
@@ -87,9 +85,6 @@ router.get("/", (req, res) => {
         console.error("❌ Error fetching history:", err);
         return res.status(500).json({ message: "Gagal mengambil riwayat" });
       }
-      console.log(
-        `Found ${historyResult.length} history items for ${selectedMonth}`
-      );
       res.json({
         history: historyResult,
         summary: summary,

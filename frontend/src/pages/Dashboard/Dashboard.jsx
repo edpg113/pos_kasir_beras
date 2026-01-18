@@ -14,6 +14,9 @@ export default function Dashboard({ onLogout, user, storeName }) {
   });
   const [inventory, setInventory] = useState([]);
   const [pelanggan, setPelanggan] = useState([]);
+  const [currentStoreName, setCurrentStoreName] = useState(
+    storeName || "Toko Beras"
+  );
 
   // =============================
   // HANDLE FETCH TRANSAKSI
@@ -59,18 +62,28 @@ export default function Dashboard({ onLogout, user, storeName }) {
     }
   };
 
+  const fetchStoreName = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/getsetting");
+      if (response.data && response.data.length > 0) {
+        setCurrentStoreName(response.data[0].namaToko);
+      }
+    } catch (error) {
+      console.error("Gagal mengambil nama toko:", error);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
     fetchTransaksi();
     fetchInventory();
     fetchPelanggan();
+    fetchStoreName();
   }, []);
 
   const needReorder = inventory.filter(
     (item) => item.stok <= item.minStok
   ).length;
-  // const averageStock =
-  //   inventory.length > 0 ? Math.round(totalStok / inventory.length) : 0;
 
   return (
     <div className="dashboard-container">
@@ -85,13 +98,13 @@ export default function Dashboard({ onLogout, user, storeName }) {
 
         <div className="dashboard-page-content">
           <div className="dashboard-page-header">
-            <h1>Selamat Datang di Toko Beras Sumber Negeri</h1>
+            <h1>Selamat Datang di {currentStoreName}</h1>
             <p>Kelola toko beras Anda dengan mudah dan efisien</p>
           </div>
 
           <div className="dashboard-stats-grid">
             <div className="dashboard-stat-card">
-              <h3>Total Penjualan (Bruto)</h3>
+              <h3>Total Penjualan</h3>
               <div className="value">
                 {Number(stats.total_penjualan).toLocaleString("id-ID")}
               </div>
@@ -99,20 +112,9 @@ export default function Dashboard({ onLogout, user, storeName }) {
             </div>
 
             <div className="dashboard-stat-card">
-              <h3 style={{ color: "#e67e22" }}>Total Retur</h3>
+              <h3 style={{ color: "#e67e22" }}>Total Piutang</h3>
               <div className="value" style={{ color: "#e67e22" }}>
-                {Number(stats.total_retur || 0).toLocaleString("id-ID")}
-              </div>
-              <div className="unit">Rp</div>
-            </div>
-
-            <div
-              className="dashboard-stat-card"
-              style={{ borderLeft: "4px solid #27ae60" }}
-            >
-              <h3 style={{ color: "#27ae60" }}>Penjualan Bersih (Net)</h3>
-              <div className="value" style={{ color: "#27ae60" }}>
-                {Number(stats.net_sales || 0).toLocaleString("id-ID")}
+                {Number(stats.total_piutang || 0).toLocaleString("id-ID")}
               </div>
               <div className="unit">Rp</div>
             </div>
@@ -152,7 +154,7 @@ export default function Dashboard({ onLogout, user, storeName }) {
 
           <div className="dashboard-card">
             <h2>Penjualan Terbaru</h2>
-            <div className="table-container">
+            <div className="dashboard-table">
               <table>
                 <thead>
                   <tr>

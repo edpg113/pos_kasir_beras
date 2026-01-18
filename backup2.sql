@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS `pelanggan` (
   `telepon` varchar(50) NOT NULL DEFAULT '0',
   `alamat` text NOT NULL,
   `kategori` varchar(225) DEFAULT 'pelanggan baru',
+  `keterangan` varchar(225) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -138,6 +139,7 @@ CREATE TABLE IF NOT EXISTS `transaksi` (
   `total` int NOT NULL,
   `bayar` int NOT NULL,
   `kembalian` int NOT NULL,
+  `metode` enum('Cash','Transfer','Kasbon') NOT NULL DEFAULT 'Cash',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -165,7 +167,6 @@ CREATE TABLE IF NOT EXISTS `user` (
   `nama` varchar(225) NOT NULL DEFAULT '',
   `email` varchar(225) NOT NULL DEFAULT '',
   `password` varchar(225) NOT NULL DEFAULT '',
-  `role` enum('owner','karyawan') NOT NULL DEFAULT 'karyawan',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

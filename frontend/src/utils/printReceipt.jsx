@@ -11,6 +11,7 @@ import logo from "../assets/logo.png";
 const ReceiptTemplate = ({ storeSettings, transactionData }) => {
   const { namaToko, alamat, email, telepon } = storeSettings;
   const {
+    metode,
     pembeli,
     items,
     total,
@@ -46,6 +47,7 @@ const ReceiptTemplate = ({ storeSettings, transactionData }) => {
         <p>No : {kode_transaksi || id}</p>
         <p>Tanggal : {dateStr}</p>
         <p>Customer : {pembeli || "-"}</p>
+        <p>Metode : {metode || "-"}</p>
       </div>
 
       <div className="divider" />
@@ -76,7 +78,7 @@ const ReceiptTemplate = ({ storeSettings, transactionData }) => {
 
       <div className="footer">
         <p>Terima kasih telah berbelanja!</p>
-        <p className="small">No. Telp :{telepon}</p>
+        <p className="small">No. Telp : {telepon}</p>
       </div>
     </div>
   );

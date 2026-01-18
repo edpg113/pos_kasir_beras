@@ -37,6 +37,14 @@ router.post("/transaksi", (req, res) => {
     return res.status(400).json({ message: "Item transaksi kosong!" });
   }
 
+  for (const item of items) {
+    if (!item.produk_id || item.qty <= 0) {
+      return res.status(400).json({
+        message: "Data item transaksi tidak valid",
+      });
+    }
+  }
+
   // Mulai transaksi database untuk memastikan konsistensi data
   db.beginTransaction((err) => {
     if (err) {
@@ -102,17 +110,98 @@ router.post("/transaksi", (req, res) => {
           Promise.all(stokPromises)
             .then(() => {
               // Jika semua berhasil, commit transaksi
-              db.commit((commitErr) => {
-                if (commitErr) {
-                  return db.rollback(() => res.status(500).json(commitErr));
+              // --- INTEGRASI PIUTANG (KASBON) ---
+              if (metode.toLowerCase() === "kasbon") {
+                const sisaPiutang = total - bayar;
+
+                if (sisaPiutang <= 0) {
+                  return db.commit((commitErr) => {
+                    if (commitErr)
+                      return db.rollback(() => res.status(500).json(commitErr));
+                    res.json({
+                      message:
+                        "✅ Transaksi berhasil (Bayar Lunas, Piutang tidak dibuat)",
+                      transaksi_id: transaksiId,
+                      kode_transaksi: kodeTransaksi,
+                    });
+                  });
                 }
-                // Kirim satu respons sukses di akhir
-                res.json({
-                  message: "✅ Transaksi berhasil & stok diperbarui",
-                  transaksi_id: transaksiId,
-                  kode_transaksi: kodeTransaksi,
+
+                const findPelangganQuery =
+                  "SELECT id FROM pelanggan WHERE nama = ? LIMIT 1";
+                db.query(
+                  findPelangganQuery,
+                  [pembeli],
+                  (pelErr, pelResults) => {
+                    if (pelErr || pelResults.length === 0) {
+                      console.warn(
+                        "⚠️ Pelanggan tidak ditemukan untuk transaksi kasbon:",
+                        pembeli
+                      );
+                      db.commit((commitErr) => {
+                        if (commitErr)
+                          return db.rollback(() =>
+                            res.status(500).json(commitErr)
+                          );
+                        res.json({
+                          message:
+                            "✅ Transaksi berhasil SIMPAN, namun GAGAL mencatat Piutang karena Nama Pelanggan tidak terdaftar.",
+                          transaksi_id: transaksiId,
+                          kode_transaksi: kodeTransaksi,
+                        });
+                      });
+                    } else {
+                      const pelangganId = pelResults[0].id;
+                      const insertPiutangQuery = `
+                        INSERT INTO piutang (transaksi_id, pelanggan_id, total, sisa, status, tanggal)
+                        VALUES (?, ?, ?, ?, 'open', NOW())
+                      `;
+                      db.query(
+                        insertPiutangQuery,
+                        [transaksiId, pelangganId, total, sisaPiutang],
+                        (piuErr) => {
+                          if (piuErr) {
+                            console.error(
+                              "❌ Gagal membuat record piutang:",
+                              piuErr
+                            );
+                            return db.rollback(() =>
+                              res.status(500).json({
+                                message: "Gagal membuat record piutang",
+                              })
+                            );
+                          }
+
+                          db.commit((commitErr) => {
+                            if (commitErr)
+                              return db.rollback(() =>
+                                res.status(500).json(commitErr)
+                              );
+                            res.json({
+                              message:
+                                "✅ Transaksi berhasil & Record Piutang dibuat",
+                              transaksi_id: transaksiId,
+                              kode_transaksi: kodeTransaksi,
+                            });
+                          });
+                        }
+                      );
+                    }
+                  }
+                );
+              } else {
+                // Jika bukan kasbon, langsung commit
+                db.commit((commitErr) => {
+                  if (commitErr) {
+                    return db.rollback(() => res.status(500).json(commitErr));
+                  }
+                  res.json({
+                    message: "✅ Transaksi berhasil & stok diperbarui",
+                    transaksi_id: transaksiId,
+                    kode_transaksi: kodeTransaksi,
+                  });
                 });
-              });
+              }
             })
             .catch((error) => {
               // Jika ada error (misal: stok tidak cukup), rollback transaksi
@@ -124,13 +213,6 @@ router.post("/transaksi", (req, res) => {
       }
     );
   });
-  for (const item of items) {
-    if (!item.produk_id || item.qty <= 0) {
-      return res.status(400).json({
-        message: "Data item transaksi tidak valid",
-      });
-    }
-  }
 });
 
 // API GET TRANSAKSI

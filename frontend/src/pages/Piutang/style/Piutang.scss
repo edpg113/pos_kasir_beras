@@ -1,0 +1,212 @@
+@use "../../../styles/variables.scss" as *;
+
+.piutang-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.piutang-content-wrapper {
+  margin-left: $sidebar-width;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: $white;
+  margin-top: 5%;
+}
+
+.piutang-page-content {
+  flex: 1;
+  padding: 30px;
+  /* animation: fadeIn 0.5s ease; Removed for Electron */
+  background-color: $white;
+}
+
+.piutang-page-header {
+  margin-bottom: 30px;
+
+  h1 {
+    color: $secondary-color;
+    margin-bottom: 5px;
+    font-size: 28px;
+  }
+
+  p {
+    color: $light-text;
+    font-size: 14px;
+  }
+}
+
+.piutang-card {
+  background-color: $light-bg;
+  border-radius: $border-radius;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: $shadow-sm;
+  border: 1px solid $light-border;
+
+  h2 {
+    color: $secondary-color;
+    margin-bottom: 20px;
+    font-size: 18px;
+  }
+}
+
+/* Piutang Table Styles */
+.piutang-table-card {
+  background-color: $white;
+  border-radius: $border-radius;
+  border: 1px solid $light-border;
+  overflow: hidden;
+  box-shadow: $shadow-sm;
+}
+
+.piutang-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #edf2f7;
+  }
+
+  th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  td {
+    padding: 16px;
+    border-bottom: 1px solid #edf2f7;
+    color: #2d3748;
+    font-size: 14px;
+  }
+
+  tbody tr {
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #f7fafc;
+    }
+  }
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+
+  .btn-icon {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    &.btn-payment {
+      background-color: #ebf8ff;
+      color: #3182ce;
+      border-color: #bee3f8;
+      &:hover {
+        background-color: #bee3f8;
+      }
+    }
+
+    &.btn-detail {
+      background-color: #f7fafc;
+      color: #4a5568;
+      border-color: #e2e8f0;
+      &:hover {
+        background-color: #e2e8f0;
+      }
+    }
+
+    &.btn-success {
+      background-color: #f0fff4;
+      color: #38a169;
+      border-color: #c6f6d5;
+      &:hover {
+        background-color: #c6f6d5;
+      }
+    }
+  }
+}
+
+/* Badge Styles */
+.badge {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+
+  &.status-open {
+    background-color: #fff5f5;
+    color: #e53e3e;
+    border: 1px solid #feb2b2;
+  }
+
+  &.status-partial {
+    background-color: #fffaf0;
+    color: #dd6b20;
+    border: 1px solid #fbd38d;
+  }
+
+  &.status-paid {
+    background-color: #f0fff4;
+    color: #38a169;
+    border: 1px solid #c6f6d5;
+  }
+}
+
+.piutang-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 15px;
+
+  .search-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+
+    input {
+      width: 100%;
+      padding: 10px 16px;
+      padding-left: 40px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+
+      &:focus {
+        border-color: #3182ce;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+      }
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #a0aec0;
+    }
+  }
+
+  .filter-group {
+    display: flex;
+    gap: 10px;
+  }
+}

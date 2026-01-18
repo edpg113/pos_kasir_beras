@@ -1,7 +1,5 @@
 import React from "react";
 import ReactDOMServer from "react-dom/server";
-import "./printPO.scss";
-
 const POReportTemplate = ({ storeSettings, historyData, filterDate }) => {
   const { namaToko, alamat } = storeSettings || {};
   const today = new Date().toLocaleDateString("id-ID", {
@@ -71,7 +69,7 @@ const POReportTemplate = ({ storeSettings, historyData, filterDate }) => {
                   <td>
                     {item.harga_per_kg
                       ? `Rp. ${Number(item.harga_per_kg).toLocaleString(
-                          "id-ID"
+                          "id-ID",
                         )}`
                       : "-"}
                   </td>
@@ -132,12 +130,89 @@ export const printPOReport = (storeSettings, historyData, filterDate) => {
       storeSettings={storeSettings}
       historyData={historyData}
       filterDate={filterDate}
-    />
+    />,
   );
 
   const styles = `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
     body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+    .po-report {
+      font-family: 'Inter', sans-serif;
+      color: #333;
+      line-height: 1.6;
+      background-color: white;
+      padding: 20px;
+    }
+    .po-report .header {
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #333;
+      padding-bottom: 15px;
+    }
+    .po-report .header h1 {
+      font-size: 20px;
+      margin-bottom: 5px;
+      font-weight: bold;
+      margin-top: 0;
+    }
+    .po-report .store-info {
+      font-size: 12px;
+      color: #666;
+    }
+    .po-report .report-meta {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px 0;
+      font-size: 12px;
+    }
+    .po-report .meta-item {
+      padding: 5px 0;
+    }
+    .po-report .meta-item span {
+      font-weight: bold;
+    }
+    .po-report .po-table {
+      margin: 20px 0;
+    }
+    .po-report .po-table table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .po-report .po-table th {
+      background-color: #f0f0f0;
+      padding: 10px;
+      text-align: left;
+      border: 1px solid #ddd;
+      font-weight: bold;
+    }
+    .po-report .po-table td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      vertical-align: top;
+    }
+    .po-report .po-table td.qty-cell {
+      text-align: center;
+    }
+    .po-report .po-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    .po-report .footer {
+      margin-top: 30px;
+      border-top: 1px solid #ddd;
+      padding-top: 15px;
+      font-size: 12px;
+      text-align: center;
+      color: #666;
+    }
+    .po-report .footer p {
+      margin: 5px 0;
+    }
+    @media print {
+      .po-report .footer {
+        page-break-inside: avoid;
+      }
+    }
   `;
 
   const printWindow = window.open("", "_blank");
@@ -151,9 +226,7 @@ export const printPOReport = (storeSettings, historyData, filterDate) => {
           </style>
         </head>
         <body>
-          <div style="background-color: white; padding: 20px;">
-            ${htmlContent}
-          </div>
+          ${htmlContent}
           <script>
             window.onload = function() { 
               setTimeout(() => {

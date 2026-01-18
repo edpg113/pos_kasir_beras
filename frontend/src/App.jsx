@@ -12,7 +12,7 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import Products from "./pages/Products/Products";
 import Sales from "./pages/Sales/Sales";
 import Inventory from "./pages/Inventory/Inventory";
-import Retur from "./pages/Retur/Retur";
+import Piutang from "./pages/Piutang/Piutang";
 import Reports from "./pages/Reports/Reports";
 import Settings from "./pages/Settings/Settings";
 import Pelanggan from "./pages/Pelanggan/Pelanggan";
@@ -269,10 +269,10 @@ export default function App() {
             }
           />
           <Route
-            path="/retur"
+            path="/piutang"
             element={
               isAuthenticated ? (
-                <Retur {...commonProps} />
+                <Piutang {...commonProps} />
               ) : (
                 <Navigate to="/login" replace />
               )

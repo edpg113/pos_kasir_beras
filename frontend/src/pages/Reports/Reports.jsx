@@ -4,6 +4,7 @@ import "./style/Reports.scss";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
 import { useToast } from "../../components/Toast/Toast";
+import { printReport } from "../../utils/printReport";
 
 export default function Reports({ onLogout, user, storeName }) {
   const [startDate, setStartDate] = useState(
@@ -70,12 +71,30 @@ export default function Reports({ onLogout, user, storeName }) {
     }
   };
 
-  const handleExport = () => {
-    // Trigger download directly
-    window.location.href = `http://localhost:3000/api/reports/export?startDate=${startDate}&endDate=${endDate}`;
-    toast.showToast("Laporan berhasil diexport!", {
-      type: "success",
-    });
+  const handleExport = async () => {
+    try {
+      // Fetch report data
+      const response = await axios.get(
+        `http://localhost:3000/api/reports/data?startDate=${startDate}&endDate=${endDate}`
+      );
+
+      // Fetch store settings
+      const settingsResponse = await axios.get(
+        "http://localhost:3000/api/getsetting"
+      );
+
+      // Call print utility - backend returns array, so get first element
+      printReport(settingsResponse.data[0], response.data, startDate, endDate);
+
+      toast.showToast("Membuka jendela cetak...", {
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Gagal mencetak laporan:", error);
+      toast.showToast("Gagal mencetak laporan", {
+        type: "error",
+      });
+    }
   };
 
   useEffect(() => {
@@ -152,32 +171,24 @@ export default function Reports({ onLogout, user, storeName }) {
               style={{ width: "auto", marginLeft: "auto" }}
               onClick={handleExport}
             >
-              📥 Cetak PDF (Range)
+              📥 Cetak Laporan
             </button>
           </div>
 
           <div className="reports-stats-grid">
             <div className="reports-stat-card">
-              <h3>Total Penjualan (Bruto)</h3>
+              <h3>Total Penjualan (Range)</h3>
               <div className="value">
                 {Number(summaryStats.gross_sales || 0).toLocaleString("id-ID")}
               </div>
               <div className="unit">Rp</div>
             </div>
             <div className="reports-stat-card">
-              <h3 style={{ color: "#e67e22" }}>Total Retur</h3>
+              <h3 style={{ color: "#e67e22" }}>Total Piutang</h3>
               <div className="value" style={{ color: "#e67e22" }}>
-                {Number(summaryStats.total_retur || 0).toLocaleString("id-ID")}
-              </div>
-              <div className="unit">Rp</div>
-            </div>
-            <div
-              className="reports-stat-card"
-              style={{ borderLeftColor: "#27ae60" }}
-            >
-              <h3 style={{ color: "#27ae60" }}>Penjualan Bersih (Net)</h3>
-              <div className="value" style={{ color: "#27ae60" }}>
-                {Number(summaryStats.net_sales || 0).toLocaleString("id-ID")}
+                {Number(summaryStats.total_piutang || 0).toLocaleString(
+                  "id-ID"
+                )}
               </div>
               <div className="unit">Rp</div>
             </div>
@@ -219,9 +230,7 @@ export default function Reports({ onLogout, user, storeName }) {
                 <thead>
                   <tr>
                     <th>Bulan</th>
-                    <th>Total Bruto</th>
-                    <th>Total Retur</th>
-                    <th>Penjualan Bersih</th>
+                    <th>Total Penjualan</th>
                     <th>Jumlah (item)</th>
                   </tr>
                 </thead>
@@ -232,14 +241,6 @@ export default function Reports({ onLogout, user, storeName }) {
                         <td>{item.bulan}</td>
                         <td>
                           {Number(item.total_bruto).toLocaleString("id-ID")}
-                        </td>
-                        <td style={{ color: "#e67e22" }}>
-                          {Number(item.total_retur).toLocaleString("id-ID")}
-                        </td>
-                        <td>
-                          <strong style={{ color: "#27ae60" }}>
-                            {Number(item.net_sales).toLocaleString("id-ID")}
-                          </strong>
                         </td>
                         <td>{item.qty}</td>
                       </tr>

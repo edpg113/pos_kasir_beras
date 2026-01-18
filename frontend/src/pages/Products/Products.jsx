@@ -5,6 +5,7 @@ import Navbar from "../../components/Navbar";
 import Modal from "../../components/Modal";
 import axios from "axios";
 import { useToast } from "../../components/Toast/Toast";
+import { printProducts } from "../../utils/printProducts";
 
 export default function Products({ onLogout, user, storeName }) {
   const [products, setProducts] = useState([]);
@@ -43,7 +44,7 @@ export default function Products({ onLogout, user, storeName }) {
     // compute harga per kg when modal or kategori changes
     if (e.target.name === "modal" || e.target.name === "kategori") {
       const modalVal = parseFloat(
-        e.target.name === "modal" ? e.target.value : updated.modal || 0
+        e.target.name === "modal" ? e.target.value : updated.modal || 0,
       );
       const kategoriVal =
         e.target.name === "kategori" ? e.target.value : updated.kategori;
@@ -84,7 +85,7 @@ export default function Products({ onLogout, user, storeName }) {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       toast.showToast("Berhasil menambahkan kategori", {
         type: "success",
@@ -120,7 +121,7 @@ export default function Products({ onLogout, user, storeName }) {
     try {
       const response = await axios.put(
         `http://localhost:3000/api/editcategories/${editCategory.id}`,
-        editCategory
+        editCategory,
       );
       setEditCategory(response.data);
       toast.showToast("✅ Kategori berhasil diperbarui!", {
@@ -168,7 +169,7 @@ export default function Products({ onLogout, user, storeName }) {
         payload,
         {
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
       console.log("📥 New product added response:", response);
       toast.showToast("✅ Produk baru berhasil ditambahkan!", {
@@ -191,9 +192,12 @@ export default function Products({ onLogout, user, storeName }) {
     }
   };
 
-  const handleExportProducts = () => {
-    window.location.href = `http://localhost:3000/api/products/export`;
-    toast.showToast("Mencetak daftar produk...", { type: "success" });
+  const handleExportProducts = async () => {
+    const storeSettings = await axios.get(
+      "http://localhost:3000/api/getsetting",
+    );
+    printProducts(storeSettings.data[0], products);
+    toast.showToast("Membuka jendela cetak...", { type: "success" });
   };
 
   const fetchProducts = async () => {
@@ -227,7 +231,7 @@ export default function Products({ onLogout, user, storeName }) {
 
     if (e.target.name === "modal" || e.target.name === "kategori") {
       const modalVal = parseFloat(
-        e.target.name === "modal" ? e.target.value : updated.modal || 0
+        e.target.name === "modal" ? e.target.value : updated.modal || 0,
       );
       const kategoriVal =
         e.target.name === "kategori" ? e.target.value : updated.kategori;
@@ -248,7 +252,7 @@ export default function Products({ onLogout, user, storeName }) {
       };
       const response = await axios.put(
         `http://localhost:3000/api/editproduct/${editingProduct.id}`,
-        payload
+        payload,
       );
       console.log("🔄 Product updated response:", response);
       toast.showToast("✅ Produk berhasil diperbarui!", {
@@ -344,7 +348,7 @@ export default function Products({ onLogout, user, storeName }) {
                             {(() => {
                               const perKg = computeHargaPerKg(
                                 product.modal,
-                                product.kategori
+                                product.kategori,
                               );
                               return perKg
                                 ? `Rp. ${Number(perKg).toLocaleString("id-ID")}`
@@ -494,7 +498,7 @@ export default function Products({ onLogout, user, storeName }) {
                 value={
                   newProduct.hargaPerKg
                     ? `Rp. ${Number(newProduct.hargaPerKg).toLocaleString(
-                        "id-ID"
+                        "id-ID",
                       )}`
                     : ""
                 }
@@ -592,7 +596,7 @@ export default function Products({ onLogout, user, storeName }) {
                 value={
                   editingProduct?.hargaPerKg
                     ? `Rp. ${Number(editingProduct.hargaPerKg).toLocaleString(
-                        "id-ID"
+                        "id-ID",
                       )}`
                     : ""
                 }

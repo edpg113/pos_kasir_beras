@@ -20,11 +20,10 @@ export default function Sales({ onLogout, user, storeName }) {
 
   // New State for enhancements
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [dailyGross, setDailyGross] = useState(0);
-  const [dailyReturn, setDailyReturn] = useState(0);
-  const [dailyNet, setDailyNet] = useState(0);
+  const [dailyPiutang, setDailyPiutang] = useState(0);
 
   const [items, setItems] = useState([
     { produk_id: "", nama: "", harga: 0, qty: 1, subtotal: 0 },
@@ -65,7 +64,7 @@ export default function Sales({ onLogout, user, storeName }) {
         .catch(() =>
           toast.showToast("Gagal mengambil data produk", {
             type: "error",
-          })
+          }),
         );
     } catch (error) {
       console.log(error);
@@ -102,6 +101,7 @@ export default function Sales({ onLogout, user, storeName }) {
       });
 
       setLastTransaction({
+        metode,
         pembeli,
         total,
         bayar,
@@ -141,25 +141,22 @@ export default function Sales({ onLogout, user, storeName }) {
     try {
       // Ambil transaksi
       const resTransaksi = await axios.get(
-        `http://localhost:3000/api/gettransaksi?date=${date}`
+        `http://localhost:3000/api/gettransaksi?date=${date}`,
       );
       setTransaksi(resTransaksi.data);
       const grossSales = resTransaksi.data.reduce(
         (sum, item) => sum + item.subtotal,
-        0
+        0,
       );
       setDailyGross(grossSales);
 
-      // Ambil retur untuk tanggal tersebut
-      const resRetur = await axios.get("http://localhost:3000/api/retur", {
-        params: { startDate: date, endDate: date },
-      });
-      const totalRetur = resRetur.data
-        .filter((r) => r.tipe === "penjualan")
-        .reduce((sum, item) => sum + Number(item.total_nilai), 0);
-
-      setDailyReturn(totalRetur);
-      setDailyNet(grossSales - totalRetur);
+      // Ambil total piutang
+      const resPiutang = await axios.get("http://localhost:3000/api/piutang");
+      const totalPiutang = resPiutang.data.reduce(
+        (sum, item) => sum + Number(item.sisa),
+        0,
+      );
+      setDailyPiutang(totalPiutang);
     } catch (error) {
       console.log(error);
     }
@@ -230,43 +227,13 @@ export default function Sales({ onLogout, user, storeName }) {
                     color: "#e67e22",
                   }}
                 >
-                  Total Retur
+                  Total Piutang
                 </h3>
                 <div
                   className="value"
                   style={{ fontSize: "20px", color: "#e67e22" }}
                 >
-                  {dailyReturn.toLocaleString("id-ID")}
-                </div>
-                <div className="unit">Rp</div>
-              </div>
-
-              <div
-                className="dashboard-stat-card"
-                style={{
-                  minWidth: "200px",
-                  padding: "20px",
-                  borderRadius: "15px",
-                  backgroundColor: "#f8f9fa",
-                  boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
-                  marginBottom: "20px",
-                  borderLeft: "4px solid #27ae60",
-                }}
-              >
-                <h3
-                  style={{
-                    marginBottom: "10px",
-                    fontSize: "14px",
-                    color: "#27ae60",
-                  }}
-                >
-                  Penjualan Bersih (Net)
-                </h3>
-                <div
-                  className="value"
-                  style={{ fontSize: "24px", color: "#27ae60" }}
-                >
-                  {dailyNet.toLocaleString("id-ID")}
+                  {dailyPiutang.toLocaleString("id-ID")}
                 </div>
                 <div className="unit">Rp</div>
               </div>
@@ -441,10 +408,27 @@ export default function Sales({ onLogout, user, storeName }) {
                   value={metode}
                   onChange={(e) => setMetode(e.target.value)}
                 >
-                  <option value="cash">Tunai</option>
-                  <option value="transfer">Transfer</option>
-                  <option value="kasbon">Kasbon</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Transfer">Transfer</option>
+                  <option value="Kasbon">Kasbon</option>
                 </select>
+                {metode === "Kasbon" && (
+                  <div
+                    style={{
+                      marginTop: "10px",
+                      padding: "10px",
+                      backgroundColor: "#fff3cd",
+                      border: "1px solid #ffc107",
+                      borderRadius: "5px",
+                      fontSize: "13px",
+                      color: "#856404",
+                    }}
+                  >
+                    ⚠️ <strong>Perhatian:</strong> Nama pelanggan wajib ada di
+                    menu pelanggan untuk kasbon. Jika tidak, maka data tidak
+                    akan masuk ke menu piutang.
+                  </div>
+                )}
               </div>
 
               {/* ===== RINGKASAN ===== */}
@@ -483,7 +467,7 @@ export default function Sales({ onLogout, user, storeName }) {
               </button>
               <button
                 className="btn btn-primary"
-                disabled={selisih < 0 || total === 0}
+                disabled={(selisih < 0 && metode !== "Kasbon") || total === 0}
                 onClick={handleSubmit}
               >
                 Simpan

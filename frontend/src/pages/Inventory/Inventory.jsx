@@ -34,9 +34,20 @@ export default function Inventory({ onLogout, user, storeName }) {
     hargaBeli: 0,
     hargaJual: 0,
     hargaPerKg: 0,
-    total: 0,
+    biayaKuli: 0,
+    biayaSopir: 0,
+    dp: 0,
+    totalProduk: 0, // Gross
+    total: 0, // Net
   };
   const [itemsToAdd, setItemsToAdd] = useState([initialItem]);
+
+  const getWeightFromKategori = (kategori) => {
+    if (!kategori) return 1;
+    const m = String(kategori).match(/(\d+(?:\.\d+)?)/);
+    const weight = m ? parseFloat(m[0]) : 1;
+    return weight > 0 ? weight : 1;
+  };
 
   const fetchInventory = async () => {
     try {
@@ -75,6 +86,7 @@ export default function Inventory({ onLogout, user, storeName }) {
       if (selectedProduct) {
         item.produk = selectedProduct.produk;
         item.stok = selectedProduct.stok;
+        item.kategori = selectedProduct.kategori; // Store category for weight calc
         // fill prices from product
         item.hargaBeli = selectedProduct.modal || 0;
         item.hargaJual = selectedProduct.harga || 0;
@@ -87,11 +99,46 @@ export default function Inventory({ onLogout, user, storeName }) {
       }
     }
 
-    // If qty or hargaBeli changed, recompute total
-    if (field === "quantity" || field === "hargaBeli") {
+    // Auto-calculate logic for prices
+    if (field === "hargaJual") {
+      const weight = getWeightFromKategori(item.kategori);
+      item.hargaPerKg =
+        Math.round((parseFloat(value || 0) / weight) * 100) / 100;
+    }
+
+    if (field === "hargaPerKg") {
+      const weight = getWeightFromKategori(item.kategori);
+      item.hargaJual = Math.round(parseFloat(value || 0) * weight);
+    }
+
+    // If hb changes, we might want to update hj/hpk if user wants margin?
+    // But user input says "harga/1kg otomatis menghitung perubahan jika ada perubahan harga BELI"
+    // This implies a relation. Let's assume a default margin or just conversion if they mean HJ.
+    // If they strictly want HB -> HPK, maybe they meant conversion from HB to HJ first?
+    // Let's stick to the direct requirements first:
+    // 3. merubah harga jual/karung
+    // 4. harga/1kg otomatis calculate if harga BELI changes?
+    // Maybe they want: HPK = HB / weight + margin?
+    // Actually, "jika ada perubahan harga beli" auto-calc HPK.
+    // Let's assume they want the same margin to be maintained?
+    // Current POS seems to just have HJ independent.
+    // I'll implement HPK = HJ / weight for now, and see if I should link HB to HJ.
+
+    // If qty, hargaBeli, biayaKuli, biayaSopir, or dp changed, recompute total
+    if (
+      field === "quantity" ||
+      field === "hargaBeli" ||
+      field === "biayaKuli" ||
+      field === "biayaSopir" ||
+      field === "dp"
+    ) {
       const q = parseFloat(item.quantity || 0);
-      const hb = parseFloat(item.hargaBeli || 0);
-      item.total = Math.round(hb * q * 100) / 100;
+      const hb_val = parseFloat(item.hargaBeli || 0);
+      const bk = parseFloat(item.biayaKuli || 0);
+      const bs = parseFloat(item.biayaSopir || 0);
+      const d_p = parseFloat(item.dp || 0);
+      item.totalProduk = Math.round(hb_val * q);
+      item.total = Math.round(item.totalProduk - bk - bs - d_p);
     }
 
     setItemsToAdd(newItems);
@@ -163,7 +210,7 @@ export default function Inventory({ onLogout, user, storeName }) {
         toast.showToast(
           `❌ Gagal update inventori: ${
             error.response?.data?.message || error.message
-          }`
+          }`,
         );
       }
       return;
@@ -171,7 +218,7 @@ export default function Inventory({ onLogout, user, storeName }) {
 
     // Logic for Add Mode (Multiple Items)
     const validItems = itemsToAdd.filter(
-      (item) => item.inventoryId && parseInt(item.quantity, 10) > 0
+      (item) => item.inventoryId && parseInt(item.quantity, 10) > 0,
     );
 
     if (validItems.length === 0) {
@@ -188,10 +235,19 @@ export default function Inventory({ onLogout, user, storeName }) {
       supplier,
       hargaBeli: parseFloat(item.hargaBeli || 0),
       hargaJual: parseFloat(item.hargaJual || 0),
-      total:
-        Math.round(
-          parseFloat(item.hargaBeli || 0) * parseInt(item.quantity, 10) * 100
-        ) / 100,
+      hargaPerKg: parseFloat(item.hargaPerKg || 0),
+      biayaKuli: parseFloat(item.biayaKuli || 0),
+      biayaSopir: parseFloat(item.biayaSopir || 0),
+      dp: parseFloat(item.dp || 0),
+      totalProduk: Math.round(
+        parseFloat(item.hargaBeli || 0) * parseInt(item.quantity, 10),
+      ),
+      total: Math.round(
+        parseFloat(item.hargaBeli || 0) * parseInt(item.quantity, 10) -
+          parseFloat(item.biayaKuli || 0) -
+          parseFloat(item.biayaSopir || 0) -
+          parseFloat(item.dp || 0),
+      ),
     }));
 
     try {
@@ -217,7 +273,7 @@ export default function Inventory({ onLogout, user, storeName }) {
         }`,
         {
           type: "error",
-        }
+        },
       );
     }
   };
@@ -233,7 +289,7 @@ export default function Inventory({ onLogout, user, storeName }) {
 
   const totalStok = inventory.reduce((sum, item) => sum + item.stok, 0);
   const needReorder = inventory.filter(
-    (item) => item.stok <= item.minStok
+    (item) => item.stok <= item.minStok,
   ).length;
   const averageStock =
     inventory.length > 0 ? Math.round(totalStok / inventory.length) : 0;
@@ -312,7 +368,9 @@ export default function Inventory({ onLogout, user, storeName }) {
                 className="btn btn-secondary"
                 onClick={() => {
                   const filtered = inventory.filter((item) =>
-                    item.produk.toLowerCase().includes(searchTerm.toLowerCase())
+                    item.produk
+                      .toLowerCase()
+                      .includes(searchTerm.toLowerCase()),
                   );
                   printInventory(storeSettings, filtered);
                 }}
@@ -331,7 +389,8 @@ export default function Inventory({ onLogout, user, storeName }) {
                     <th>Produk</th>
                     <th>Stok Saat Ini (kg)</th>
                     <th>Harga/1kg (Rp)</th>
-                    <th>Last Total (Rp)</th>
+                    <th>Total Produk (Rp)</th>
+                    <th>Total Bayar (Rp)</th>
                     <th>Min Stok (kg)</th>
                     <th>Qty Reorder (kg)</th>
                     <th>Status</th>
@@ -345,7 +404,7 @@ export default function Inventory({ onLogout, user, storeName }) {
                     .filter((item) =>
                       item.produk
                         .toLowerCase()
-                        .includes(searchTerm.toLowerCase())
+                        .includes(searchTerm.toLowerCase()),
                     )
                     .map((item) => (
                       <tr key={item.id}>
@@ -359,13 +418,20 @@ export default function Inventory({ onLogout, user, storeName }) {
                             : "-"}
                         </td>
                         <td>
+                          {item.lastTotalProduk
+                            ? Number(item.lastTotalProduk).toLocaleString(
+                                "id-ID",
+                              )
+                            : "-"}
+                        </td>
+                        <td>
                           {item.lastTotal
                             ? Number(item.lastTotal).toLocaleString("id-ID")
                             : item.reorder && item.lastHargaBeli
-                            ? (
-                                item.reorder * item.lastHargaBeli
-                              ).toLocaleString("id-ID")
-                            : "-"}
+                              ? (
+                                  item.reorder * item.lastHargaBeli
+                                ).toLocaleString("id-ID")
+                              : "-"}
                         </td>
                         <td>{item.minStok}</td>
                         <td>{item.reorder}</td>
@@ -380,7 +446,7 @@ export default function Inventory({ onLogout, user, storeName }) {
                               year: "numeric",
                               hour: "2-digit",
                               minute: "2-digit",
-                            }
+                            },
                           )}
                         </td>
                         <td>
@@ -473,93 +539,236 @@ export default function Inventory({ onLogout, user, storeName }) {
               /* Add Mode UI */
               <div className="modal-body-inner" style={{ padding: 0 }}>
                 {itemsToAdd.map((item, index) => (
-                  <div key={index} className="item-row">
-                    <label>Nama Produk</label>
-                    <select
-                      name="inventoryId"
-                      value={item.inventoryId}
-                      onChange={(e) =>
-                        handleItemChange(index, "inventoryId", e.target.value)
-                      }
-                      required
-                      style={{ flex: 2 }}
+                  <div
+                    key={index}
+                    className="item-row"
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px",
+                      padding: "20px",
+                      border: "1px solid #eee",
+                      borderRadius: "8px",
+                      marginBottom: "20px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
                     >
-                      <option value="" disabled>
-                        -- Pilih Produk --
-                      </option>
-                      {inventory.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.produk} (Stok: {p.stok})
-                        </option>
-                      ))}
-                    </select>
-                    <label>Harga Beli/Karung</label>
-                    <input
-                      type="number"
-                      name="hargaBeli"
-                      placeholder="Harga Beli"
-                      value={item.hargaBeli}
-                      readOnly
-                      onChange={(e) =>
-                        handleItemChange(index, "hargaBeli", e.target.value)
-                      }
-                      style={{ width: "120px", marginLeft: "8px" }}
-                    />
-                    <label>Harga Jual/Karung</label>
-                    <input
-                      type="number"
-                      name="hargaJual"
-                      placeholder="Harga Jual"
-                      readOnly
-                      value={item.hargaJual}
-                      onChange={(e) =>
-                        handleItemChange(index, "hargaJual", e.target.value)
-                      }
-                      style={{ width: "120px", marginLeft: "8px" }}
-                    />
-                    <label>Harga/1kg</label>
-                    <input
-                      type="text"
-                      name="hargaPerKg"
-                      placeholder="Harga/1kg"
-                      value={
-                        item.hargaPerKg
-                          ? Number(item.hargaPerKg).toLocaleString("id-ID")
-                          : "-"
-                      }
-                      readOnly
-                      style={{ width: "120px", marginLeft: "8px" }}
-                    />
-                    <label>Jumlah</label>
-                    <input
-                      type="number"
-                      name="quantity"
-                      placeholder="Qty"
-                      value={item.quantity}
-                      onChange={(e) =>
-                        handleItemChange(index, "quantity", e.target.value)
-                      }
-                      required
-                      min="1"
-                      style={{ width: "80px", marginLeft: "8px" }}
-                    />
-                    <label>Total Yang perlu dibayarkan</label>
-                    <input
-                      type="text"
-                      name="total"
-                      placeholder="Total"
-                      value={item.total}
-                      readOnly
-                      style={{ width: "140px", marginLeft: "8px" }}
-                    />
-                    {itemsToAdd.length > 1 && (
-                      <button
-                        className="remove"
-                        onClick={() => removeItem(index)}
+                      <h4 style={{ margin: 0 }}>Item #{index + 1}</h4>
+                      {itemsToAdd.length > 1 && (
+                        <button
+                          className="remove"
+                          onClick={() => removeItem(index)}
+                          style={{
+                            color: "#e74c3c",
+                            border: "none",
+                            background: "none",
+                            cursor: "pointer",
+                            fontSize: "20px",
+                          }}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="form-group-full">
+                      <label>Nama Produk</label>
+                      <select
+                        name="inventoryId"
+                        value={item.inventoryId}
+                        onChange={(e) =>
+                          handleItemChange(index, "inventoryId", e.target.value)
+                        }
+                        required
+                        className="form-control"
                       >
-                        ×
-                      </button>
-                    )}
+                        <option value="" disabled>
+                          -- Pilih Produk --
+                        </option>
+                        {inventory.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.produk} (Stok: {p.stok})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "15px",
+                      }}
+                    >
+                      <div className="form-group-full">
+                        <label>Harga Beli/Karung</label>
+                        <input
+                          type="number"
+                          name="hargaBeli"
+                          placeholder="Harga Beli"
+                          value={item.hargaBeli}
+                          onChange={(e) =>
+                            handleItemChange(index, "hargaBeli", e.target.value)
+                          }
+                          className="form-control"
+                        />
+                      </div>
+                      <div className="form-group-full">
+                        <label>Harga Jual/Karung</label>
+                        <input
+                          type="number"
+                          name="hargaJual"
+                          placeholder="Harga Jual"
+                          value={item.hargaJual}
+                          onChange={(e) =>
+                            handleItemChange(index, "hargaJual", e.target.value)
+                          }
+                          className="form-control"
+                        />
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "15px",
+                      }}
+                    >
+                      <div className="form-group-full">
+                        <label>Harga/1kg</label>
+                        <input
+                          type="number"
+                          name="hargaPerKg"
+                          placeholder="Harga/1kg"
+                          value={item.hargaPerKg}
+                          readOnly
+                          className="form-control"
+                          style={{ backgroundColor: "#f5f5f5" }}
+                        />
+                      </div>
+                      <div className="form-group-full">
+                        <label>Jumlah (Qty)</label>
+                        <input
+                          type="number"
+                          name="quantity"
+                          placeholder="Qty"
+                          value={item.quantity}
+                          onChange={(e) =>
+                            handleItemChange(index, "quantity", e.target.value)
+                          }
+                          required
+                          min="1"
+                          className="form-control"
+                        />
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr 1fr",
+                        gap: "15px",
+                      }}
+                    >
+                      <div className="form-group-full">
+                        <label>Biaya Kuli</label>
+                        <input
+                          type="number"
+                          name="biayaKuli"
+                          placeholder="Rp"
+                          value={item.biayaKuli}
+                          onChange={(e) =>
+                            handleItemChange(index, "biayaKuli", e.target.value)
+                          }
+                          className="form-control"
+                        />
+                      </div>
+                      <div className="form-group-full">
+                        <label>Biaya Sopir</label>
+                        <input
+                          type="number"
+                          name="biayaSopir"
+                          placeholder="Rp"
+                          value={item.biayaSopir}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              "biayaSopir",
+                              e.target.value,
+                            )
+                          }
+                          className="form-control"
+                        />
+                      </div>
+                      <div className="form-group-full">
+                        <label>DP</label>
+                        <input
+                          type="number"
+                          name="dp"
+                          placeholder="Rp"
+                          value={item.dp}
+                          onChange={(e) =>
+                            handleItemChange(index, "dp", e.target.value)
+                          }
+                          className="form-control"
+                        />
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "15px",
+                      }}
+                    >
+                      <div className="form-group-full">
+                        <label>Total Harga Produk</label>
+                        <input
+                          type="text"
+                          name="totalProduk"
+                          placeholder="Total Rp"
+                          value={
+                            item.totalProduk
+                              ? Number(item.totalProduk).toLocaleString("id-ID")
+                              : "0"
+                          }
+                          readOnly
+                          className="form-control"
+                          style={{
+                            backgroundColor: "#f5f5f5",
+                            fontWeight: "500",
+                          }}
+                        />
+                      </div>
+                      <div className="form-group-full">
+                        <label>Total Yang harus dibayarkan</label>
+                        <input
+                          type="text"
+                          name="total"
+                          placeholder="Total Rp"
+                          value={
+                            item.total
+                              ? Number(item.total).toLocaleString("id-ID")
+                              : "0"
+                          }
+                          readOnly
+                          className="form-control"
+                          style={{
+                            backgroundColor: "#f5f5f5",
+                            fontWeight: "bold",
+                            color: "#27ae60",
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 ))}
                 <button className="add-item" onClick={addItem}>
@@ -633,7 +842,7 @@ export default function Inventory({ onLogout, user, storeName }) {
                           day: "2-digit",
                           month: "long",
                           year: "numeric",
-                        }
+                        },
                       )}
                     </strong>
                   </p>
@@ -678,15 +887,15 @@ export default function Inventory({ onLogout, user, storeName }) {
                       <td>
                         {lastAddedStock.items.reduce(
                           (sum, item) => sum + (Number(item.quantity) || 0),
-                          0
+                          0,
                         )}
                       </td>
                       <td>
                         {Number(
                           lastAddedStock.items.reduce(
                             (sum, item) => sum + (Number(item.total) || 0),
-                            0
-                          )
+                            0,
+                          ),
                         ).toLocaleString("id-ID")}
                       </td>
                     </tr>

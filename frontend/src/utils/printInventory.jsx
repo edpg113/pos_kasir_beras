@@ -16,42 +16,126 @@ const InventoryTemplate = ({ storeSettings, inventory }) => {
   });
 
   return (
-    <div style={{ fontFamily: "Arial, sans-serif", fontSize: 12, color: "#222" }}>
-      <div style={{ textAlign: "center", marginBottom: 8 }}>
-        <div style={{ fontSize: 16, fontWeight: 700 }}>{namaToko}</div>
-        <div style={{ fontSize: 12 }}>{alamat}</div>
-        <div style={{ marginTop: 8, fontWeight: 700 }}>LAPORAN INVENTORY</div>
-        <div style={{ fontSize: 11 }}>{`Tanggal: ${dateStr}`}</div>
+    <div className="inventory-report">
+      <div className="header">
+        <h1>{namaToko}</h1>
+        <p>{alamat}</p>
+        <h2 style={{ marginTop: "10px", textTransform: "uppercase" }}>
+          LAPORAN INVENTORY
+        </h2>
+        <p>Tanggal: {dateStr}</p>
       </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+      <table className="inventory-table">
         <thead>
           <tr>
-            <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "left" }}>Produk</th>
-            <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "right" }}>Stok (kg)</th>
-            <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "right" }}>Harga/1kg</th>
-            <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "right" }}>Last Total</th>
-            {/* <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "right" }}>Min Stok</th> */}
-            <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "right" }}>Reorder</th>
-            <th style={{ border: "1px solid #ddd", padding: 6, textAlign: "left" }}>Supplier</th>
+            <th>Produk</th>
+            <th className="text-right">Stok (kg)</th>
+            <th className="text-right">Harga/1kg</th>
+            <th className="text-right">Total Modal Produk</th>
+            <th className="text-right">Total Bayar (Setelah Potongan)</th>
+            <th className="text-right">Reorder</th>
+            <th>Supplier</th>
           </tr>
         </thead>
         <tbody>
           {inventory.map((item, i) => (
             <tr key={i}>
-              <td style={{ border: "1px solid #eee", padding: 6 }}>{item.produk}</td>
-              <td style={{ border: "1px solid #eee", padding: 6, textAlign: "right" }}>{item.stok != null ? item.stok : "-"}</td>
-              <td style={{ border: "1px solid #eee", padding: 6, textAlign: "right" }}>{item.harga_per_kg ? Number(item.harga_per_kg).toLocaleString('id-ID') : "-"}</td>
-              <td style={{ border: "1px solid #eee", padding: 6, textAlign: "right" }}>{item.lastTotal ? Number(item.lastTotal).toLocaleString('id-ID') : (item.reorder && item.lastHargaBeli ? Number(item.reorder * item.lastHargaBeli).toLocaleString('id-ID') : "-")}</td>
-              {/* <td style={{ border: "1px solid #eee", padding: 6, textAlign: "right" }}>{item.minStok != null ? item.minStok : "-"}</td> */}
-              <td style={{ border: "1px solid #eee", padding: 6, textAlign: "right" }}>{item.reorder != null ? item.reorder : "-"}</td>
-              <td style={{ border: "1px solid #eee", padding: 6 }}>{item.supplier || "-"}</td>
+              <td>
+                <div style={{ fontWeight: "bold" }}>{item.produk}</div>
+                {(item.lastBiayaKuli > 0 ||
+                  item.lastBiayaSopir > 0 ||
+                  item.lastDP > 0) && (
+                  <div className="cost-details">
+                    {item.lastBiayaKuli > 0 && (
+                      <span>
+                        Kuli: Rp
+                        {Number(item.lastBiayaKuli).toLocaleString(
+                          "id-ID",
+                        )}{" "}
+                      </span>
+                    )}
+                    {item.lastBiayaSopir > 0 && (
+                      <span>
+                        Sopir: Rp
+                        {Number(item.lastBiayaSopir).toLocaleString(
+                          "id-ID",
+                        )}{" "}
+                      </span>
+                    )}
+                    {item.lastDP > 0 && (
+                      <span>
+                        DP: Rp{Number(item.lastDP).toLocaleString("id-ID")}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </td>
+              <td className="text-right">
+                {item.stok != null ? item.stok : "-"}
+              </td>
+              <td className="text-right">
+                {item.harga_per_kg
+                  ? Number(item.harga_per_kg).toLocaleString("id-ID")
+                  : "-"}
+              </td>
+              <td className="text-right">
+                {item.lastTotalProduk
+                  ? Number(item.lastTotalProduk).toLocaleString("id-ID")
+                  : "-"}
+              </td>
+              <td className="text-right" style={{ fontWeight: "bold" }}>
+                {item.lastTotal
+                  ? Number(item.lastTotal).toLocaleString("id-ID")
+                  : "-"}
+              </td>
+              <td className="text-right">
+                {item.reorder != null ? item.reorder : "-"}
+              </td>
+              <td>{item.supplier || "-"}</td>
             </tr>
           ))}
         </tbody>
+        <tfoot>
+          <tr style={{ background: "#f9f9f9", fontWeight: "bold" }}>
+            <td colSpan="1" style={{ textAlign: "right", padding: "10px" }}>
+              TOTAL STOK:
+            </td>
+            <td style={{ textAlign: "right", padding: "10px" }}>
+              {inventory
+                .reduce((sum, item) => sum + (Number(item.stok) || 0), 0)
+                .toLocaleString("id-ID")}{" "}
+              kg
+            </td>
+            <td colSpan="1"></td>
+            <td style={{ textAlign: "right", padding: "10px" }}>
+              Total Modal Produk: Rp{" "}
+              {inventory
+                .reduce(
+                  (sum, item) => sum + (Number(item.lastTotalProduk) || 0),
+                  0,
+                )
+                .toLocaleString("id-ID")}
+            </td>
+            <td style={{ textAlign: "right", padding: "10px" }}>
+              Total Bayar: Rp {""}
+              {inventory
+                .reduce((sum, item) => sum + (Number(item.lastTotal) || 0), 0)
+                .toLocaleString("id-ID")}
+            </td>
+            <td style={{ textAlign: "right", padding: "10px" }}>
+              Total Reorder:{" "}
+              {inventory
+                .reduce((sum, item) => sum + (Number(item.reorder) || 0), 0)
+                .toLocaleString("id-ID")}
+            </td>
+          </tr>
+        </tfoot>
       </table>
 
-      <div style={{ marginTop: 12, fontSize: 11 }}>Laporan ini dihasilkan otomatis oleh sistem.</div>
+      <div className="footer">
+        <p>Laporan ini dihasilkan otomatis oleh sistem.</p>
+      </div>
     </div>
   );
 };
@@ -63,8 +147,29 @@ export const printInventory = (storeSettings, inventory) => {
   }
 
   const htmlContent = ReactDOMServer.renderToStaticMarkup(
-    <InventoryTemplate storeSettings={storeSettings} inventory={inventory} />
+    <InventoryTemplate storeSettings={storeSettings} inventory={inventory} />,
   );
+
+  const inventoryStyles = `
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+    body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background-color: white; color: #333; }
+    .inventory-report { padding: 20px; }
+    .inventory-report .header { text-align: center; margin-bottom: 20px; }
+    .inventory-report .header h1 { margin: 0; font-size: 20px; }
+    .inventory-report .header h2 { margin: 5px 0; font-size: 16px; border-top: 1px solid #333; padding-top: 10px; }
+    .inventory-report .header p { margin: 2px 0; font-size: 12px; }
+    .inventory-report .inventory-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 15px; }
+    .inventory-report .inventory-table th { background-color: #f0f0f0; padding: 8px; border: 1px solid #ddd; text-align: left; }
+    .inventory-report .inventory-table td { padding: 8px; border: 1px solid #eee; vertical-align: top; }
+    .inventory-report .inventory-table .text-right { text-align: right; }
+    .inventory-report .inventory-table .cost-details { font-size: 9px; color: #666; margin-top: 4px; }
+    .inventory-report .footer { margin-top: 20px; font-size: 11px; text-align: center; color: #999; }
+    @media print {
+      body { background-color: white !important; }
+      @page { margin: 10mm; }
+      .inventory-report .inventory-table th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; }
+    }
+  `;
 
   const printWindow = window.open("", "_blank");
   if (printWindow) {
@@ -73,14 +178,13 @@ export const printInventory = (storeSettings, inventory) => {
         <head>
           <title>Cetak Laporan Inventory</title>
           <style>
-            body { margin: 10px; }
-            @media print { @page { size: auto; margin: 10mm; } }
+             ${inventoryStyles}
           </style>
         </head>
         <body>
           ${htmlContent}
           <script>
-            window.onload = function() { setTimeout(() => { window.print(); }, 300); }
+            window.onload = function() { setTimeout(() => { window.print(); }, 500); }
           </script>
         </body>
       </html>

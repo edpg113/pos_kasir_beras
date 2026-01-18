@@ -4,7 +4,7 @@ import { supabase } from "./supabaseClient";
 const isElectron = typeof window !== "undefined" && window.require;
 const ipcRenderer = isElectron ? window.require("electron").ipcRenderer : null;
 
-const GRACE_PERIOD_DAYS = 60;
+const GRACE_PERIOD_DAYS = 365;
 
 export const licenseService = {
   /**

@@ -43,6 +43,21 @@ export default function Pelanggan({ onLogout, user, storeName }) {
 
   // Handle Add Customer
   const handleAddPelanggan = async () => {
+    // Check for duplicate name
+    const isDuplicate = pelanggan.some(
+      (p) => p.nama.toLowerCase() === formData.nama.toLowerCase(),
+    );
+
+    if (isDuplicate) {
+      toast.showToast(
+        "Nama pelanggan sudah ada! Silakan gunakan nama yang berbeda.",
+        {
+          type: "error",
+        },
+      );
+      return;
+    }
+
     try {
       await axios.post("http://localhost:3000/api/addpelanggan", formData);
       toast.showToast(`Pelanggan berhasil ditambahkan!`, {
@@ -54,17 +69,36 @@ export default function Pelanggan({ onLogout, user, storeName }) {
       console.error("Gagal menambahkan pelanggan:", error);
       toast.showToast(
         "Gagal menambahkan pelanggan: " +
-          (error.response?.data?.message || error.message)
+          (error.response?.data?.message || error.message),
+        {
+          type: "error",
+        },
       );
     }
   };
 
   // Handle Update Customer
   const handleUpdatePelanggan = async () => {
+    // Check for duplicate name (excluding current customer)
+    const isDuplicate = pelanggan.some(
+      (p) =>
+        p.id !== editId && p.nama.toLowerCase() === formData.nama.toLowerCase(),
+    );
+
+    if (isDuplicate) {
+      toast.showToast(
+        "Nama pelanggan sudah ada! Silakan gunakan nama yang berbeda.",
+        {
+          type: "error",
+        },
+      );
+      return;
+    }
+
     try {
       await axios.put(
         `http://localhost:3000/api/pelanggan/${editId}`,
-        formData
+        formData,
       );
       toast.showToast(`Pelanggan berhasil diperbarui!`, {
         type: "success",
@@ -75,7 +109,10 @@ export default function Pelanggan({ onLogout, user, storeName }) {
       console.error("Gagal memperbarui pelanggan:", error);
       toast.showToast(
         "Gagal memperbarui pelanggan: " +
-          (error.response?.data?.message || error.message)
+          (error.response?.data?.message || error.message),
+        {
+          type: "error",
+        },
       );
     }
   };
@@ -102,7 +139,7 @@ export default function Pelanggan({ onLogout, user, storeName }) {
       console.error("Gagal menghapus pelanggan:", error);
       toast.showToast(
         "Gagal menghapus pelanggan: " +
-          (error.response?.data?.message || error.message)
+          (error.response?.data?.message || error.message),
       );
     }
   };

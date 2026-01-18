@@ -556,7 +556,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
             {transferHistory.length === 0 ? (
               <div className="empty-state">Data tidak ditemukan.</div>
             ) : (
-              <div className="table-responsive">
+              <div className="table-container">
                 <table>
                   <thead>
                     <tr>

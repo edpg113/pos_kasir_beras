@@ -123,6 +123,8 @@
     border-bottom: 1px solid $light-border;
     font-size: 14px;
     color: $dark-text;
+    font-weight: 500;
+
     &:last-child {
       border-bottom: none;
     }
@@ -180,6 +182,7 @@
     border-bottom: 1px solid $light-border;
     color: $dark-text;
     font-size: 13px;
+    font-weight: 500;
   }
 
   tbody tr {
