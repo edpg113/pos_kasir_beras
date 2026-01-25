@@ -5,10 +5,12 @@ import Modal from "../../components/Modal";
 import "./style/pengeluaran.scss";
 import axios from "axios";
 import { useToast } from "../../components/Toast/Toast";
+import { printPengeluaran } from "../../utils/printPengeluaran";
 
 const Pengeluaran = ({ onLogout, user, storeName }) => {
   const [history, setHistory] = useState([]);
   const [totals, setTotals] = useState({ modal: 0, keluar: 0, sisa: 0 });
+  const [storeSettings, setStoreSettings] = useState(null);
 
   // Modals state
   const [showModalForm, setShowModalForm] = useState(false);
@@ -17,7 +19,7 @@ const Pengeluaran = ({ onLogout, user, storeName }) => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
       2,
-      "0"
+      "0",
     )}`;
   });
 
@@ -35,7 +37,7 @@ const Pengeluaran = ({ onLogout, user, storeName }) => {
       setTotals({ modal: 0, keluar: 0, sisa: 0 });
 
       const response = await axios.get(
-        `http://localhost:3000/api/pengeluaran?month=${selectedMonth}`
+        `http://localhost:3000/api/pengeluaran?month=${selectedMonth}`,
       );
       console.log("Fetch History Response:", response.data);
 
@@ -48,11 +50,11 @@ const Pengeluaran = ({ onLogout, user, storeName }) => {
         // Calculate totals locally
         const totalModal = historyData.reduce(
           (sum, item) => sum + (Number(item.modal) || 0),
-          0
+          0,
         );
         const totalKeluar = historyData.reduce(
           (sum, item) => sum + (Number(item.keluar) || 0),
-          0
+          0,
         );
         summaryData = {
           modal: totalModal,
@@ -75,8 +77,20 @@ const Pengeluaran = ({ onLogout, user, storeName }) => {
     }
   };
 
+  const getSettings = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/getsetting");
+      if (response.data && response.data.length > 0) {
+        setStoreSettings(response.data[0]);
+      }
+    } catch (error) {
+      console.error("Gagal mengambil setting toko:", error);
+    }
+  };
+
   useEffect(() => {
     fetchHistory();
+    getSettings();
   }, [selectedMonth]);
 
   const handleAddModal = async (e) => {
@@ -112,7 +126,11 @@ const Pengeluaran = ({ onLogout, user, storeName }) => {
   };
 
   const handleExportPDF = () => {
-    window.location.href = `http://localhost:3000/api/pengeluaran/export-pdf?month=${selectedMonth}`;
+    if (!storeSettings) {
+      toast.showToast("Data setting toko belum siap.", { type: "error" });
+      return;
+    }
+    printPengeluaran(storeSettings, history, totals, selectedMonth);
   };
 
   return (

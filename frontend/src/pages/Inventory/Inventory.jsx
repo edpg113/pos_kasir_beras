@@ -14,9 +14,10 @@ export default function Inventory({ onLogout, user, storeName }) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editData, setEditData] = useState(null);
   const [supplier, setSupplier] = useState("");
-  const [editStok, setEditStok] = useState("");
   const [editHargaBeli, setEditHargaBeli] = useState(0);
   const [editHargaJual, setEditHargaJual] = useState(0);
+  const [editHargaPerKg, setEditHargaPerKg] = useState(0);
+  const [editStok, setEditStok] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [storeSettings, setStoreSettings] = useState(null);
 
@@ -99,32 +100,11 @@ export default function Inventory({ onLogout, user, storeName }) {
       }
     }
 
-    // Auto-calculate logic for prices
-    if (field === "hargaJual") {
+    if (field === "hargaBeli") {
       const weight = getWeightFromKategori(item.kategori);
       item.hargaPerKg =
         Math.round((parseFloat(value || 0) / weight) * 100) / 100;
     }
-
-    if (field === "hargaPerKg") {
-      const weight = getWeightFromKategori(item.kategori);
-      item.hargaJual = Math.round(parseFloat(value || 0) * weight);
-    }
-
-    // If hb changes, we might want to update hj/hpk if user wants margin?
-    // But user input says "harga/1kg otomatis menghitung perubahan jika ada perubahan harga BELI"
-    // This implies a relation. Let's assume a default margin or just conversion if they mean HJ.
-    // If they strictly want HB -> HPK, maybe they meant conversion from HB to HJ first?
-    // Let's stick to the direct requirements first:
-    // 3. merubah harga jual/karung
-    // 4. harga/1kg otomatis calculate if harga BELI changes?
-    // Maybe they want: HPK = HB / weight + margin?
-    // Actually, "jika ada perubahan harga beli" auto-calc HPK.
-    // Let's assume they want the same margin to be maintained?
-    // Current POS seems to just have HJ independent.
-    // I'll implement HPK = HJ / weight for now, and see if I should link HB to HJ.
-
-    // If qty, hargaBeli, biayaKuli, biayaSopir, or dp changed, recompute total
     if (
       field === "quantity" ||
       field === "hargaBeli" ||
@@ -163,6 +143,7 @@ export default function Inventory({ onLogout, user, storeName }) {
       setEditStok(item.stok); // Pre-fill with current stock
       setEditHargaBeli(item.modal || 0);
       setEditHargaJual(item.harga || 0);
+      setEditHargaPerKg(item.harga_per_kg || 0);
     } else {
       setIsEditMode(false);
       setEditData(null);
@@ -199,6 +180,7 @@ export default function Inventory({ onLogout, user, storeName }) {
           supplier: supplier,
           hargaBeli: editHargaBeli,
           hargaJual: editHargaJual,
+          hargaPerKg: editHargaPerKg,
         });
         toast.showToast("✅ Inventori berhasil diupdate", {
           type: "success",
@@ -310,12 +292,12 @@ export default function Inventory({ onLogout, user, storeName }) {
             <div className="inventory-stat-card">
               <h3>Total Stok</h3>
               <div className="value">{totalStok}</div>
-              <div className="unit">kg</div>
+              <div className="unit">karung</div>
             </div>
             <div className="inventory-stat-card">
               <h3>Jumlah Produk</h3>
               <div className="value">{inventory.length}</div>
-              <div className="unit">item</div>
+              <div className="unit">produk</div>
             </div>
             <div className="inventory-stat-card">
               <h3>Perlu Reorder</h3>
@@ -330,7 +312,7 @@ export default function Inventory({ onLogout, user, storeName }) {
             <div className="inventory-stat-card">
               <h3>Rata-rata Stok</h3>
               <div className="value">{averageStock}</div>
-              <div className="unit">kg</div>
+              <div className="unit">karung</div>
             </div>
           </div>
 
@@ -451,7 +433,7 @@ export default function Inventory({ onLogout, user, storeName }) {
                         </td>
                         <td>
                           <button
-                            // className="btn-edit"
+                            className="btn-edit"
                             onClick={() => openModal(item)}
                           >
                             Edit
@@ -512,17 +494,35 @@ export default function Inventory({ onLogout, user, storeName }) {
                   <input
                     type="number"
                     value={editHargaBeli}
-                    onChange={(e) => setEditHargaBeli(e.target.value)}
+                    // onChange={(e) => setEditHargaBeli(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditHargaBeli(val);
+                      const weight = getWeightFromKategori(editData.kategori);
+                      setEditHargaPerKg(
+                        Math.round((parseFloat(val || 0) / weight) * 100) / 100,
+                      );
+                    }}
                     className="form-control"
                   />
                 </div>
                 <div className="form-group">
-                  <label>Harga Jual (Rp)</label>
+                  <label>Harga Jual / Karung (Rp)</label>
                   <input
                     type="number"
                     value={editHargaJual}
                     onChange={(e) => setEditHargaJual(e.target.value)}
                     className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Harga / 1kg (Rp) (Read-Only)</label>
+                  <input
+                    type="number"
+                    value={editHargaPerKg}
+                    readOnly
+                    className="form-control"
+                    style={{ backgroundColor: "#f5f5f5" }}
                   />
                 </div>
                 <div className="form-group">
@@ -749,7 +749,7 @@ export default function Inventory({ onLogout, user, storeName }) {
                         />
                       </div>
                       <div className="form-group-full">
-                        <label>Total Yang harus dibayarkan</label>
+                        <label>Total Bayar</label>
                         <input
                           type="text"
                           name="total"

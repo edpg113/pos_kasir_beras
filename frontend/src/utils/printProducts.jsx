@@ -34,11 +34,11 @@ const ProductsTemplate = ({ storeSettings, products }) => {
   return (
     <div className="products-print">
       <div className="header">
+        <h1 style={{ marginTop: "10px", fontWeight: "bold" }}>
+          LAPORAN PRODUK, STOK DAN MODAL
+        </h1>
         <p className="title">{namaToko}</p>
         <p className="small">{alamat}</p>
-        <p style={{ marginTop: "10px", fontWeight: "bold" }}>
-          LAPORAN PRODUK, STOK DAN MODAL
-        </p>
         <p className="small">Tanggal: {dateStr}</p>
       </div>
 
@@ -48,18 +48,18 @@ const ProductsTemplate = ({ storeSettings, products }) => {
         <table className="products-table">
           <thead>
             <tr>
-              <th style={{ width: "25%" }}>Nama Produk</th>
-              <th style={{ width: "12%" }}>Satuan</th>
+              <th style={{ width: "20%" }}>Nama Produk</th>
+              <th style={{ width: "7%" }}>Satuan</th>
+              <th className="text-right" style={{ width: "12%" }}>
+                Modal/krg
+              </th>
+              <th className="text-right" style={{ width: "12%" }}>
+                Harga Jual/krg
+              </th>
               <th className="text-right" style={{ width: "12%" }}>
                 Harga/1kg
               </th>
-              <th className="text-right" style={{ width: "12%" }}>
-                Modal/karung
-              </th>
-              <th className="text-right" style={{ width: "12%" }}>
-                Harga/karung
-              </th>
-              <th className="text-right" style={{ width: "10%" }}>
+              <th className="text-right" style={{ width: "8%" }}>
                 Stok
               </th>
               <th className="text-right" style={{ width: "15%" }}>
@@ -81,24 +81,24 @@ const ProductsTemplate = ({ storeSettings, products }) => {
                   <td>{product.namaProduk}</td>
                   <td>{product.kategori}</td>
                   <td className="text-right">
-                    {hargaPerKg
-                      ? `Rp. ${Number(hargaPerKg).toLocaleString("id-ID")}`
-                      : "-"}
-                  </td>
-                  <td className="text-right">
                     {product.modal
-                      ? `Rp. ${Number(product.modal).toLocaleString("id-ID")}`
+                      ? `Rp.${Number(product.modal).toLocaleString("id-ID")}`
                       : "-"}
                   </td>
                   <td className="text-right">
                     {product.harga
-                      ? `Rp. ${Number(product.harga).toLocaleString("id-ID")}`
+                      ? `Rp.${Number(product.harga).toLocaleString("id-ID")}`
+                      : "-"}
+                  </td>
+                  <td className="text-right">
+                    {hargaPerKg
+                      ? `Rp.${Number(hargaPerKg).toLocaleString("id-ID")}`
                       : "-"}
                   </td>
                   <td className="text-right">{product.stok || "-"}</td>
                   <td className="text-right">
                     {totalModal > 0
-                      ? `Rp. ${totalModal.toLocaleString("id-ID")}`
+                      ? `Rp.${totalModal.toLocaleString("id-ID")}`
                       : "-"}
                   </td>
                 </tr>
@@ -114,7 +114,7 @@ const ProductsTemplate = ({ storeSettings, products }) => {
                 <strong>{grandTotalStok}</strong>
               </td>
               <td className="text-right">
-                <strong>Rp. {grandTotalModal.toLocaleString("id-ID")}</strong>
+                <strong>Rp.{grandTotalModal.toLocaleString("id-ID")}</strong>
               </td>
             </tr>
           </tfoot>
@@ -160,7 +160,7 @@ export const printProducts = (storeSettings, products) => {
       margin-bottom: 20px;
     }
     .products-print .header .title {
-      font-size: 18px;
+      // font-size: 18px;
       font-weight: 700;
       text-transform: uppercase;
       margin: 5px 0;
@@ -182,7 +182,7 @@ export const printProducts = (storeSettings, products) => {
     .products-print .products-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 11px;
+      font-size: 12px;
       table-layout: fixed;
     }
     .products-print .products-table thead {
@@ -198,6 +198,8 @@ export const printProducts = (storeSettings, products) => {
       padding: 8px 10px;
       vertical-align: middle;
       border-bottom: 1px solid #eee;
+      font-size: 12px;
+      // font-weight: 600;
     }
     .products-print .products-table tfoot .total-row {
       border-top: 2px solid #333;
@@ -207,9 +209,9 @@ export const printProducts = (storeSettings, products) => {
       padding: 12px 6px;
       font-weight: 700;
     }
-    .products-print .products-table .text-right {
-      text-align: right;
-    }
+    // .products-print .products-table .text-right {
+    //   text-align: right;
+    // }
     .products-print .products-table td, 
     .products-print .products-table th {
       word-wrap: break-word;

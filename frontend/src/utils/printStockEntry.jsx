@@ -37,104 +37,115 @@ const StockEntryTemplate = ({ storeSettings, stockData }) => {
 
   const dateStr = new Date(tanggal || new Date()).toLocaleString("id-ID", {
     day: "2-digit",
-    month: "2-digit",
+    month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
 
   return (
-    <div className="stock-entry-receipt">
-      <div className="header">
-        <p className="title">{namaToko}</p>
-        <p className="small">{alamat}</p>
-        <p style={{ marginTop: "10px", fontWeight: "bold" }}>
-          LAPORAN TAMBAH STOK
-        </p>
+    <div className="a4-report-wrapper">
+      <div className="report-header">
+        <h1>LAPORAN TAMBAH STOK</h1>
+        <p className="font-bold">{namaToko}</p>
+        <p>{alamat}</p>
       </div>
 
-      <div className="divider" />
-
-      <div className="info">
-        <p>
-          <span>Tanggal:</span>
-          <span>{dateStr}</span>
-        </p>
-        <p>
-          <span>Supplier:</span>
-          <span>{supplier || "-"}</span>
-        </p>
-      </div>
-
-      <div className="divider" />
-
-      <div className="items">
-        <div className="item-header">
-          <span>Produk</span>
-          <span style={{ textAlign: "center" }}>Qty</span>
-          <span style={{ textAlign: "right" }}>Total</span>
-        </div>
-        {items.map((item, i) => (
-          <div className="row" key={i}>
-            <span>{item.produk}</span>
-            <span style={{ textAlign: "center" }}>{item.quantity} kg</span>
-            <span>
-              Rp.
-              {Number(
-                Number(item.quantity) * Number(item.hargaBeli),
-              ).toLocaleString("id-ID")}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div className="divider" />
-
-      <div className="totals">
-        <p>
-          <span>Total Produk:</span>
-          <span>Rp.{grandTotalGross.toLocaleString("id-ID")}</span>
-        </p>
-        <p>
-          <span>Total Qty:</span>
-          <span>{grandTotalQty.toLocaleString("id-ID")} kg</span>
-        </p>
-        {totalBiayaKuli > 0 && (
-          <p>
-            <span>Biaya Kuli:</span>
-            <span>- Rp.{totalBiayaKuli.toLocaleString("id-ID")}</span>
-          </p>
-        )}
-        {totalBiayaSopir > 0 && (
-          <p>
-            <span>Biaya Sopir:</span>
-            <span>- Rp.{totalBiayaSopir.toLocaleString("id-ID")}</span>
-          </p>
-        )}
-        {totalDP > 0 && (
-          <p>
-            <span>DP:</span>
-            <span>- Rp.{totalDP.toLocaleString("id-ID")}</span>
-          </p>
-        )}
-        <p
-          style={{
-            fontSize: "14px",
-            marginTop: "5px",
-            borderTop: "1px dashed #eee",
-            paddingTop: "5px",
-            fontWeight: "bold",
-          }}
+      <div className="report-meta">
+        <table
+          style={{ width: "100%", fontSize: "10pt", marginBottom: "15px" }}
         >
-          <span>Total Bayar:</span>
-          <span>Rp.{grandTotalNet.toLocaleString("id-ID")}</span>
-        </p>
+          <tbody>
+            <tr>
+              <td style={{ width: "15%" }}>Supplier</td>
+              <td style={{ width: "2%" }}>:</td>
+              <td>{supplier || "-"}</td>
+              <td style={{ width: "15%", textAlign: "right" }}>Waktu</td>
+              <td style={{ width: "2%", textAlign: "right" }}>:</td>
+              <td style={{ width: "25%", textAlign: "right" }}>{dateStr}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <div className="divider" />
+      <table className="report-table">
+        <thead>
+          <tr>
+            <th style={{ width: "5%" }}>No</th>
+            <th>Nama Produk</th>
+            <th style={{ width: "10%" }}>Qty</th>
+            <th style={{ width: "18%" }}>Harga Beli</th>
+            <th style={{ width: "10%" }}>Kuli</th>
+            <th style={{ width: "10%" }}>Sopir</th>
+            <th style={{ width: "10%" }}>DP</th>
+            <th style={{ width: "18%" }}>Total Net</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item, i) => (
+            <tr key={i}>
+              <td className="text-center">{i + 1}</td>
+              <td className="font-bold">{item.produk}</td>
+              <td className="text-center">{item.quantity}</td>
+              <td className="text-right">
+                Rp {Number(item.hargaBeli).toLocaleString("id-ID")}
+              </td>
+              <td className="text-right">
+                {Number(item.biayaKuli || 0).toLocaleString("id-ID")}
+              </td>
+              <td className="text-right">
+                {Number(item.biayaSopir || 0).toLocaleString("id-ID")}
+              </td>
+              <td className="text-right">
+                {Number(item.dp || 0).toLocaleString("id-ID")}
+              </td>
+              <td className="text-right">
+                Rp {Number(item.total).toLocaleString("id-ID")}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr className="font-bold" style={{ backgroundColor: "#f9f9f9" }}>
+            <td colSpan={2} className="text-right">
+              TOTAL
+            </td>
+            <td className="text-center">{grandTotalQty}</td>
+            <td className="text-right">
+              Rp {grandTotalGross.toLocaleString("id-ID")}
+            </td>
+            <td className="text-right">
+              {totalBiayaKuli.toLocaleString("id-ID")}
+            </td>
+            <td className="text-right">
+              {totalBiayaSopir.toLocaleString("id-ID")}
+            </td>
+            <td className="text-right">{totalDP.toLocaleString("id-ID")}</td>
+            <td className="text-right">
+              Rp {grandTotalNet.toLocaleString("id-ID")}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
 
-      <div className="footer">
-        <p>Laporan ini dihasilkan secara otomatis oleh sistem.</p>
+      <div
+        className="report-footer"
+        style={{
+          marginTop: "40px",
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ textAlign: "center", width: "200px" }}>
+          <p>Diterima Oleh,</p>
+          <div style={{ height: "60px" }}></div>
+          <p className="font-bold">( ____________________ )</p>
+        </div>
+        <div style={{ textAlign: "center", width: "200px" }}>
+          <p>Supplier,</p>
+          <div style={{ height: "60px" }}></div>
+          <p className="font-bold">( {supplier || "____________________"} )</p>
+        </div>
       </div>
     </div>
   );
@@ -155,98 +166,77 @@ export const printStockEntry = (storeSettings, stockData) => {
 
   const stockEntryStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-    body { margin: 0; padding: 0; display: flex; justify-content: center; background-color: #f0f0f0; }
-    .stock-entry-receipt {
-      width: 100%;
-      max-width: 58mm;
-      margin: 0 auto;
-      background-color: white;
-      color: #333;
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      padding: 10px;
+    
+    @page {
+      size: A4;
+      margin: 0;
     }
-    .stock-entry-receipt .header {
+
+    body { 
+      margin: 0; 
+      padding: 0; 
+      background-color: #fff;
+      font-family: 'Inter', sans-serif;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    .a4-report-wrapper {
+      box-sizing: border-box;
+      width: 210mm;
+      min-height: 297mm;
+      padding: 15mm 12mm;
+      margin: 0 auto;
+      background: #fff;
+    }
+
+    .report-header {
       text-align: center;
       margin-bottom: 20px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
     }
-    .stock-entry-receipt .header .title {
-      font-size: 18px;
-      font-weight: bold;
+
+    .report-header h1 {
+      font-size: 18pt;
+      margin: 0 0 5px 0;
       text-transform: uppercase;
-      margin: 5px 0;
     }
-    .stock-entry-receipt .header p {
+
+    .report-header p {
+      font-size: 10pt;
       margin: 2px 0;
     }
-    .stock-entry-receipt .header .small {
-      font-size: 12px;
-      font-weight: 400;
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 9pt;
     }
-    .stock-entry-receipt .divider {
-      border-top: 1px dashed #ccc;
-      margin: 10px 0;
-    }
-    .stock-entry-receipt .info {
-      margin: 15px 0;
+
+    .report-table th {
+      background-color: #f2f2f2 !important;
+      border: 1px solid #000;
+      padding: 8px 4px;
       font-weight: bold;
-    }
-    .stock-entry-receipt .info p {
-      margin: 4px 0;
-      display: flex;
-      justify-content: space-between;
-    }
-    .stock-entry-receipt .items {
-      margin: 15px 0;
-    }
-    .stock-entry-receipt .items .item-header {
-      font-weight: bold;
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 5px;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 5px;
-    }
-    .stock-entry-receipt .items .row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 5px;
-    }
-    .stock-entry-receipt .items .row span {
-      flex: 1;
-      font-weight: 700;
-    }
-    .stock-entry-receipt .items .row span:last-child {
-      text-align: right;
-    }
-    .stock-entry-receipt .totals {
-      margin: 10px 0;
-    }
-    .stock-entry-receipt .totals p {
-      margin: 4px 0;
-      display: flex;
-      justify-content: space-between;
-      font-weight: bold;
-      font-size: 13px;
-    }
-    .stock-entry-receipt .totals p span:last-child {
-      text-align: right;
-    }
-    .stock-entry-receipt .footer {
       text-align: center;
-      margin-top: 20px;
-      font-size: 12px;
-      color: #888;
     }
-    .stock-entry-receipt .footer p {
-      margin: 2px 0;
+
+    .report-table td {
+      border: 1px solid #000;
+      padding: 6px 4px;
+      vertical-align: middle;
     }
+
+    .text-right { text-align: right !important; }
+    .text-center { text-align: center !important; }
+    .font-bold { font-weight: bold !important; }
+
     @media print {
-      body { background-color: white !important; }
-      @page { margin: 0; }
-      .stock-entry-receipt { padding: 0; }
+      .a4-report-wrapper { padding: 15mm 12mm; }
     }
-  `;
+`;
 
   const printWindow = window.open("", "_blank");
   if (printWindow) {

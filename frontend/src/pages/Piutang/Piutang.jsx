@@ -108,12 +108,7 @@ export default function Piutang({ onLogout, user, storeName }) {
       });
       return;
     }
-
-    const confirmDelete = window.confirm(
-      `Apakah Anda yakin ingin menghapus piutang ${item.nama} - ${item.produk}?`,
-    );
-
-    if (!confirmDelete) return;
+    // return;
 
     try {
       await axios.delete(`http://localhost:3000/api/piutang/${item.id}`);

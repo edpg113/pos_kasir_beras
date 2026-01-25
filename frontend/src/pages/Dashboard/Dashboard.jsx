@@ -3,7 +3,6 @@ import Sidebar from "../../components/Sidebar";
 import "./style/Dashboard.scss";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
-// import Inventory from "../Inventory/Inventory";
 
 export default function Dashboard({ onLogout, user, storeName }) {
   const [transaksi, setTransaksi] = useState([]);
@@ -15,7 +14,7 @@ export default function Dashboard({ onLogout, user, storeName }) {
   const [inventory, setInventory] = useState([]);
   const [pelanggan, setPelanggan] = useState([]);
   const [currentStoreName, setCurrentStoreName] = useState(
-    storeName || "Toko Beras"
+    storeName || "Toko Beras",
   );
 
   // =============================
@@ -82,7 +81,7 @@ export default function Dashboard({ onLogout, user, storeName }) {
   }, []);
 
   const needReorder = inventory.filter(
-    (item) => item.stok <= item.minStok
+    (item) => item.stok <= item.minStok,
   ).length;
 
   return (
@@ -122,13 +121,13 @@ export default function Dashboard({ onLogout, user, storeName }) {
             <div className="dashboard-stat-card">
               <h3>Produk Terjual</h3>
               <div className="value">{stats.produk_terjual}</div>
-              <div className="unit">kg</div>
+              <div className="unit">karung</div>
             </div>
 
             <div className="dashboard-stat-card">
               <h3>Total Stok Beras</h3>
               <div className="value">{stats.stok_beras}</div>
-              <div className="unit">kg</div>
+              <div className="unit">karung</div>
             </div>
             <div className="dashboard-stat-card">
               <h3>Total Produk</h3>

@@ -157,3 +157,34 @@ ipcMain.handle("secure-get-license", async () => {
     return null; // Return null if tampering or key mismatch detected
   }
 });
+// --- Printing IPC Handler ---
+ipcMain.on("print-command", (event, options = {}) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return;
+
+  // Configuration for A4 Direct Print
+  const printOptions = {
+    silent: options.silent || false,
+    printBackground: true,
+    deviceName: options.deviceName || "",
+    color: true,
+    margins: {
+      marginType: "custom",
+      top: 15000, // 15mm in microns
+      bottom: 15000,
+      left: 12000, // 12mm in microns
+      right: 12000,
+    },
+    pageSize: "A4",
+    scaleFactor: options.scaleFactor || 100,
+  };
+
+  win.webContents.print(printOptions, (success, failureReason) => {
+    if (!success) {
+      console.error(`Print failed: ${failureReason}`);
+      event.reply("print-finished", { success: false, error: failureReason });
+    } else {
+      event.reply("print-finished", { success: true });
+    }
+  });
+});

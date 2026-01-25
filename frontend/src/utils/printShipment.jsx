@@ -14,7 +14,7 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
         month: "long",
         year: "numeric",
       })
-    : "Semua Tanggal";
+    : "-";
 
   const totalQty = historyData
     ? historyData.reduce((sum, item) => sum + (Number(item.qty) || 0), 0)
@@ -35,7 +35,7 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
 
       <div className="report-meta">
         <div className="meta-item">
-          <span>Tanggal Laporan:</span> {today}
+          <span>Tanggal Cetak Laporan:</span> {today}
         </div>
         <div className="meta-item">
           <span>Filter Tanggal:</span> {displayDate}
@@ -44,7 +44,7 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
       <div className="shipment-table">
         <table border="1" style={{ borderCollapse: "collapse" }}>
           <thead>
-            <tr>
+            <tr style={{ fontSize: "12px" }}>
               <th>Waktu</th>
               <th>Nama Produk</th>
               <th className="qty-cell">Qty</th>
@@ -68,17 +68,17 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
                 <td className="qty-cell">{item.qty}</td>
                 <td>
                   {item.harga_per_kg
-                    ? `Rp. ${Number(item.harga_per_kg).toLocaleString("id-ID")}`
+                    ? `Rp.${Number(item.harga_per_kg).toLocaleString("id-ID")}`
                     : "-"}
                 </td>
                 <td>
                   {item.modal
-                    ? `Rp. ${Number(item.modal).toLocaleString("id-ID")}`
+                    ? `Rp.${Number(item.modal).toLocaleString("id-ID")}`
                     : "-"}
                 </td>
                 <td>
                   {item.total
-                    ? `Rp. ${Number(item.total).toLocaleString("id-ID")}`
+                    ? `Rp.${Number(item.total).toLocaleString("id-ID")}`
                     : "-"}
                 </td>
                 <td>{item.tujuan}</td>
@@ -104,7 +104,7 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
                 Total Modal:
               </td>
               <td style={{ fontWeight: "bold" }}>
-                {`Rp. ${Number(totalModal).toLocaleString("id-ID")}`}
+                {`Rp.${Number(totalModal).toLocaleString("id-ID")}`}
               </td>
               <td colSpan={2}></td>
             </tr>
@@ -114,7 +114,7 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
 
       <div className="footer">
         <div className="signature-box">
-          <p>Dicetak pada: {today}</p>
+          <p>........., {today}</p>
           <div className="line" />
           {/* <div className="name">Petugas Gudang</div> */}
         </div>
@@ -137,9 +137,9 @@ export const printShipmentReport = (storeSettings, historyData, filterDate) => {
     body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background-color: white; }
     .shipment-report {
       width: 100%;
-      max-width: 800px;
+      max-width: 210mm;
       margin: 0 auto;
-      padding: 30px;
+      padding: 20px;
       background-color: white;
       color: #333;
     }
@@ -152,19 +152,19 @@ export const printShipmentReport = (storeSettings, historyData, filterDate) => {
     .shipment-report .header h1 {
       margin: 0;
       color: #2c3e50;
-      font-size: 24px;
+      font-size: 22px;
       text-transform: uppercase;
     }
     .shipment-report .header .store-info {
       margin-top: 5px;
-      font-size: 14px;
+      font-size: 12px;
       color: #7f8c8d;
     }
     .shipment-report .report-meta {
       display: flex;
       justify-content: space-between;
       margin-bottom: 40px;
-      font-size: 14px;
+      font-size: 12px;
     }
     .shipment-report .meta-item span {
       font-weight: 600;
@@ -181,14 +181,18 @@ export const printShipmentReport = (storeSettings, historyData, filterDate) => {
       background-color: #f8f9fa;
       color: #2c3e50;
       font-weight: 600;
-      text-align: left;
-      padding: 12px;
+      text-align: center;
+      padding: 8px;
       border-bottom: 2px solid #dee2e6;
     }
     .shipment-report .shipment-table td {
-      padding: 12px 16px;
-      border-bottom: 1px solid #eee;
-      font-size: 14px;
+      padding: 8px;
+      border-bottom: 1px solid #2c3e50;
+      font-size: 12px;
+      text-align: center;
+    }
+    .shipment-report .shipment-table tfoot th {
+      border: 1px solid #dee2e6;
     }
     .shipment-report .shipment-table .qty-cell {
       text-align: center;
@@ -204,7 +208,7 @@ export const printShipmentReport = (storeSettings, historyData, filterDate) => {
     }
     .shipment-report .signature-box p {
       margin-bottom: 60px;
-      font-size: 14px;
+      font-size: 12px;
     }
     .shipment-report .signature-box .line {
       border-top: 1px solid #333;
@@ -212,7 +216,7 @@ export const printShipmentReport = (storeSettings, historyData, filterDate) => {
     }
     @media print {
       body { background-color: white !important; }
-      .shipment-report { padding: 20px; max-width: 100%; }
+      .shipment-report { padding: 20px; max-width: 210mm; }
     }
   `;
 

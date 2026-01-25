@@ -3,37 +3,6 @@ const router = express.Router();
 const db = require("../db");
 const PDFDocument = require("pdfkit");
 
-// Ensure columns exist in po_barang table
-const ensureColumns = () => {
-  const columns = [
-    "harga_beli DECIMAL(15,2) DEFAULT 0",
-    "stok_awal INT DEFAULT 0",
-    "total DECIMAL(15,2) DEFAULT 0",
-  ];
-
-  columns.forEach((col) => {
-    const colName = col.split(" ")[0];
-    const query = `SHOW COLUMNS FROM po_barang LIKE '${colName}'`;
-    db.query(query, (err, results) => {
-      if (!err && results.length === 0) {
-        const alterQuery = `ALTER TABLE po_barang ADD COLUMN ${col}`;
-        db.query(alterQuery, (err2) => {
-          if (err2)
-            console.error(
-              `❌ Gagal menambah kolom ${colName} ke po_barang:`,
-              err2
-            );
-          else
-            console.log(
-              `✅ Kolom ${colName} berhasil ditambahkan ke po_barang`
-            );
-        });
-      }
-    });
-  });
-};
-ensureColumns();
-
 // GET /api/pobarang - Get all PO Barang
 router.get("/pobarang", (req, res) => {
   const query = `
@@ -47,7 +16,12 @@ router.get("/pobarang", (req, res) => {
       pb.tanggal,
       pb.harga_beli,
       pb.stok_awal,
-      pb.total
+      pb.total,
+      pb.biaya_kuli,
+      pb.biaya_sopir,
+      pb.dp,
+      pb.total_harga_produk,
+      pb.harga_per_kg
     FROM po_barang pb
     JOIN produk p ON pb.produk_id = p.id
     ORDER BY pb.tanggal DESC
@@ -80,7 +54,12 @@ router.get("/pobarang/history", (req, res) => {
       pb.tanggal,
       pb.harga_beli,
       pb.stok_awal,
-      pb.total
+      pb.total,
+      pb.biaya_kuli,
+      pb.biaya_sopir,
+      pb.dp,
+      pb.total_harga_produk,
+      pb.harga_per_kg
     FROM po_barang pb
     JOIN produk p ON pb.produk_id = p.id
   `;
@@ -129,11 +108,17 @@ router.post("/pobarang", (req, res) => {
 
           const currentStock = results[0].stok;
           const buyPrice = results[0].modal || 0;
-          const total = buyPrice * item.qty;
+          const unitPrice = item.total_harga_produk || buyPrice;
+          const subtotal = unitPrice * item.qty;
+          const total =
+            subtotal -
+            (item.biaya_kuli || 0) -
+            (item.biaya_sopir || 0) -
+            (item.dp || 0);
 
           const insertQuery = `
-                    INSERT INTO po_barang (produk_id, qty, tujuan, keterangan, tanggal, harga_beli, stok_awal, total)
-                    VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)
+                    INSERT INTO po_barang (produk_id, qty, tujuan, keterangan, tanggal, harga_beli, stok_awal, total, biaya_kuli, biaya_sopir, dp, total_harga_produk, subtotal, harga_per_kg)
+                    VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `;
 
           const params = [
@@ -144,6 +129,12 @@ router.post("/pobarang", (req, res) => {
             buyPrice,
             currentStock,
             total,
+            item.biaya_kuli || 0,
+            item.biaya_sopir || 0,
+            item.dp || 0,
+            unitPrice,
+            subtotal,
+            item.harga_per_kg || 0,
           ];
 
           db.query(insertQuery, params, (err, result) => {
@@ -193,9 +184,12 @@ router.get("/pobarang/export", (req, res) => {
       pb.harga_beli,
       pb.modal,
       pb.total,
-      p.harga_per_kg,
-      p.harga,
-      p.modal
+      pb.biaya_kuli,
+      pb.biaya_sopir,
+      pb.dp,
+      pb.total_harga_produk,
+      pb.subtotal,
+      pb.harga_per_kg
     FROM po_barang pb
     JOIN produk p ON pb.produk_id = p.id
   `;
@@ -276,18 +270,18 @@ router.get("/pobarang/export", (req, res) => {
           c === "tanggal"
             ? "Tanggal"
             : c === "produk"
-            ? "Produk"
-            : c === "qty"
-            ? "Qty"
-            : c === "harga_per_kg"
-            ? "Harga/1kg"
-            : c === "harga"
-            ? "Harga/Karung"
-            : c === "total"
-            ? "Total Modal"
-            : c === "tujuan"
-            ? "Supplier"
-            : "Keterangan";
+              ? "Produk"
+              : c === "qty"
+                ? "Qty"
+                : c === "harga_per_kg"
+                  ? "Harga/1kg"
+                  : c === "harga"
+                    ? "Harga/Karung"
+                    : c === "total"
+                      ? "Total Modal"
+                      : c === "tujuan"
+                        ? "Supplier"
+                        : "Keterangan";
         doc.text(title, colX[c], doc.y, {
           width: colWidths[c],
           align: c === "produk" || c === "tujuan" ? "left" : "right",
@@ -313,7 +307,7 @@ router.get("/pobarang/export", (req, res) => {
           new Date(row.tanggal).toLocaleDateString("id-ID"),
           colX.tanggal,
           doc.y,
-          { width: colWidths.tanggal, align: "center" }
+          { width: colWidths.tanggal, align: "center" },
         );
         doc.text(row.namaProduk, colX.produk, doc.y - 13, {
           width: colWidths.produk,
@@ -329,16 +323,16 @@ router.get("/pobarang/export", (req, res) => {
             : "-",
           colX.harga_per_kg,
           doc.y - 13,
-          { width: colWidths.harga_per_kg, align: "right" }
+          { width: colWidths.harga_per_kg, align: "right" },
         );
 
         doc.text(
-          row.harga_beli
-            ? `Rp ${Number(row.harga_beli).toLocaleString("id-ID")}`
+          row.total_harga_produk
+            ? `Rp ${Number(row.total_harga_produk).toLocaleString("id-ID")}`
             : "-",
           colX.harga,
           doc.y - 13,
-          { width: colWidths.harga, align: "right" }
+          { width: colWidths.harga, align: "right" },
         );
 
         const total = row.total || 0;
@@ -349,7 +343,7 @@ router.get("/pobarang/export", (req, res) => {
           row.total ? `Rp ${Number(row.total).toLocaleString("id-ID")}` : "-",
           colX.total,
           doc.y - 13,
-          { width: colWidths.total, align: "right" }
+          { width: colWidths.total, align: "right" },
         );
         doc.text(row.tujuan, colX.tujuan, doc.y - 13, {
           width: colWidths.tujuan,
@@ -399,7 +393,7 @@ router.get("/pobarang/export", (req, res) => {
         `Rp ${Number(grandTotal).toLocaleString("id-ID")}`,
         colX.total,
         doc.y,
-        { width: colWidths.total, align: "right" }
+        { width: colWidths.total, align: "right" },
       );
 
       doc.end();

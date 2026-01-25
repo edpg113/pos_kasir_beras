@@ -55,16 +55,16 @@ export default function Products({ onLogout, user, storeName }) {
     setNewProduct(updated);
   };
 
-  // helper to compute harga per kg from modal and kategori
+  // helper to compute harga per kg from buying price (modal) and kategori
   const computeHargaPerKg = (modalVal, kategoriVal) => {
-    const hb = parseFloat(modalVal || 0);
+    const mb = parseFloat(modalVal || 0);
     if (!kategoriVal) return "";
     // try parse numeric from kategori (e.g., "10" or "10 kg")
     const m = String(kategoriVal).match(/(\d+(?:\.\d+)?)/);
     const qty = m ? parseFloat(m[0]) : NaN;
     const divisor = !isNaN(qty) && qty > 0 ? qty : 1;
-    if (hb === 0) return "";
-    return Math.round((hb / divisor) * 100) / 100;
+    if (mb === 0) return "";
+    return Math.round((mb / divisor) * 100) / 100;
   };
 
   // =============================
@@ -181,6 +181,7 @@ export default function Products({ onLogout, user, storeName }) {
         harga: "",
         modal: "",
         stok: "",
+        hargaPerKg: "",
       });
       fetchProducts();
       setShowModal(false);
@@ -235,7 +236,8 @@ export default function Products({ onLogout, user, storeName }) {
       );
       const kategoriVal =
         e.target.name === "kategori" ? e.target.value : updated.kategori;
-      updated.hargaPerKg = computeHargaPerKg(modalVal, kategoriVal);
+      const perKg = computeHargaPerKg(modalVal, kategoriVal);
+      updated.hargaPerKg = perKg;
     }
 
     setEditingProduct(updated);
@@ -317,7 +319,7 @@ export default function Products({ onLogout, user, storeName }) {
                   style={{ marginLeft: 8 }}
                   onClick={() => handleExportProducts()}
                 >
-                  📥 Cetak PDF
+                  📥 Cetak Produk
                 </button>
               </div>
               <div className="products-card">
@@ -327,8 +329,8 @@ export default function Products({ onLogout, user, storeName }) {
                       <tr>
                         <th>Nama Produk</th>
                         <th>Satuan</th>
+                        <th>Modal / Karung</th>
                         <th>Harga Jual / Karung</th>
-                        <th>Harga Beli / Karung</th>
                         <th>Harga / 1kg</th>
                         <th>Stok</th>
                         <th>Status</th>
@@ -342,18 +344,12 @@ export default function Products({ onLogout, user, storeName }) {
                             <strong>{product.namaProduk}</strong>
                           </td>
                           <td>{product.kategori}</td>
-                          <td>Rp. {product.harga.toLocaleString("id-ID")}</td>
                           <td>Rp. {product.modal.toLocaleString("id-ID")}</td>
+                          <td>Rp. {product.harga.toLocaleString("id-ID")}</td>
                           <td>
-                            {(() => {
-                              const perKg = computeHargaPerKg(
-                                product.modal,
-                                product.kategori,
-                              );
-                              return perKg
-                                ? `Rp. ${Number(perKg).toLocaleString("id-ID")}`
-                                : "-";
-                            })()}
+                            {product.harga_per_kg
+                              ? `Rp. ${Number(product.harga_per_kg).toLocaleString("id-ID")}`
+                              : "-"}
                           </td>
                           <td>{product.stok}</td>
                           <td>{getStokBadge(product.stok)}</td>

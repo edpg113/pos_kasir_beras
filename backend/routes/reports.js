@@ -169,21 +169,16 @@ router.get("/reports/data", async (req, res) => {
 
   const querySales = `
     SELECT 
-      t.id as transaksi_id,
-      t.tanggal,
       p.namaProduk,
-      p.modal,
-      p.harga,
-      p.harga_per_kg,
-      td.qty,
-      td.subtotal,
-      (td.harga - p.modal) * td.qty as keuntungan,
-      t.total
+      SUM(td.qty) as qty,
+      SUM(td.subtotal) as subtotal,
+      SUM((td.harga - p.modal) * td.qty) as keuntungan
     FROM transaksi t
     JOIN transaksi_detail td ON t.id = td.transaksi_id
     JOIN produk p ON td.produk_id = p.id
     WHERE DATE(t.tanggal) BETWEEN ? AND ?
-    ORDER BY t.tanggal DESC
+    GROUP BY p.id
+    ORDER BY keuntungan DESC
   `;
 
   const queryNewPiutang = `
@@ -260,21 +255,16 @@ router.get("/reports/export", async (req, res) => {
 
   const querySales = `
     SELECT 
-      t.id as transaksi_id,
-      t.tanggal,
       p.namaProduk,
-      p.modal,
-      p.harga,
-      p.harga_per_kg,
-      td.qty,
-      td.subtotal,
-      (td.harga - p.modal) * td.qty as keuntungan,
-      t.total
+      SUM(td.qty) as qty,
+      SUM(td.subtotal) as subtotal,
+      SUM((td.harga - p.modal) * td.qty) as keuntungan
     FROM transaksi t
     JOIN transaksi_detail td ON t.id = td.transaksi_id
     JOIN produk p ON td.produk_id = p.id
     WHERE DATE(t.tanggal) BETWEEN ? AND ?
-    ORDER BY t.tanggal DESC
+    GROUP BY p.id
+    ORDER BY keuntungan DESC
   `;
 
   const queryNewPiutang = `
@@ -339,7 +329,7 @@ router.get("/reports/export", async (req, res) => {
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader(
         "Content-Disposition",
-        `inline; filename="Laporan_POS_${filenameDate}.pdf"`
+        `inline; filename="Laporan_POS_${filenameDate}.pdf"`,
       );
       res.setHeader("Content-Length", pdfBuffer.length);
       res.send(pdfBuffer);
@@ -406,21 +396,12 @@ router.get("/reports/export", async (req, res) => {
       .text("1. Detail Penjualan Produk", marginLeft);
     doc.moveDown(0.5);
 
-    const salesCols = [
-      "tanggal",
-      "produk",
-      "qty",
-      "harga",
-      "subtotal",
-      "keuntungan",
-    ];
+    const salesCols = ["produk", "qty", "subtotal", "keuntungan"];
     const salesWidths = {
-      tanggal: pageWidth * 0.15,
-      produk: pageWidth * 0.35,
-      qty: pageWidth * 0.08,
-      harga: pageWidth * 0.14,
-      subtotal: pageWidth * 0.14,
-      keuntungan: pageWidth * 0.14,
+      produk: pageWidth * 0.45,
+      qty: pageWidth * 0.15,
+      subtotal: pageWidth * 0.2,
+      keuntungan: pageWidth * 0.2,
     };
 
     let curX = marginLeft;
@@ -442,10 +423,8 @@ router.get("/reports/export", async (req, res) => {
       }
 
       const rowData = {
-        tanggal: new Date(row.tanggal).toLocaleDateString("id-ID"),
         produk: row.namaProduk,
         qty: row.qty,
-        harga: Number(row.harga).toLocaleString("id-ID"),
         subtotal: Number(row.subtotal).toLocaleString("id-ID"),
         keuntungan: Number(row.keuntungan).toLocaleString("id-ID"),
       };
@@ -569,7 +548,7 @@ router.get("/reports/export", async (req, res) => {
     drawSummaryLine(
       "Total Saldo Piutang (Semua)",
       overallPiutang[0].total_sisa,
-      true
+      true,
     );
 
     doc.end();

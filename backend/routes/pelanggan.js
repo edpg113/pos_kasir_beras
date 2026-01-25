@@ -16,36 +16,61 @@ router.get("/pelanggan", (req, res) => {
   });
 });
 
+// API GET Pelanggan Names (for autocomplete)
+router.get("/pelanggan-names", (req, res) => {
+  const query = "SELECT id, nama FROM pelanggan ORDER BY nama ASC";
+  db.query(query, (err, result) => {
+    if (err) {
+      console.error("❌ DB error on get pelanggan names:", err);
+      return res
+        .status(500)
+        .json({ message: "Gagal mengambil data pelanggan." });
+    }
+    res.json(result);
+  });
+});
+
 // API POST Pelanggan
 router.post("/addpelanggan", (req, res) => {
   const { nama, telepon, alamat, kategori, keterangan } = req.body;
   if (!nama || !telepon || !alamat || !kategori) {
     return res
       .status(400)
-      .json({ message: "Nama, telepon, alamat, kategori, dan keterangan harus diisi." });
+      .json({
+        message: "Nama, telepon, alamat, kategori, dan keterangan harus diisi.",
+      });
   }
 
   const query =
     "INSERT INTO pelanggan (nama, telepon, alamat, kategori, keterangan) VALUES (?, ?, ?, ?, ?)";
-  db.query(query, [nama, telepon, alamat, kategori, keterangan], (err, result) => {
-    if (err) {
-      console.error("❌ DB error on add pelanggan:", err);
-      return res.status(500).json({ message: "Gagal menambahkan pelanggan." });
-    }
+  db.query(
+    query,
+    [nama, telepon, alamat, kategori, keterangan],
+    (err, result) => {
+      if (err) {
+        console.error("❌ DB error on add pelanggan:", err);
+        return res
+          .status(500)
+          .json({ message: "Gagal menambahkan pelanggan." });
+      }
 
-    // Return the newly created customer data
-    const newPelanggan = {
-      id: result.insertId,
-      nama,
-      telepon,
-      alamat,
-      kategori,
-      keterangan,
-    };
-    res
-      .status(201)
-      .json({ message: "Pelanggan berhasil ditambahkan", data: newPelanggan });
-  });
+      // Return the newly created customer data
+      const newPelanggan = {
+        id: result.insertId,
+        nama,
+        telepon,
+        alamat,
+        kategori,
+        keterangan,
+      };
+      res
+        .status(201)
+        .json({
+          message: "Pelanggan berhasil ditambahkan",
+          data: newPelanggan,
+        });
+    },
+  );
 });
 
 // API UPDATE Pelanggan
@@ -56,26 +81,32 @@ router.put("/pelanggan/:id", (req, res) => {
   if (!nama || !telepon || !alamat || !kategori || !keterangan) {
     return res
       .status(400)
-      .json({ message: "Nama, telepon, alamat, kategori, dan keterangan harus diisi." });
+      .json({
+        message: "Nama, telepon, alamat, kategori, dan keterangan harus diisi.",
+      });
   }
 
   const query =
     "UPDATE pelanggan SET nama = ?, telepon = ?, alamat = ?, kategori = ?, keterangan = ? WHERE id = ?";
-  db.query(query, [nama, telepon, alamat, kategori, keterangan, id], (err, result) => {
-    if (err) {
-      console.error("❌ DB error on update pelanggan:", err);
-      return res.status(500).json({ message: "Gagal mengupdate pelanggan." });
-    }
+  db.query(
+    query,
+    [nama, telepon, alamat, kategori, keterangan, id],
+    (err, result) => {
+      if (err) {
+        console.error("❌ DB error on update pelanggan:", err);
+        return res.status(500).json({ message: "Gagal mengupdate pelanggan." });
+      }
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Pelanggan tidak ditemukan." });
-    }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Pelanggan tidak ditemukan." });
+      }
 
-    res.json({
-      message: "Pelanggan berhasil diupdate",
-      data: { id, nama, telepon, alamat, kategori },
-    });
-  });
+      res.json({
+        message: "Pelanggan berhasil diupdate",
+        data: { id, nama, telepon, alamat, kategori },
+      });
+    },
+  );
 });
 
 // API DELETE Pelanggan

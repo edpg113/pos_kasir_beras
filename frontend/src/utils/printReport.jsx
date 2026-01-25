@@ -75,15 +75,15 @@ const ReportTemplate = ({ storeSettings, reportData, startDate, endDate }) => {
               </span>
             </div>
             <div className="summary-item">
-              <span className="label">Total Kas Masuk Hari Ini:</span>
+              <span className="label">Total keuntungan:</span>
               <span className="value">
-                Rp {totalBayarPiutang.toLocaleString("id-ID")}
+                Rp {totalUntung.toLocaleString("id-ID")}
               </span>
             </div>
           </div>
           <div className="summary-row">
             <div className="summary-item">
-              <span className="label">Tambahan dari Piutang:</span>
+              <span className="label">Pembayaran Piutang:</span>
               <span className="value">
                 Rp {totalBayarPiutang.toLocaleString("id-ID")}
               </span>
@@ -108,13 +108,14 @@ const ReportTemplate = ({ storeSettings, reportData, startDate, endDate }) => {
 
       {/* Rincian Penjualan Hari Ini */}
       <div className="report-section">
-        <h2>Rincian Penjualan Hari Ini</h2>
+        <h2>Rincian Penjualan</h2>
         <table className="report-table">
           <thead>
             <tr>
               <th>Produk</th>
               <th>Jumlah Terjual</th>
               <th>Total Penjualan</th>
+              <th>Keuntungan</th>
             </tr>
           </thead>
           <tbody>
@@ -127,10 +128,13 @@ const ReportTemplate = ({ storeSettings, reportData, startDate, endDate }) => {
                     <td className="text-right">
                       Rp {Number(row.subtotal).toLocaleString("id-ID")}
                     </td>
+                    <td className="text-right">
+                      Rp {Number(row.keuntungan).toLocaleString("id-ID")}
+                    </td>
                   </tr>
                 ))}
                 <tr className="total-row">
-                  <td>
+                  <td colSpan={1}>
                     <strong>Total</strong>
                   </td>
                   <td className="text-center">
@@ -144,6 +148,9 @@ const ReportTemplate = ({ storeSettings, reportData, startDate, endDate }) => {
                   </td>
                   <td className="text-right">
                     <strong>Rp {totalPenjualan.toLocaleString("id-ID")}</strong>
+                  </td>
+                  <td className="text-right">
+                    <strong>Rp {totalUntung.toLocaleString("id-ID")}</strong>
                   </td>
                 </tr>
               </>
@@ -160,14 +167,14 @@ const ReportTemplate = ({ storeSettings, reportData, startDate, endDate }) => {
 
       {/* Piutang Baru Hari Ini */}
       <div className="report-section">
-        <h2>Piutang Baru Hari Ini</h2>
+        <h2>Piutang Baru</h2>
         <table className="report-table">
           <thead>
             <tr>
+              <th>Tanggal</th>
               <th>Pelanggan</th>
               <th>Produk Diutang</th>
               <th>Total Piutang</th>
-              {/* <th>Jatuh Tempo</th> */}
               <th>Status</th>
             </tr>
           </thead>
@@ -175,14 +182,12 @@ const ReportTemplate = ({ storeSettings, reportData, startDate, endDate }) => {
             {newPiutang.length > 0 ? (
               newPiutang.map((row, idx) => (
                 <tr key={idx}>
+                  <td>{new Date(row.tanggal).toLocaleDateString("id-ID")}</td>
                   <td>{row.nama_pelanggan}</td>
                   <td>{row.produk}</td>
                   <td className="text-right">
                     Rp {Number(row.total).toLocaleString("id-ID")}
                   </td>
-                  {/* <td className="text-center">
-                    {row.tanggal ? formatDate(row.tanggal) : "-"}
-                  </td> */}
                   <td className="text-center">{row.status}</td>
                 </tr>
               ))
@@ -199,10 +204,11 @@ const ReportTemplate = ({ storeSettings, reportData, startDate, endDate }) => {
 
       {/* Pembayaran Piutang Hari Ini */}
       <div className="report-section">
-        <h2>Pembayaran Piutang Hari Ini</h2>
+        <h2>Pembayaran Piutang</h2>
         <table className="report-table">
           <thead>
             <tr>
+              <th>Tanggal</th>
               <th>Pelanggan</th>
               <th>Jumlah Dibayar</th>
               <th>Metode Pembayaran</th>
@@ -212,6 +218,7 @@ const ReportTemplate = ({ storeSettings, reportData, startDate, endDate }) => {
             {payments.length > 0 ? (
               payments.map((row, idx) => (
                 <tr key={idx}>
+                  <td>{new Date(row.tanggal).toLocaleDateString("id-ID")}</td>
                   <td>{row.nama_pelanggan}</td>
                   <td className="text-right">
                     Rp {Number(row.jumlah).toLocaleString("id-ID")}
@@ -259,7 +266,7 @@ export const printReport = (storeSettings, reportData, startDate, endDate) => {
     
     body {
       font-family: 'Inter', sans-serif;
-      padding: 20px;
+      // padding: 20px;
       background: #f9fafb;
     }
     

@@ -14,7 +14,7 @@ const POReportTemplate = ({ storeSettings, historyData, filterDate }) => {
         month: "long",
         year: "numeric",
       })
-    : "Semua Tanggal";
+    : "-";
 
   const totalQty = historyData
     ? historyData.reduce((sum, item) => sum + (Number(item.qty) || 0), 0)
@@ -44,43 +44,62 @@ const POReportTemplate = ({ storeSettings, historyData, filterDate }) => {
         <table border="1" style={{ borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              <th>Waktu</th>
-              <th>Nama Produk</th>
+              <th>Produk</th>
               <th className="qty-cell">Qty</th>
               <th>Harga/1kg</th>
-              <th>Modal/krg</th>
-              <th>Total</th>
+              <th>Harga Beli</th>
+              <th>Subtotal</th>
+              <th>Kuli</th>
+              <th>Sopir</th>
+              <th>DP</th>
+              <th>Total (Net)</th>
               <th>Supplier</th>
-              <th>Keterangan</th>
+              <th>Ktr</th>
             </tr>
           </thead>
           <tbody>
             {historyData &&
               historyData.map((item) => (
                 <tr key={item.id}>
-                  <td>
-                    {new Date(item.tanggal).toLocaleTimeString("id-ID", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </td>
                   <td style={{ fontWeight: 600 }}>{item.namaProduk}</td>
                   <td className="qty-cell">{item.qty}</td>
                   <td>
                     {item.harga_per_kg
-                      ? `Rp. ${Number(item.harga_per_kg).toLocaleString(
-                          "id-ID",
-                        )}`
+                      ? Number(item.harga_per_kg).toLocaleString("id-ID")
                       : "-"}
                   </td>
                   <td>
-                    {item.modal
-                      ? `Rp. ${Number(item.modal).toLocaleString("id-ID")}`
-                      : "-"}
+                    {item.total_harga_produk
+                      ? Number(item.total_harga_produk).toLocaleString("id-ID")
+                      : item.modal
+                        ? Number(item.modal).toLocaleString("id-ID")
+                        : "-"}
+                  </td>
+                  <td>
+                    {item.subtotal
+                      ? Number(item.subtotal).toLocaleString("id-ID")
+                      : item.total_harga_produk && item.qty
+                        ? Number(
+                            item.total_harga_produk * item.qty,
+                          ).toLocaleString("id-ID")
+                        : "-"}
+                  </td>
+                  <td>
+                    {item.biaya_kuli
+                      ? Number(item.biaya_kuli).toLocaleString("id-ID")
+                      : "0"}
+                  </td>
+                  <td>
+                    {item.biaya_sopir
+                      ? Number(item.biaya_sopir).toLocaleString("id-ID")
+                      : "0"}
+                  </td>
+                  <td>
+                    {item.dp ? Number(item.dp).toLocaleString("id-ID") : "0"}
                   </td>
                   <td>
                     {item.total
-                      ? `Rp. ${Number(item.total).toLocaleString("id-ID")}`
+                      ? Number(item.total).toLocaleString("id-ID")
                       : "-"}
                   </td>
                   <td>{item.tujuan}</td>
@@ -100,13 +119,13 @@ const POReportTemplate = ({ storeSettings, historyData, filterDate }) => {
                 {totalQty}
               </td>
               <td
-                colSpan={2}
+                colSpan={6}
                 style={{ textAlign: "right", fontWeight: "bold" }}
               >
-                Total Modal:
+                Total Bayar (Net):
               </td>
               <td style={{ fontWeight: "bold" }}>
-                {`Rp. ${Number(totalModal).toLocaleString("id-ID")}`}
+                {Number(totalModal).toLocaleString("id-ID")}
               </td>
               <td colSpan={2}></td>
             </tr>
@@ -142,11 +161,14 @@ export const printPOReport = (storeSettings, historyData, filterDate) => {
       line-height: 1.6;
       background-color: white;
       padding: 20px;
+      max-width: 210mm;
+      margin: 0 auto;
+      width: 100%;
     }
     .po-report .header {
       text-align: center;
       margin-bottom: 20px;
-      border-bottom: 2px solid #333;
+      border-bottom: 2px solid #3498db;
       padding-bottom: 15px;
     }
     .po-report .header h1 {
@@ -154,6 +176,7 @@ export const printPOReport = (storeSettings, historyData, filterDate) => {
       margin-bottom: 5px;
       font-weight: bold;
       margin-top: 0;
+      text-transform: uppercase;
     }
     .po-report .store-info {
       font-size: 12px;
@@ -180,14 +203,15 @@ export const printPOReport = (storeSettings, historyData, filterDate) => {
       font-size: 12px;
     }
     .po-report .po-table th {
+      font-size: 12px;
+      font-weight: 600;
       background-color: #f0f0f0;
-      padding: 10px;
+      padding: 5px;
       text-align: left;
       border: 1px solid #ddd;
-      font-weight: bold;
     }
     .po-report .po-table td {
-      padding: 10px;
+      padding: 5px;
       border: 1px solid #ddd;
       vertical-align: top;
     }
@@ -199,8 +223,6 @@ export const printPOReport = (storeSettings, historyData, filterDate) => {
     }
     .po-report .footer {
       margin-top: 30px;
-      border-top: 1px solid #ddd;
-      padding-top: 15px;
       font-size: 12px;
       text-align: center;
       color: #666;
@@ -209,6 +231,7 @@ export const printPOReport = (storeSettings, historyData, filterDate) => {
       margin: 5px 0;
     }
     @media print {
+      .po-report { padding: 20px; max-width: 210mm; }
       .po-report .footer {
         page-break-inside: avoid;
       }

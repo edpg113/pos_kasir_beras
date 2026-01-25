@@ -6,6 +6,7 @@ import "./style/Sales.scss";
 import axios from "axios";
 import { printReceipt } from "../../utils/printReceipt";
 import ProductAutocomplete from "../../components/ProductAutocomplete";
+import CustomerAutocomplete from "../../components/CustomerAutocomplete";
 import done2 from "../../assets/done2.gif";
 import { useToast } from "../../components/Toast/Toast";
 
@@ -13,6 +14,7 @@ export default function Sales({ onLogout, user, storeName }) {
   const [showModal, setShowModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [produk, setProduk] = useState([]);
+  const [pelanggan, setPelanggan] = useState([]);
   const [transaksi, setTransaksi] = useState([]);
   const [storeSettings, setStoreSettings] = useState(null);
   const [lastTransaction, setLastTransaction] = useState(null);
@@ -34,6 +36,7 @@ export default function Sales({ onLogout, user, storeName }) {
 
   useEffect(() => {
     getProduct();
+    getPelanggan();
     getSettings();
   }, []);
 
@@ -68,6 +71,15 @@ export default function Sales({ onLogout, user, storeName }) {
         );
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const getPelanggan = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/api/pelanggan-names");
+      setPelanggan(res.data);
+    } catch (error) {
+      console.log("Gagal mengambil data pelanggan:", error);
     }
   };
 
@@ -201,7 +213,7 @@ export default function Sales({ onLogout, user, storeName }) {
                     color: "#7f8c8d",
                   }}
                 >
-                  Total Penjualan (Bruto)
+                  Total Penjualan
                 </h3>
                 <div className="value" style={{ fontSize: "20px" }}>
                   {dailyGross.toLocaleString("id-ID")}
@@ -393,12 +405,10 @@ export default function Sales({ onLogout, user, storeName }) {
 
               <div className="form-group">
                 <label>Pembeli</label>
-                <input
-                  type="text"
-                  className="form-control"
+                <CustomerAutocomplete
+                  customers={pelanggan}
                   value={pembeli}
-                  onChange={(e) => setPembeli(e.target.value)}
-                  placeholder="Nama pembeli"
+                  onChange={(val) => setPembeli(val)}
                 />
               </div>
               <div className="form-group">
