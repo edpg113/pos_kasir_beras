@@ -722,11 +722,6 @@ export default function POBarang({ onLogout, user, storeName }) {
                     {poHistory.map((item) => (
                       <tr key={item.id}>
                         <td>
-                          {new Date(item.tanggal).toLocaleDateString("id-ID", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })}{" "}
                           {new Date(item.tanggal).toLocaleTimeString("id-ID", {
                             hour: "2-digit",
                             minute: "2-digit",

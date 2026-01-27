@@ -46,15 +46,14 @@ const POReportTemplate = ({ storeSettings, historyData, filterDate }) => {
             <tr>
               <th>Produk</th>
               <th className="qty-cell">Qty</th>
-              <th>Harga/1kg</th>
               <th>Harga Beli</th>
+              <th>Harga/1kg</th>
               <th>Subtotal</th>
               <th>Kuli</th>
               <th>Sopir</th>
               <th>DP</th>
               <th>Total (Net)</th>
               <th>Supplier</th>
-              <th>Ktr</th>
             </tr>
           </thead>
           <tbody>
@@ -64,16 +63,16 @@ const POReportTemplate = ({ storeSettings, historyData, filterDate }) => {
                   <td style={{ fontWeight: 600 }}>{item.namaProduk}</td>
                   <td className="qty-cell">{item.qty}</td>
                   <td>
-                    {item.harga_per_kg
-                      ? Number(item.harga_per_kg).toLocaleString("id-ID")
-                      : "-"}
-                  </td>
-                  <td>
                     {item.total_harga_produk
                       ? Number(item.total_harga_produk).toLocaleString("id-ID")
                       : item.modal
                         ? Number(item.modal).toLocaleString("id-ID")
                         : "-"}
+                  </td>
+                  <td>
+                    {item.harga_per_kg
+                      ? Number(item.harga_per_kg).toLocaleString("id-ID")
+                      : "-"}
                   </td>
                   <td>
                     {item.subtotal
@@ -103,14 +102,13 @@ const POReportTemplate = ({ storeSettings, historyData, filterDate }) => {
                       : "-"}
                   </td>
                   <td>{item.tujuan}</td>
-                  <td>{item.keterangan || "-"}</td>
                 </tr>
               ))}
           </tbody>
           <tfoot>
             <tr>
               <td
-                colSpan={2}
+                colSpan={1}
                 style={{ textAlign: "right", fontWeight: "bold" }}
               >
                 Total Qty:
@@ -154,13 +152,16 @@ export const printPOReport = (storeSettings, historyData, filterDate) => {
 
   const styles = `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    * {
+      box-sizing: border-box;
+    }
     body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
     .po-report {
       font-family: 'Inter', sans-serif;
       color: #333;
       line-height: 1.6;
       background-color: white;
-      padding: 20px;
+      padding: 0;
       max-width: 210mm;
       margin: 0 auto;
       width: 100%;
@@ -200,20 +201,24 @@ export const printPOReport = (storeSettings, historyData, filterDate) => {
     .po-report .po-table table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12px;
+      font-size: 10px;
+    }
+      .po-report .po-table tr {
+      page-break-inside: avoid;
     }
     .po-report .po-table th {
-      font-size: 12px;
+      font-size: 10px;
       font-weight: 600;
       background-color: #f0f0f0;
-      padding: 5px;
+      padding: 4px;
       text-align: left;
       border: 1px solid #ddd;
     }
     .po-report .po-table td {
-      padding: 5px;
+      padding: 4px;
       border: 1px solid #ddd;
       vertical-align: top;
+      font-size: 10px;
     }
     .po-report .po-table td.qty-cell {
       text-align: center;
@@ -222,18 +227,33 @@ export const printPOReport = (storeSettings, historyData, filterDate) => {
       background-color: #f9f9f9;
     }
     .po-report .footer {
-      margin-top: 30px;
-      font-size: 12px;
+      margin-top: 15px;
+      font-size: 11px;
       text-align: center;
-      color: #666;
     }
     .po-report .footer p {
       margin: 5px 0;
     }
     @media print {
+    body {
+    margin:0;
+    }
       .po-report { padding: 20px; max-width: 210mm; }
       .po-report .footer {
         page-break-inside: avoid;
+      }
+        table {
+          font-size: 10px;
+        }
+          th, td {
+          padding: 4px;
+          }
+          tr {
+            page-break-inside: avoid;
+          }
+      @page {
+        size: A4;
+        margin: 10mm;
       }
     }
   `;

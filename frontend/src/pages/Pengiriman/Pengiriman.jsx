@@ -216,7 +216,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
         }`,
         {
           type: "error",
-        }
+        },
       );
     } finally {
       setIsSubmitting(false);
@@ -414,7 +414,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
                           value={
                             item.harga_per_kg
                               ? Number(item.harga_per_kg).toLocaleString(
-                                  "id-ID"
+                                  "id-ID",
                                 )
                               : "-"
                           }
@@ -462,7 +462,7 @@ export default function Pengiriman({ onLogout, user, storeName }) {
                             handleItemChange(
                               index,
                               "total",
-                              qty * item.harga_beli
+                              qty * item.harga_beli,
                             );
                           }}
                           min="1"
@@ -576,11 +576,6 @@ export default function Pengiriman({ onLogout, user, storeName }) {
                     {transferHistory.map((item) => (
                       <tr key={item.id}>
                         <td>
-                          {new Date(item.tanggal).toLocaleDateString("id-ID", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })}{" "}
                           {new Date(item.tanggal).toLocaleTimeString("id-ID", {
                             hour: "2-digit",
                             minute: "2-digit",

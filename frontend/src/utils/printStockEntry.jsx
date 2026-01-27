@@ -215,6 +215,10 @@ export const printStockEntry = (storeSettings, stockData) => {
       font-size: 9pt;
     }
 
+    .report-table tr {
+    page-break-inside: avoid;
+    }
+
     .report-table th {
       background-color: #f2f2f2 !important;
       border: 1px solid #000;
@@ -232,6 +236,10 @@ export const printStockEntry = (storeSettings, stockData) => {
     .text-right { text-align: right !important; }
     .text-center { text-align: center !important; }
     .font-bold { font-weight: bold !important; }
+
+    .report-footer {
+    page-break-inside: avoid;
+    }
 
     @media print {
       .a4-report-wrapper { padding: 15mm 12mm; }

@@ -29,7 +29,7 @@ const InventoryTemplate = ({ storeSettings, inventory }) => {
         </h2>
         <p>{namaToko}</p>
         <p>{alamat}</p>
-        <p>Tanggal: {dateStr}</p>
+        <p>Tanggal Cetak : {dateStr}</p>
       </div>
 
       <table className="inventory-table">
@@ -42,7 +42,7 @@ const InventoryTemplate = ({ storeSettings, inventory }) => {
             <th className="text-right">Biaya Kuli</th>
             <th className="text-right">Sopir</th>
             <th className="text-right">DP</th>
-            <th className="text-right">Total Bayar (Setelah Potongan)</th>
+            <th className="text-right">Total Bayar (Net)</th>
             <th className="text-right">Last Reorder</th>
             <th>Supplier</th>
             <th>Waktu</th>
@@ -91,16 +91,7 @@ const InventoryTemplate = ({ storeSettings, inventory }) => {
                 {item.reorder != null ? item.reorder : "-"}
               </td>
               <td>{item.supplier || "-"}</td>
-              <td>
-                {" "}
-                {new Date(item.lastUpdate).toLocaleDateString("id-ID", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </td>
+              <td>{dateStr}</td>
             </tr>
           ))}
         </tbody>
@@ -134,6 +125,7 @@ const InventoryTemplate = ({ storeSettings, inventory }) => {
                 .toLocaleString("id-ID")}
             </td>
             <td></td>
+            <td></td>
           </tr>
         </tfoot>
       </table>
@@ -157,23 +149,104 @@ export const printInventory = (storeSettings, inventory) => {
 
   const inventoryStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-    body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background-color: white; color: #333; }
-    .inventory-report { padding: 20px; max-width: 210mm; margin: 0 auto;}
-    .inventory-report .header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-    .inventory-report .header h1 { margin: 0; font-size: 20px; }
-    .inventory-report .header h2 { margin: 5px 0; font-size: 16px; }
-    .inventory-report .header p { margin: 2px 0; font-size: 12px; }
-    .inventory-report .inventory-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 15px; }
-    .inventory-report .inventory-table th { background-color: #f0f0f0; padding: 8px; border: 1px solid #ddd; text-align: left; }
-    .inventory-report .inventory-table td { padding: 8px; border: 1px solid #eee; vertical-align: top; }
-    .inventory-report .inventory-table .text-right { text-align: right; }
-    .inventory-report .inventory-table .cost-details { font-size: 10px; color: #666; margin-top: 4px; }
-    .inventory-report .footer { margin-top: 20px; font-size: 12px; text-align: center; color: #999; }
+    
+    * {
+     box-sizing: border-box;
+    }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      margin: 0; 
+      padding: 0; 
+      background-color: white; 
+      color: #333; 
+    }
+    
+    .inventory-report { 
+      padding: 20px; 
+      max-width: 210mm; 
+      margin: 0 auto;
+    }
+    
+    .inventory-report .header { 
+      text-align: center; 
+      margin-bottom: 20px; 
+      border-bottom: 1px solid #333; 
+      padding-bottom: 10px; 
+    }
+    
+    .inventory-report .header h1 { 
+      margin: 0; 
+      font-size: 20px; 
+    }
+    
+    .inventory-report .header h2 { 
+      margin: 5px 0; 
+      font-size: 16px; 
+    }
+    
+    .inventory-report .header p { 
+      margin: 2px 0; 
+      font-size: 12px; 
+    }
+    
+    .inventory-report .inventory-table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      font-size: 10px; 
+      margin-top: 15px; 
+    }
+      .inventory-report .inventory-table tr {
+      page-break-inside: avoid;
+      }
+    
+    .inventory-report .inventory-table th { 
+      background-color: #f0f0f0; 
+      padding: 4px; 
+      border: 1px solid #ddd; 
+      text-align: left; 
+      font-size: 10px; 
+    }
+    
+    .inventory-report .inventory-table td { 
+      padding: 4px; 
+      border: 1px solid #eee; 
+      vertical-align: top; 
+      font-size: 10px; 
+    }
+    
+    .inventory-report .inventory-table .text-right { 
+      text-align: right; 
+    }
+    
+    .inventory-report .inventory-table .cost-details { 
+      font-size: 10px; 
+      color: #666; 
+      margin-top: 4px; 
+    }
+    
+    .inventory-report .footer { 
+      margin-top: 20px; 
+      font-size: 10px; 
+      text-align: center; 
+      color: #999; 
+    }
+    
     @media print {
-      body { background-color: white !important; }
-      @page { margin: 10mm; }
-      .inventory-report { padding: 20px; max-width: 210mm; }
-      .inventory-report .inventory-table th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; }
+      body { 
+        background-color: white !important; 
+      }
+      @page { 
+        size: A4;
+        margin: 10mm; 
+      }
+      .inventory-report { 
+        padding: 20px; 
+        max-width: 210mm; 
+      }
+      .inventory-report .inventory-table th { 
+        background-color: #f0f0f0 !important; 
+        -webkit-print-color-adjust: exact; 
+      }
     }
   `;
 

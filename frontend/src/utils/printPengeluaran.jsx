@@ -131,11 +131,11 @@ export const printPengeluaran = (storeSettings, history, totals, month) => {
   const styles = `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     
-    // * { 
-    //   margin: 0; 
-    //   padding: 0; 
-    //   box-sizing: border-box; 
-    // }
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
 
     body { 
       font-family: 'Inter', sans-serif; 
@@ -247,13 +247,16 @@ export const printPengeluaran = (storeSettings, history, totals, month) => {
       margin-top: 40px; 
       font-size: 12px; 
       color: #64748b; 
-      border-top: 1px solid #e2e8f0; 
       padding-top: 10px; 
     }
 
     @media print {
       body { padding: 0; }
       .print-pengeluaran { max-width: 210mm; }
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
     }
   `;
   const printWindow = window.open("", "_blank");

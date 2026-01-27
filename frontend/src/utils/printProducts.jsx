@@ -42,8 +42,6 @@ const ProductsTemplate = ({ storeSettings, products }) => {
         <p className="small">Tanggal: {dateStr}</p>
       </div>
 
-      <div className="divider" />
-
       <div className="table-container">
         <table className="products-table">
           <thead>
@@ -121,8 +119,6 @@ const ProductsTemplate = ({ storeSettings, products }) => {
         </table>
       </div>
 
-      <div className="divider" />
-
       <div className="footer">
         <p>Laporan ini dihasilkan secara otomatis oleh sistem.</p>
       </div>
@@ -145,6 +141,9 @@ export const printProducts = (storeSettings, products) => {
 
   const printStyles = `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+    * {
+    box-sizing: border-box;
+    }
     body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
     .products-print {
       width: 100%;
@@ -152,7 +151,7 @@ export const printProducts = (storeSettings, products) => {
       background-color: white;
       color: #333;
       font-size: 12px;
-      padding: 20px;
+      padding: 0;
       max-width: 210mm;
     }
     .products-print .header {
@@ -160,7 +159,6 @@ export const printProducts = (storeSettings, products) => {
       margin-bottom: 20px;
     }
     .products-print .header .title {
-      // font-size: 18px;
       font-weight: 700;
       text-transform: uppercase;
       margin: 5px 0;
@@ -199,7 +197,6 @@ export const printProducts = (storeSettings, products) => {
       vertical-align: middle;
       border-bottom: 1px solid #eee;
       font-size: 12px;
-      // font-weight: 600;
     }
     .products-print .products-table tfoot .total-row {
       border-top: 2px solid #333;
@@ -209,9 +206,7 @@ export const printProducts = (storeSettings, products) => {
       padding: 12px 6px;
       font-weight: 700;
     }
-    // .products-print .products-table .text-right {
-    //   text-align: right;
-    // }
+    
     .products-print .products-table td, 
     .products-print .products-table th {
       word-wrap: break-word;
@@ -225,7 +220,7 @@ export const printProducts = (storeSettings, products) => {
     }
     @media print {
       body { background-color: white !important; }
-      @page { margin: 10mm; }
+      @page { size: A4; margin: 10mm; }
       .products-print .divider {
         border-top: 1px solid #ccc;
       }
@@ -239,6 +234,7 @@ export const printProducts = (storeSettings, products) => {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
+
     }
   `;
 

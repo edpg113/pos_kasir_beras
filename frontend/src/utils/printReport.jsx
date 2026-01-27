@@ -266,7 +266,6 @@ export const printReport = (storeSettings, reportData, startDate, endDate) => {
     
     body {
       font-family: 'Inter', sans-serif;
-      // padding: 20px;
       background: #f9fafb;
     }
     
@@ -379,6 +378,10 @@ export const printReport = (storeSettings, reportData, startDate, endDate) => {
       margin-top: 6px;
       font-size: 13px;
     }
+
+    .report-table tr {
+      page-break-inside: avoid;
+    }
     
     .report-table th {
       background: #1e3a8a;
@@ -418,13 +421,10 @@ export const printReport = (storeSettings, reportData, startDate, endDate) => {
         background: white;
         padding: 0;
       }
-      
-      .report-document {
-        box-shadow: none;
-        padding: 20px;
-      }
+    
       
       @page {
+        size: A4;
         margin: 15mm;
       }
     }

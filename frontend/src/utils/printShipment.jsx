@@ -45,11 +45,10 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
         <table border="1" style={{ borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ fontSize: "12px" }}>
-              <th>Waktu</th>
               <th>Nama Produk</th>
               <th className="qty-cell">Qty</th>
-              <th>Harga/1kg</th>
               <th>Modal/krg</th>
+              <th>Harga/1kg</th>
               <th>Total</th>
               <th>Tujuan</th>
               <th>Keterangan</th>
@@ -58,22 +57,16 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
           <tbody>
             {historyData.map((item) => (
               <tr key={item.id}>
-                <td>
-                  {new Date(item.tanggal).toLocaleTimeString("id-ID", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </td>
                 <td style={{ fontWeight: 600 }}>{item.namaProduk}</td>
                 <td className="qty-cell">{item.qty}</td>
                 <td>
-                  {item.harga_per_kg
-                    ? `Rp.${Number(item.harga_per_kg).toLocaleString("id-ID")}`
+                  {item.modal
+                    ? `Rp.${Number(item.modal).toLocaleString("id-ID")}`
                     : "-"}
                 </td>
                 <td>
-                  {item.modal
-                    ? `Rp.${Number(item.modal).toLocaleString("id-ID")}`
+                  {item.harga_per_kg
+                    ? `Rp.${Number(item.harga_per_kg).toLocaleString("id-ID")}`
                     : "-"}
                 </td>
                 <td>
@@ -89,10 +82,10 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
           <tfoot>
             <tr>
               <td
-                colSpan={2}
+                colSpan={1}
                 style={{ textAlign: "right", fontWeight: "bold" }}
               >
-                Total Qty:
+                Total Qty :
               </td>
               <td className="qty-cell" style={{ fontWeight: "bold" }}>
                 {totalQty}
@@ -101,12 +94,12 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
                 colSpan={2}
                 style={{ textAlign: "right", fontWeight: "bold" }}
               >
-                Total Modal:
+                Total :
               </td>
               <td style={{ fontWeight: "bold" }}>
                 {`Rp.${Number(totalModal).toLocaleString("id-ID")}`}
               </td>
-              <td colSpan={2}></td>
+              {/* <td colSpan={2}></td> */}
             </tr>
           </tfoot>
         </table>
@@ -116,7 +109,6 @@ const ShipmentReportTemplate = ({ storeSettings, historyData, filterDate }) => {
         <div className="signature-box">
           <p>........., {today}</p>
           <div className="line" />
-          {/* <div className="name">Petugas Gudang</div> */}
         </div>
       </div>
     </div>
@@ -134,12 +126,15 @@ export const printShipmentReport = (storeSettings, historyData, filterDate) => {
 
   const styles = `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    * {
+     box-sizing: border-box;
+    }
     body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background-color: white; }
     .shipment-report {
       width: 100%;
       max-width: 210mm;
       margin: 0 auto;
-      padding: 20px;
+      padding: 0;
       background-color: white;
       color: #333;
     }
@@ -177,18 +172,22 @@ export const printShipmentReport = (storeSettings, historyData, filterDate) => {
       width: 100%;
       border-collapse: collapse;
     }
+    .shipment-report .shipment-table tr {
+        page-break-inside: avoid;
+      }
     .shipment-report .shipment-table th {
       background-color: #f8f9fa;
       color: #2c3e50;
       font-weight: 600;
       text-align: center;
-      padding: 8px;
+      padding: 4px;
       border-bottom: 2px solid #dee2e6;
+      font-size: 10px;
     }
     .shipment-report .shipment-table td {
-      padding: 8px;
+      padding: 4px;
       border-bottom: 1px solid #2c3e50;
-      font-size: 12px;
+      font-size: 10px;
       text-align: center;
     }
     .shipment-report .shipment-table tfoot th {
@@ -201,6 +200,7 @@ export const printShipmentReport = (storeSettings, historyData, filterDate) => {
       margin-top: 50px;
       display: flex;
       justify-content: flex-end;
+      page-break-inside: avoid;
     }
     .shipment-report .signature-box {
       text-align: center;
@@ -217,6 +217,12 @@ export const printShipmentReport = (storeSettings, historyData, filterDate) => {
     @media print {
       body { background-color: white !important; }
       .shipment-report { padding: 20px; max-width: 210mm; }
+
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
+      
     }
   `;
 
